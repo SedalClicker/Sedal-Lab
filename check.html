@@ -829,7 +829,7 @@ document.addEventListener('click',e=>{
   if(t.id==='next'){const i=stepIdx();if(i<STEPS.length-1)go(STEPS[i+1].k);else openNotice();return}
   if(t.id==='apply-all'){const c=lastPick||S.btn[S.sel];S.btn=S.btn.map(()=>c);render();status('8개 버튼에 같은 색을 적용했습니다');return}
   if(t.id==='shape-all'){const k=S.shp[S.sel],tn=S.tone[S.sel];S.shp=S.shp.map(()=>k);S.tone=S.tone.map(()=>tn);render();status('8개 버튼을 '+SH[k].name+'으로 바꿨습니다');return}
-  if(t.dataset.shape){S.shp[S.sel]=t.dataset.shape;render();return}
+  if(t.dataset.shape){S.shp[S.sel]=t.dataset.shape;S.sel=(S.sel+1)%8;render();return}
   if(t.id==='sw-all'){const k=S.sw[S.sel];S.sw=S.sw.map(()=>k);render();status('8개 버튼에 '+swName(k)+'을 적용했습니다');return}
   if(t.dataset.sw){S.sw[S.sel]=t.dataset.sw;if(t.classList.contains('sw')&&S.sel<7)S.sel++;render();return}
   if(t.dataset.rim){S.rim=t.dataset.rim==='0'?false:t.dataset.rim;render();status(S.rim?rimOf().name+' 테두리를 선택했습니다':'테두리를 뺐습니다');return}
@@ -837,7 +837,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.tone){S.tone[S.sel]=t.dataset.tone;render();return}
   if(t.dataset.sel){S.sel=+t.dataset.sel;lastPick=null;render();return}
   if(t.dataset.color){const id=t.dataset.color;lastPick=id;const scope=t.dataset.scope||(S.step==='body'?'body':'btn');
-    if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;if(S.sel<7)S.sel++}render();return}
+    if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;S.sel=(S.sel+1)%8}render();return}
   if(t.id==='copy'||t.id==='drawer-copy'){openNotice();return}
   if(t.id==='notice-ok'){$('#notice').hidden=true;copyOrder();return}
   if(t.id==='notice-cancel'){$('#notice').hidden=true;return}
