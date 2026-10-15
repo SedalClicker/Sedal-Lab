@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4E2F23">
+<meta name="description" content="새달랩(SE:DAL) 초콜릿 클리커 커스텀 · 몸통, 버튼, 스위치 축을 골라 나만의 클리커를 만들어 보세요.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="새달랩 커스텀">
+<title>초콜릿 클리커 커스텀</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Montserrat:wght@700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: car-configurator pattern — cream top bar + step bar, sticky white product stage on the left, scrolling option panel on the right with a fixed prev/next rail. */
+:root{
+  --bg:#FFFFFF; --bar:#F0EBE3; --sunken:#F6F3EF; --stage:#FFFFFF;
+  --ink:#1B1512; --ink-2:#6E655F; --ink-3:#A39A93; --line:#E6DFD8; --line-2:#D4CBC2;
+  --accent:#4E2F23; --accent-ink:#FFFFFF; --check:#4E2F23; --best:#D6432F; --focus:#9A6B55;
+  --shadow:0 22px 44px -30px rgba(50,30,20,.45);
+  --body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --wordmark:"Montserrat","Noto Sans KR",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#15110F; --bar:#1F1915; --sunken:#1E1915; --stage:#F4F1EC;
+    --ink:#F2ECE7; --ink-2:#B5AAA2; --ink-3:#7E746D; --line:#33291F; --line-2:#4A3C32;
+    --accent:#E6C3B3; --accent-ink:#1B1512; --check:#E6C3B3; --best:#F06A57; --focus:#E6C3B3;
+    --shadow:0 22px 44px -30px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#15110F; --bar:#1F1915; --sunken:#1E1915; --stage:#F4F1EC;
+  --ink:#F2ECE7; --ink-2:#B5AAA2; --ink-3:#7E746D; --line:#33291F; --line-2:#4A3C32;
+  --accent:#E6C3B3; --accent-ink:#1B1512; --check:#E6C3B3; --best:#F06A57; --focus:#E6C3B3;
+  --shadow:0 22px 44px -30px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;color:inherit}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.app{min-height:100%;display:flex;flex-direction:column}
+
+/* ── top bar ── */
+.topbar{background:var(--bar);padding:0 clamp(16px,3vw,40px);height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.wordmark{font-family:var(--wordmark);font-weight:800;font-size:20px;letter-spacing:.1em}
+.brand .div{width:1px;height:22px;background:var(--line-2)}
+.brand .model{font-weight:500;font-size:15px;white-space:nowrap}
+.brand .model small{color:var(--ink-2);font-size:12px;margin-left:8px;font-weight:400}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.btn{appearance:none;border:1px solid var(--line-2);background:transparent;border-radius:3px;padding:9px 14px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px;line-height:1;white-space:nowrap}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.accent{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{border-color:transparent;color:var(--ink-2)}
+.btn[disabled]{opacity:.35;cursor:default}
+.btn svg{width:12px;height:12px}
+
+/* ── step bar ── */
+.steps{display:flex;align-items:stretch;gap:0;padding:0 clamp(16px,3vw,40px);border-bottom:1px solid var(--line);background:var(--bg);overflow-x:auto;scrollbar-width:none;position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:19}
+.steps::-webkit-scrollbar{display:none}
+.step{display:flex;align-items:center;gap:12px;padding:16px 0;white-space:nowrap}
+.step + .step{margin-left:28px;padding-left:28px;border-left:1px solid var(--line)}
+.step .num{font-family:var(--wordmark);font-weight:700;font-size:15px;color:var(--ink-3);letter-spacing:.02em}
+.step .name{font-size:17px;font-weight:700;color:var(--ink-3)}
+.step.on .num,.step.on .name{color:var(--ink)}
+.step .val{font-size:13px;color:var(--ink-2);padding:3px 9px;background:var(--sunken);border-radius:999px}
+.substeps{display:flex;align-items:center;gap:0;list-style:none;margin:0 0 0 12px;padding:0}
+.substeps li{display:flex;align-items:center}
+.substeps li + li::before{content:"";width:6px;height:6px;border-right:1.5px solid var(--ink-3);border-bottom:1.5px solid var(--ink-3);transform:rotate(-45deg);margin:0 12px}
+.substeps button{appearance:none;border:0;background:none;padding:6px 0;font-size:15px;color:var(--ink-3);cursor:pointer;position:relative}
+.substeps button.done{color:var(--ink-2)}
+.substeps button[aria-current="step"]{color:var(--accent);font-weight:700}
+.substeps button[aria-current="step"]::after{content:"";position:absolute;left:0;right:0;bottom:-17px;height:2px;background:var(--accent)}
+
+/* ── main ── */
+.main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,.9fr);flex:1;min-height:0}
+.stage-col{padding:28px clamp(16px,3vw,40px) 24px;border-right:1px solid var(--line);position:sticky;top:calc(env(safe-area-inset-top,0px) + 123px);align-self:start;height:calc(100vh - 123px - env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:12px}
+.stage-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.stage-head h1{margin:0;font-size:clamp(22px,2.2vw,28px);font-weight:700;letter-spacing:-.01em;line-height:1.2;text-wrap:balance}
+.stage-head h1 span{font-weight:400}
+.stage-head .sub{margin:4px 0 0;font-size:13px;color:var(--ink-2)}
+.price{text-align:right;line-height:1.15}
+.price .lbl{display:block;font-size:12px;color:var(--ink-2);font-weight:500}
+.price strong{font-size:clamp(22px,2.2vw,26px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+.price strong small{font-size:14px;font-weight:500;margin-left:2px}
+.price em{display:block;font-style:normal;font-size:12px;color:var(--ink-3);max-width:230px;margin-left:auto;margin-top:2px}
+.stage{position:relative;flex:1;min-height:300px;background:var(--stage);border-radius:6px;display:grid;place-items:center;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.stage .floor{position:absolute;left:50%;top:67%;width:78%;max-width:620px;aspect-ratio:3.4/1;transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid #D9D2CA;pointer-events:none}
+.stage .floor::after{content:"360°";position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);font-family:var(--wordmark);font-weight:700;font-size:14px;color:#8E8680;letter-spacing:.06em}
+.stage .view{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);width:min(84%,700px);height:78%;z-index:1;cursor:grab}
+.stage.grabbing .view{cursor:grabbing}
+.stage .view.v-top{width:min(40%,300px);height:86%;top:50%}
+.stage .view svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 14px 14px rgba(58,31,20,.16))}
+.stage .view svg [data-i]{cursor:pointer}
+.turn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:88px;height:88px;border-radius:50%;background:rgba(27,21,18,.72);color:#fff;display:grid;place-items:center;font-family:var(--wordmark);font-weight:700;font-size:15px;letter-spacing:.02em;pointer-events:none;z-index:2;opacity:0;transition:opacity .25s}
+.stage.hint .turn{opacity:1}
+.turn::after{content:"← →";font-size:11px;letter-spacing:0;margin-top:-6px;opacity:.9}
+.chip{position:absolute;left:14px;top:14px;z-index:2;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #E6DFD8;color:#1B1512;font-size:13px;font-weight:500;pointer-events:none}
+.chip i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+.stage-tools{position:absolute;right:14px;top:14px;z-index:2;display:flex;gap:6px}
+.stage-tools button{appearance:none;border:1px solid #E6DFD8;background:#fff;color:#1B1512;width:34px;height:34px;border-radius:999px;cursor:pointer;display:grid;place-items:center}
+.stage-tools svg{width:16px;height:16px}
+.stage-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stage-foot .note{margin:0;font-size:12px;color:var(--ink-3);line-height:1.5}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
+.seg button{appearance:none;border:0;background:transparent;color:var(--ink-2);padding:9px 18px;font-size:14px;font-weight:500;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* ── panel ── */
+.panel{display:flex;flex-direction:column;min-width:0}
+.panel-body{padding:28px clamp(16px,3vw,40px) 32px;display:grid;gap:26px;align-content:start}
+.ptitle{margin:0;font-size:26px;font-weight:700;letter-spacing:-.01em}
+.lead{margin:-14px 0 0;font-size:14px;color:var(--ink-2)}
+.best{display:grid;gap:12px}
+.best .tagline{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;margin:0}
+.tag{display:inline-block;background:var(--best);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;letter-spacing:.02em}
+.best-box{background:var(--sunken);border-radius:4px;padding:20px 22px;display:grid;gap:16px}
+.best-box p{margin:0;font-size:14px}
+.best-box p b.hl{color:var(--accent)}
+.best-row{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+.best-item{appearance:none;border:0;background:none;padding:0;display:grid;justify-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink)}
+.best-item i{display:grid;place-items:center;border-radius:50%;border:1px solid rgba(0,0,0,.12);font-weight:700;font-variant-numeric:tabular-nums;box-shadow:inset 0 -6px 10px rgba(0,0,0,.08)}
+.best-item i b{font-size:22px;letter-spacing:-.02em}
+.best-item i b small{font-size:12px;font-weight:700}
+.best-box small{font-size:12px;color:var(--ink-3)}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.sec-head h3{margin:0;font-size:17px;font-weight:700}
+.sec-head .sel{font-size:14px;color:var(--accent);font-weight:500}
+.sec{display:grid;gap:14px}
+.glabel{font-size:12px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;font-weight:500;margin:2px 0 -4px}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px}
+.sw{appearance:none;border:0;background:none;padding:0;display:grid;gap:6px;justify-items:center;cursor:pointer;font-size:12px;color:var(--ink-2);text-align:center;line-height:1.25}
+.sw i{width:100%;aspect-ratio:1;border-radius:3px;border:1px solid rgba(0,0,0,.12);position:relative;box-shadow:inset 0 -8px 14px rgba(0,0,0,.06)}
+.sw[aria-pressed="true"]{color:var(--ink);font-weight:700}
+.sw[aria-pressed="true"] i{outline:2px solid var(--ink);outline-offset:2px}
+.sw[aria-pressed="true"] i::after{content:"";position:absolute;right:-7px;top:-7px;width:20px;height:20px;border-radius:50%;background:var(--check);border:2px solid var(--bg);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:12px;background-position:center;background-repeat:no-repeat}
+.mini-wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.mini{display:grid;grid-template-columns:repeat(2,56px);gap:6px;padding:8px;border-radius:6px;background:var(--sunken)}
+.mini button{position:relative;width:56px;height:46px;border-radius:7px;border:2px solid transparent;cursor:pointer;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12);padding:0}
+.mini button[aria-pressed="true"]{border-color:var(--ink)}
+.mini button .deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.mini button .n{position:absolute;left:3px;top:3px;font-size:10px;line-height:1.3;background:rgba(255,255,255,.92);color:#2A1D18;border-radius:5px;padding:0 4px;font-weight:700;font-variant-numeric:tabular-nums}
+.mini-side{display:grid;gap:10px;align-content:start;flex:1;min-width:160px}
+.mini-side p{margin:0;font-size:13px;color:var(--ink-2)}
+.mini-side p b{color:var(--ink)}
+.link{appearance:none;border:0;background:none;padding:0;font-size:13px;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;justify-self:start}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sw-cards{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+.sw-group+.sw-group{margin-top:14px}
+.rim-cards{grid-template-columns:repeat(3,minmax(0,1fr))}@media (max-width:520px){.rim-cards{grid-template-columns:1fr}}
+.logo-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px}
+.logo-sw{appearance:none;border:1px solid var(--line-2);background:var(--bg);border-radius:6px;padding:7px 4px 6px;display:grid;justify-items:center;gap:4px;cursor:pointer;font:inherit}
+.logo-sw i{width:26px;height:26px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.15)}.logo-sw span{font-size:11px;color:var(--ink-2);white-space:nowrap}
+.logo-sw[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.shape-cards{grid-template-columns:repeat(4,minmax(0,1fr))}.shape-cards .card{padding-left:6px;padding-right:6px}@media (max-width:520px){.shape-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.main>*,.stage-col,.panel{min-width:0}
+.sw-group h4{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--ink-2);letter-spacing:.02em}
+.heart-note .dots{display:inline-flex;gap:2px;vertical-align:middle}.heart-note .dots i{width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.12)}
+.sw-cards .card{padding:10px 6px 8px}
+.sw-cards .card svg.ico{width:44px;height:44px}
+.sw-cards .card span{font-size:11px}
+.card{appearance:none;border:1px solid var(--line-2);background:var(--bg);border-radius:4px;padding:14px 10px 12px;display:grid;justify-items:center;gap:6px;cursor:pointer;text-align:center;position:relative}
+.card svg.ico{width:56px;height:56px}
+.card b{font-size:14px}
+.card span{font-size:12px;color:var(--ink-2)}
+.card em{font-style:normal;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.card[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.card[aria-pressed="true"]::after{content:"";position:absolute;right:-8px;top:-8px;width:22px;height:22px;border-radius:50%;background:var(--check);border:2px solid var(--bg);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:12px;background-position:center;background-repeat:no-repeat}
+.tones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tone{appearance:none;border:1px solid var(--line-2);background:var(--bg);border-radius:4px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;position:relative}
+.tone .dots{display:flex}
+.tone .dots i{width:22px;height:22px;border-radius:50%;border:2px solid var(--bg);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.tone .dots i + i{margin-left:-8px}
+.tone b{display:block;font-size:14px}
+.tone b .tp{font-size:11px;font-weight:600;color:#D95F7C;margin-left:4px}
+.tone span{font-size:12px;color:var(--ink-2)}
+.tone[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.summary{display:grid;gap:0;border-top:1px solid var(--line)}
+.summary .row{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:center}
+.summary .row dt{margin:0;color:var(--ink-2)}
+.summary .row dd{margin:0;font-weight:500;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cdot{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:3px 9px 3px 4px;border:1px solid var(--line);border-radius:999px;background:var(--bg)}
+.cdot i{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+.cdot em{font-style:normal;color:var(--ink-3);font-size:11px;margin-right:-2px}
+.codebox{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.code{flex:1 1 200px;min-width:0;font-family:var(--mono);font-size:16px;letter-spacing:.04em;background:var(--sunken);border-radius:3px;padding:12px 14px;user-select:all;word-break:break-all;display:flex;align-items:center}
+.load{display:flex;gap:8px;flex-wrap:wrap}
+.load input{flex:1 1 200px;min-width:0;font:500 14px var(--mono);padding:10px 12px;border-radius:3px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);text-transform:uppercase}
+.status{font-size:13px;color:var(--ink-2);min-height:1.2em;margin:0}
+.help{margin:0;font-size:13px;color:var(--ink-2)}
+.panel-nav{position:sticky;bottom:env(safe-area-inset-bottom,0px);margin-top:auto;display:flex;justify-content:space-between;gap:10px;padding:14px clamp(16px,3vw,40px) calc(14px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line);z-index:5}
+.panel-nav .btn{padding:13px 22px;font-size:15px;min-width:120px;justify-content:center}
+.panel-nav .btn.primary{flex:1;max-width:260px}
+
+/* ── summary drawer ── */
+.drawer{position:fixed;inset:0;z-index:30;background:rgba(20,12,10,.45)}
+.drawer-card{position:absolute;right:clamp(0px,2vw,24px);top:calc(env(safe-area-inset-top,0px) + 64px);width:min(480px,100%);max-height:calc(100% - 80px);overflow:auto;background:var(--bg);border-radius:0 0 6px 6px;box-shadow:var(--shadow);padding:22px clamp(16px,3vw,28px) 26px;display:grid;gap:16px}
+.drawer-card h2{margin:0;font-size:20px}
+.drawer-card .close{appearance:none;border:0;background:none;position:absolute;right:14px;top:14px;width:32px;height:32px;cursor:pointer;font-size:22px;line-height:1;color:var(--ink-2)}
+
+.sw-item{position:relative;display:grid}
+.play{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);background:var(--bg);color:var(--ink-2);display:grid;place-items:center;cursor:pointer;padding:0;z-index:1}
+.play svg{width:14px;height:14px}
+.play:hover{color:var(--ink);border-color:var(--ink)}
+.play.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.notice-card{max-width:420px;gap:14px;padding:22px 20px 18px}
+.notice-card h3{margin:0;font-size:17px}
+.notice-card p{font-size:14px;line-height:1.65;color:var(--ink)}
+.notice-card .em{font-weight:700;color:#D95F7C}
+.notice-card .row2{display:flex;gap:8px;justify-content:flex-end}
+.notice-card .row2 .btn{padding:12px 18px}
+.verify-card{max-width:520px}
+.heart-alert{margin:0;padding:10px 12px;border-radius:6px;background:#FDEEF2;color:#8A2E45 !important;font-size:14px;line-height:1.55}.heart-alert b{color:#C23A5E}
+.view-mode .steps,.view-mode .panel-nav,.view-mode #reset,.view-mode #sum-toggle,.view-mode #verify-open,.view-mode #cur-pill{display:none !important}
+@media (max-width:960px){.view-mode .panel{order:-1}}
+.vw-mobile{display:none}@media (max-width:960px){.vw-mobile{display:block}}
+@media (min-width:961px){.view-mode .stage-col{top:calc(env(safe-area-inset-top,0px) + 64px);height:calc(100vh - 64px - env(safe-area-inset-top,0px))}}
+.v-err{color:#C0392B !important;font-weight:600}
+.v-ok{font-size:13px;color:var(--ink-2)}.v-ok b{color:var(--ink);letter-spacing:.02em}
+.v-img img{width:100%;border-radius:4px;background:#fff;display:block;min-height:120px}
+.v-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:10px 12px;border:1px solid var(--line,#e5dcd5);border-radius:6px}
+.v-price span{font-size:13px;color:var(--ink-2)}.v-price b{font-size:20px}.v-price em{font-style:normal;font-size:12px;color:var(--ink-2);flex-basis:100%}
+.v-sheet summary{cursor:pointer;font-size:14px;font-weight:600;padding:4px 0}
+.v-sheet table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.v-sheet th,.v-sheet td{border-bottom:1px solid var(--line,#e5dcd5);padding:6px 4px;text-align:left;vertical-align:top}
+.v-sheet tbody th{white-space:nowrap;color:var(--ink-2)}
+@media (max-width:520px){.brand .model,.brand .div{display:none}.topbar{gap:10px}.topbar-actions{gap:6px}.topbar-actions .btn{padding-left:10px;padding-right:10px}}.v-sheet small{color:var(--ink-2)}
+/* ── modal ── */
+.modal{position:fixed;inset:0;background:rgba(20,12,10,.6);display:grid;place-items:center;padding:16px;z-index:40}
+.modal-card{background:var(--bg);border-radius:6px;padding:16px;display:grid;gap:12px;max-width:560px;width:100%;max-height:90vh;overflow:auto}
+.modal-card img{width:100%;border-radius:4px;background:#fff}
+.modal-card p{margin:0;font-size:14px;color:var(--ink-2)}
+
+@media (max-width:960px){
+  .main{grid-template-columns:1fr}
+  .stage-col{position:relative;top:auto;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .stage{min-height:300px;aspect-ratio:4/3;flex:none}
+  .stage .view{width:90%;height:80%}
+  .stage .view{width:min(88%,560px)}
+  .brand .model small{display:none}
+  .step .val{display:none}
+  .substeps button[aria-current="step"]::after{bottom:-16px}
+}
+@media (max-width:560px){
+  .topbar{height:56px}
+  .steps{top:calc(env(safe-area-inset-top,0px) + 56px)}
+  .wordmark{font-size:17px}
+  .step .name{font-size:15px}
+  .substeps button{font-size:14px}
+  .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .card svg.ico{width:44px;height:44px}
+  .tones{grid-template-columns:1fr}
+  .panel-nav .btn{min-width:0}
+}
+@media (prefers-reduced-motion:reduce){.turn{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="wordmark">SE:DAL</span><span class="div"></span><span class="model">초콜릿 클리커<small>8구 · 마그넷 키링</small></span></div>
+    <div class="topbar-actions">
+      <button class="btn ghost" id="reset" type="button">처음부터</button>
+      <button class="btn" id="verify-open" type="button">코드 확인</button>
+      <button class="btn" id="sum-toggle" type="button" aria-expanded="false">요약 보기 <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="진행 단계">
+    <div class="step"><span class="num">01</span><span class="name">제품 선택</span><span class="val">8구 초콜릿 클리커</span></div>
+    <div class="step on"><span class="num">02</span><span class="name">내 클리커 만들기</span>
+      <ol class="substeps" id="substeps"></ol>
+    </div>
+  </nav>
+
+  <main class="main">
+    <section class="stage-col">
+      <div class="stage-head">
+        <div><h1>초콜릿 클리커 <span>- 커스텀</span></h1><p class="sub">새달랩 마그넷 초콜릿 클리커 키링 · 누름 버튼 8개 · 바닥 자석</p></div>
+        <div class="price"><span class="lbl">총 금액</span><strong><span id="price-total">18,900</span> <small>원</small></strong><em id="price-note">기본가 · 옵션 추가금 없음</em></div>
+      </div>
+      <div class="stage" id="stage">
+        <span class="chip" id="cur-pill"><i></i><span></span></span>
+        <div class="stage-tools"><button type="button" id="cam-reset" title="보기 초기화" aria-label="보기 초기화"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v3h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+        <div class="floor"></div>
+        <div class="turn">360°</div>
+        <div class="view v-iso" id="vw-iso"></div>
+        <div class="view v-top" id="vw-top" hidden></div>
+      </div>
+      <div class="stage-foot">
+        <p class="note">* 미리보기는 실제 치수를 바탕으로 그린 일러스트입니다. 드래그하면 돌려 볼 수 있고, 버튼을 누르면 바로 선택됩니다.<br>&nbsp;&nbsp;화면 색은 실제 필라멘트 색과 조금 다를 수 있습니다.</p>
+        <div class="seg" id="view-seg"><button type="button" data-view="iso" aria-pressed="true">입체</button><button type="button" data-view="top" aria-pressed="false">평면</button></div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="panel-body" id="panel-body"></div>
+      <div class="panel-nav"><button class="btn" id="prev" type="button">이전</button><button class="btn primary" id="next" type="button">다음</button></div>
+    </aside>
+  </main>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-card" role="dialog" aria-label="선택 요약">
+    <button class="close" id="drawer-close" type="button" aria-label="닫기">×</button>
+    <h2>선택 요약</h2>
+    <dl class="summary" id="drawer-summary"></dl>
+    <div class="codebox"><span class="code" id="drawer-code"></span><button class="btn primary" id="drawer-copy" type="button">요청사항 복사</button></div>
+    <p class="help">조합 코드를 주문 요청사항에 붙여 넣으면 됩니다.</p>
+  </div>
+</div>
+
+<div class="modal" id="notice" hidden>
+  <div class="modal-card notice-card" role="dialog" aria-modal="true" aria-labelledby="notice-t">
+    <h3 id="notice-t">주문 전 안내</h3>
+    <p id="notice-heart" class="heart-alert" hidden></p>
+    <p>커스텀 클리커는 주문 후 제작까지 일정 시간이 소요됩니다.<br>기본 클리커 주문 시보다 <span class="em">2일 정도 더 소요</span>될 수 있는 점 양해 바라며, <span class="em">(최대 5~7일)</span> 주문 시 이 점 유념해 주세요.</p>
+    <div class="row2"><button class="btn" id="notice-cancel" type="button">다시 보기</button><button class="btn primary" id="notice-ok" type="button">확인했어요 · 요청사항 복사</button></div>
+  </div>
+</div>
+<div class="modal" id="verify" hidden>
+  <div class="modal-card notice-card verify-card" role="dialog" aria-modal="true" aria-labelledby="verify-t">
+    <h3 id="verify-t">주문코드 확인</h3>
+    <p>주문 요청사항에 적은 코드를 넣으면 실제로 제작될 모습과 결제 금액을 확인할 수 있습니다.</p>
+    <div class="load"><input id="v-in" placeholder="SD-3-6-T" maxlength="40" aria-label="주문 코드" autocomplete="off" autocapitalize="characters"><button class="btn primary" id="v-run" type="button">확인</button></div>
+    <div id="v-out" aria-live="polite"></div>
+    <div class="row2"><button class="btn" id="v-close" type="button">닫기</button></div>
+  </div>
+</div>
+<div class="modal" id="modal" hidden>
+  <div class="modal-card">
+    <img id="modal-img" alt="내가 고른 초콜릿 클리커 조합">
+    <p>휴대폰은 이미지를 길게 눌러서, PC는 오른쪽 클릭으로 저장하세요.</p>
+    <button class="btn primary" id="close" type="button">닫기</button>
+  </div>
+</div>
+<script>
+const COLORS=[
+  {id:'ww',name:'화이트초코',hex:'#D6C7A2',fin:'우드',dots:['#AF8F62','#C9AE84'],p:.06},
+  {id:'wd',name:'초코',hex:'#6B4F41',fin:'우드',dots:['#4A372A','#8D715B'],p:.06},
+  {id:'ml',name:'메론',hex:'#C4DDC2',fin:'매트'},
+  {id:'st',name:'스트로베리',hex:'#E2B8C4',fin:'매트'},
+  {id:'lv',name:'라벤다',hex:'#BEB6DA',fin:'매트'},
+  {id:'cc',name:'쿠앤크',hex:'#E4E8EC',fin:'스페클',dots:['#2B2F33','#6E7378'],p:.045},
+  {id:'sy',name:'딸기요거트',hex:'#EEE3E8',fin:'스페클',dots:['#D9708C','#B8566E'],p:.04},
+  {id:'sd',name:'소다',hex:'#8CC6E6',fin:'매트'},
+  {id:'iv',name:'화이트',hex:'#F5F2EA',fin:'매트'},
+  {id:'ch',name:'블랙',hex:'#3A3B3E',fin:'매트'},
+  {id:'be',name:'베이지',hex:'#F1E7CF',fin:'매트',only:'btn'},
+  {id:'sk',name:'핫핑크',hex:'#EAA6C8',fin:'매트',only:'btn'}
+];
+const PARTS=[
+  {k:'body',name:'몸통',desc:'받침, 테두리, 버튼 사이 채움 면과 고리까지 한 색'},
+  {k:'btn',name:'버튼',desc:'2열 4행 누름 버튼 8개를 하나씩 선택'}
+];
+const C=Object.fromEntries(COLORS.map(c=>[c.id,c]));
+const SHAPES=[{k:'B',name:'기본형',desc:'네모+테두리',acc:false},{k:'P',name:'무지형',desc:'무지',acc:false},{k:'H',name:'하트형',desc:'하트 · 투톤',acc:'테두리·하트'},{k:'S',name:'별형',desc:'별 · 투톤',acc:'테두리·별'}];
+const SH=Object.fromEntries(SHAPES.map(x=>[x.k,x]));
+// two-tone pair: button body color -> ring/heart color
+const PAIR={ww:'wd',wd:'ww',ml:'sd',st:'lv',lv:'st',cc:'ch',sy:'sk',sd:'iv',iv:'ch',ch:'iv',be:'wd',sk:'iv'};
+// 스위치: 타입은 제조사 상품 정보 기준, 색은 스템 색을 참고해 근사치로 넣은 값
+const SW=[
+  {id:'bl',name:'청축',type:'클리키',hex:'#4D8BDC'},
+  {id:'nv',name:'네이비',type:'클리키',hex:'#22386B'},
+  {id:'sl',name:'딸기라떼',type:'택타일',hex:'#F6BFD0'},
+  {id:'bs',name:'흑당라떼',type:'리니어',hex:'#7A4B32'},
+  {id:'cr',name:'크림치즈',type:'택타일',hex:'#F5E9CF'},
+  {id:'md',name:'몽돌',type:'리니어',hex:'#2E2E30'},
+  {id:'ps',name:'핑크솔트',type:'택타일',tag:'저소음',hex:'#E8A2B6'},
+  {id:'lm',name:'라임',type:'택타일',tag:'저소음',hex:'#A9D15B'},
+  {id:'ss',name:'바다소금',type:'리니어',tag:'저소음',hex:'#BFDDEB'},
+  {id:'y2',name:'Y2',type:'리니어',hex:'#D8363C'},
+  {id:'lp',name:'리퍼',type:'리니어',hex:'#CFE59A',house:'#E3D3B4'},
+  {id:'jd',name:'제이드',type:'클리키',hex:'#2FA585'}];
+function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
+const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2';
+const RIMS={ch:{name:'초코',hex:'#6E5A48'},pk:{name:'핫핑크',hex:'#EAA6C8'}};
+function rimOf(){return S.rim?RIMS[S.rim]||RIMS.ch:null}
+const EXAMPLE={rim:false,logo:null,body:'iv',btn:Array(8).fill('iv'),shp:Array(8).fill('B'),tone:Array(8).fill('2'),sw:Array(8).fill(SW_DEF),part:'body',sel:0,step:'body',view:'iso'};
+let S=load()||structuredClone(EXAMPLE);
+function load(){try{const v=JSON.parse(localStorage.getItem('sedal-choco-v3')||'null');if(v&&v.btn&&v.btn.length===8&&v.btn.every(x=>C[x])&&C[v.body]){if(v.shp)v.shp=v.shp.map(x=>x==='R'?'B':x);if(!(v.shp&&v.shp.length===8&&v.shp.every(x=>SH[x])))v.shp=Array(8).fill(SH[v.shape]?v.shape:'B');delete v.shape;if(!(v.tone&&v.tone.length===8&&v.tone.every(x=>x==='1'||x==='2')))v.tone=v.btn.map((b,i)=>v.acc&&v.acc[i]===b?'1':'2');delete v.acc;delete v.layer;v.tone=v.shp.map(k=>SH[k].acc?'2':'1');v.rim=v.rim===true?'ch':(RIMS[v.rim]?v.rim:false);if(!(v.logo&&C[v.logo]))v.logo=null;if(v.sw)v.sw=v.sw.map(x=>x==='rw'?'lp':x);if(!(v.sw&&v.sw.length===8&&v.sw.every(x=>SWM[x])))v.sw=Array(8).fill(SW_DEF);return v}}catch(e){}return null}
+function save(){try{localStorage.setItem('sedal-choco-v3',JSON.stringify(S))}catch(e){}}
+function rgb(h){const n=parseInt(h.slice(1),16);return[n>>16,n>>8&255,n&255]}
+function mix(hex,amt){const[r,g,b]=rgb(hex),t=amt<0?0:255,p=Math.abs(amt);return'#'+[r,g,b].map(v=>Math.round(v+(t-v)*p).toString(16).padStart(2,'0')).join('')}
+
+// ---- vector 3D renderer (procedural model, mm) ----
+// mm, from the filed drawings: body 44×82×15, lip 2.8 wide, fill 0.7 below the lip crest following each button with a 0.55 groove, buttons rise 5.6 above the lip
+const M={bw:44,bl:82,br:7,bh:15,fill:14.3,gap:0.55,rim:2.8,capP:18.45,capW:17.4,capR:4.6,capTopW:15.4,capTopR:4.6,capTopIso:13.4,capH:20.6,ringIn:1.7,sq:7.4,sqR:1.2,sqH:0.7};
+function rr(cx,cy,w,h,r,z,n=7){const p=[],hw=w/2,hh=h/2,c=[[hw-r,hh-r,0],[-hw+r,hh-r,90],[-hw+r,-hh+r,180],[hw-r,-hh+r,270]];
+  for(const[x,y,a0]of c)for(let i=0;i<=n;i++){const a=(a0+90*i/n)*Math.PI/180;p.push([cx+x+r*Math.cos(a),cy+y+r*Math.sin(a),z])}return p}
+const HEART=(()=>{const r=.275,ax=.225,ay=.14,tr=.11,ty=-.295,P=[];for(let i=0;i<48;i++){const a=i/48*2*Math.PI;P.push([ax+r*Math.cos(a),ay+r*Math.sin(a)],[-ax+r*Math.cos(a),ay+r*Math.sin(a)],[tr*Math.cos(a),ty+tr*Math.sin(a)])}
+  P.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lo=[],up=[];
+  for(const p of P){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}
+  for(let i=P.length-1;i>=0;i--){const p=P[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}
+  up.pop();lo.pop();return{r,ax,ay,H:lo.concat(up)}})();
+// chubby heart: two round lobes, straight full sides, short rounded tip (unit width 1)
+function heartIn(x,y){const{r,ax,ay,H}=HEART;if((x-ax)**2+(y-ay)**2<=r*r||(x+ax)**2+(y-ay)**2<=r*r)return true;if(y>ay)return false;
+  for(let i=0;i<H.length;i++){const a=H[i],b=H[(i+1)%H.length];if((b[0]-a[0])*(y-a[1])-(b[1]-a[1])*(x-a[0])<0)return false}return true}
+function heart(cx,cy,size,z,n=72){const p=[],oy=0;for(let i=0;i<n;i++){const a=Math.PI/2+i/n*2*Math.PI,dx=Math.cos(a),dy=Math.sin(a);let lo=0,hi=.8;
+  for(let k=0;k<22;k++){const m=(lo+hi)/2;if(heartIn(m*dx,oy+m*dy))lo=m;else hi=m}p.push([cx+size*lo*dx,cy+size*(oy+lo*dy),z])}return p}
+function star(cx,cy,size,z,ri=0.45){const p=[],R=size*0.5;for(let i=0;i<10;i++){const a=Math.PI/2+i*Math.PI/5,r=i%2?R*ri:R;p.push([cx+r*Math.cos(a),cy+r*Math.sin(a),z])}return p}
+function starD(cx,cy,w){return'M'+star(0,0,w,0).map(p=>(cx+p[0]).toFixed(2)+' '+(cy-p[1]).toFixed(2)).join(' L')+' Z'}
+function extrude(v,P0,P1,fill,stroke,w){const N=P0.length,q=[];for(let i=0;i<N;i++){const j=(i+1)%N,Q=[P0[i],P0[j],P1[j],P1[i]];q.push([v.cam.dp([(P0[i][0]+P0[j][0])/2,(P0[i][1]+P0[j][1])/2,P0[i][2]]),Q])}
+  q.sort((a,b)=>b[0]-a[0]);return q.map(([_,Q])=>poly(v,Q,fill,stroke,w*0.6)).join('')+poly(v,P1,fill,stroke,w)}
+function band(v,A,B,fill,stroke,w){return`<path d="M${pts(v,A).replace(/ /g,' L')} Z M${pts(v,B).replace(/ /g,' L')} Z" fill="${fill}" fill-rule="evenodd" stroke="${stroke}" stroke-width="${w}"/>`}
+function ring(cx,cy,r,z,n=40){const p=[];for(let i=0;i<n;i++){const a=i/n*2*Math.PI;p.push([cx+r*Math.cos(a),cy+r*Math.sin(a),z])}return p}
+function hull(P){P=P.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);const lo=[],up=[];
+  for(const p of P){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}
+  for(let i=P.length-1;i>=0;i--){const p=P[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}
+  up.pop();lo.pop();return lo.concat(up)}
+function cam(th,ph){const ct=Math.cos(th),st=Math.sin(th),sp=Math.sin(ph),cp=Math.cos(ph);
+  return{pr:([x,y,z])=>{const x1=x*ct-y*st,y1=x*st+y*ct;return[x1,-(y1*sp+z*cp)]},dp:([x,y,z])=>{const y1=x*st+y*ct;return y1*cp-z*sp}}}
+const VIEWS=[{id:'vw-top',cam:cam(0,Math.PI/2),taper:false},{id:'vw-iso',cam:cam(-58*Math.PI/180,38*Math.PI/180),taper:true}];
+function capCenters(){const c=[];for(let r=0;r<4;r++)for(let k=0;k<2;k++)c.push([(k?1:-1)*M.capP/2,((r-1.5)*M.capP)]);return c}
+// top-image y goes down: row 0 at top => world y positive (far). convert:
+function worldCap(i){const[x,y]=capCenters()[i];return[x,-y]}
+function fillOf(id){return C[id].dots?`url(#px-${id})`:C[id].hex}
+function strokeOf(id){const[r,g,b]=rgb(C[id].hex);if(0.299*r+0.587*g+0.114*b<90)return`rgb(${r+(255-r)*.42|0},${g+(255-g)*.42|0},${b+(255-b)*.42|0})`;return`rgb(${r*.5|0},${g*.46|0},${b*.46|0})`}
+function strokeOf2(hex){const[r,g,b]=rgb(hex);return`rgb(${r*.5|0},${g*.46|0},${b*.46|0})`}
+function pts(v,P){return P.map(p=>v.cam.pr(p)).map(q=>q[0].toFixed(2)+','+q[1].toFixed(2)).join(' ')}
+function poly(v,P,fill,stroke,w,extra=''){return`<polygon points="${pts(v,P)}" fill="${fill}" stroke="${stroke}" stroke-width="${w}" stroke-linejoin="round" ${extra}/>`}
+function hullPoly(v,A,B,fill,stroke,w,extra=''){const H=hull(A.concat(B).map(p=>v.cam.pr(p)));return`<polygon points="${H.map(q=>q[0].toFixed(2)+','+q[1].toFixed(2)).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="${w}" stroke-linejoin="round" ${extra}/>`}
+function patterns(){let d='';COLORS.forEach((c,ci)=>{if(!c.dots)return;let s='';const r=(()=>{let seed=ci*97+13;return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}})();
+  const n=c.fin==='우드'?60:45;for(let k=0;k<n;k++){s+=`<circle cx="${(r()*20).toFixed(2)}" cy="${(r()*20).toFixed(2)}" r="${(c.fin==='우드'?0.09+r()*0.1:0.12+r()*0.16).toFixed(2)}" fill="${c.dots[k%2]}"/>`}
+  d+=`<pattern id="px-${c.id}" patternUnits="userSpaceOnUse" width="20" height="20"><rect width="20" height="20" fill="${c.hex}"/>${s}</pattern>`});return`<defs>${d}</defs>`}
+function drawView(v,forExport){
+  const host=document.getElementById(v.id);const b=S.body,bf=fillOf(b),bs=strokeOf(b),LW=0.32;
+  const top=M.bh;let o='';
+  // segments of a ring that face the camera (used to draw the near rim after the buttons so it hides their bases)
+  const nearSeg=(R)=>{const N=R.length,out=[];for(let i=0;i<N;i++){const p=R[i],q=R[(i+1)%N];let nx=q[1]-p[1],ny=-(q[0]-p[0]);const mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2;if(nx*mx+ny*my<0){nx=-nx;ny=-ny}const L=Math.hypot(nx,ny)||1;
+    out.push(v.cam.dp([mx+nx/L,my+ny/L,p[2]])<v.cam.dp([mx,my,p[2]]))}return out};
+  // loop (behind body)
+  const lc=[M.bw/2-M.br+(M.br+1.3)*0.7071,M.bl/2-M.br+(M.br+1.3)*0.7071];
+  const Lz=top-0.6;const Lo=ring(lc[0],lc[1],3.1,Lz),Li=ring(lc[0],lc[1],1.5,Lz);
+  const Lo2=ring(lc[0],lc[1],3.1,Lz-2.4);
+  const loopSvg=`<g data-part="body">`+hullPoly(v,Lo,Lo2,bf,bs,LW)+`<path d="M${pts(v,Lo).replace(/ /g,' L')} Z M${pts(v,Li).replace(/ /g,' L')} Z" fill="${bf}" fill-rule="evenodd" stroke="${bs}" stroke-width="${LW}"/></g>`;
+  // the loop hangs off the top-right corner: behind the body when that corner faces away, in front when it faces the camera
+  const loopFront=v.taper&&v.cam.dp([lc[0],lc[1],Lz])<v.cam.dp([M.bw/2-M.br,M.bl/2-M.br,Lz]);
+  if(!loopFront)o+=loopSvg;
+  // body slab: outer top edge sits just under the lip crest
+  const Bt=rr(0,0,M.bw,M.bl,M.br,top-0.8),Bb=rr(0,0,M.bw,M.bl,M.br,0);
+  // side profile (from the front drawing): 45° chamfer from the bottom, short fillet, then vertical wall
+  const dIn=6.1,FR=6,zw=dIn+0.4142*FR,zch=dIn-0.2929*FR,BR=[];
+  const insAt=z=>z<=zch?dIn-z:FR-Math.sqrt(Math.max(0,FR*FR-(zw-z)*(zw-z)));
+  for(let k=0;k<=16;k++){const z=zw*(1-k/16),ins=insAt(z);BR.push(rr(0,0,M.bw-2*ins,M.bl-2*ins,Math.max(2.5,M.br-ins*0.6),z))}
+  o+=`<g data-part="body">`+hullPoly(v,Bt,[].concat(...BR),bf,bs,LW);
+  if(v.taper){const R=BR[0],vis=nearSeg(R),N=R.length;let st=vis.findIndex(x=>!x);if(st<0)st=0;let seg=[];const segs=[];
+    for(let k=1;k<=N;k++){const i=(st+k)%N;if(vis[i]||vis[(i-1+N)%N])seg.push(R[i]);else if(seg.length){segs.push(seg);seg=[]}}if(seg.length)segs.push(seg);
+    for(const s of segs)if(s.length>1)o+=`<polyline points="${pts(v,s)}" fill="none" stroke="${bs}" stroke-width="${LW*0.6}" opacity=".45"/>`}
+  // SE:DAL logo plate on the long side wall (x = +bw/2), drawn only when that wall faces the camera
+  {const xw=M.bw/2,yc=-20,zc=10.9,Lw=17,Lh=4.6;const facing=v.cam.dp([xw+1,yc,zc])<v.cam.dp([xw,yc,zc]);
+    if(facing&&v.taper){const lcol=S.logo?C[S.logo].hex:bs,P=(u,w)=>[xw+0.02,yc+u,zc+w];
+      const o0=v.cam.pr(P(0,0)),ou=v.cam.pr(P(1,0)),ow=v.cam.pr(P(0,1));const a=ou[0]-o0[0],b=ou[1]-o0[1],cc=-(ow[0]-o0[0]),d=-(ow[1]-o0[1]);
+      const rect=[P(-Lw/2,-Lh/2),P(Lw/2,-Lh/2),P(Lw/2,Lh/2),P(-Lw/2,Lh/2)];
+      o+=poly(v,rect,'none',lcol,S.logo?0.55:0.35)+`<text transform="matrix(${a.toFixed(4)} ${b.toFixed(4)} ${cc.toFixed(4)} ${d.toFixed(4)} ${o0[0].toFixed(3)} ${o0[1].toFixed(3)})" x="0" y="1.35" font-size="3.8" font-family="Montserrat,Arial,sans-serif" font-weight="700" text-anchor="middle" letter-spacing=".25" fill="${lcol}" ${S.logo?'':'opacity=".75"'}>SE:DAL</text>`}}
+  // rounded lip: crest ring slightly inset, inner edge drops into the recess
+  const Ct=rr(0,0,M.bw-1.4,M.bl-1.4,M.br-0.7,top),Oi=rr(0,0,M.bw-2*M.rim,M.bl-2*M.rim,M.br-M.rim,top-0.5);
+  const lipBand=`<path d="M${pts(v,Ct).replace(/ /g,' L')} Z M${pts(v,Oi).replace(/ /g,' L')} Z" fill="${bf}" fill-rule="evenodd" stroke="${bs}" stroke-width="${LW}"/>`;
+  o+=hullPoly(v,Bt,Ct,bf,bs,LW)+lipBand;
+  // fill inside the lip: body material follows each button outline (pocket), leaving only a thin groove around it;
+  // the material left between four pockets is the cross-shaped pillar
+  const fz=M.fill,cid=v.id+'-clip';
+  const pocket=i=>{const[x,y]=worldCap(i);return rr(x,y,M.capW+2*M.gap,M.capW+2*M.gap,M.capR+M.gap,fz)};
+  o+=`<clipPath id="${cid}"><polygon points="${pts(v,Oi)}"/></clipPath><g clip-path="url(#${cid})">`;
+  o+=hullPoly(v,Oi,rr(0,0,M.bw-2*M.rim,M.bl-2*M.rim,M.br-M.rim,fz),bf,bs,LW*0.6);
+  let pd=`M${pts(v,Oi).replace(/ /g,' L')} Z`;for(let i=0;i<8;i++)pd+=` M${pts(v,pocket(i)).replace(/ /g,' L')} Z`;
+  o+=`<path d="${pd}" fill="${bf}" fill-rule="evenodd" stroke="${bs}" stroke-width="${LW*0.7}"/>`;
+  for(let i=0;i<8;i++){const[x,y]=worldCap(i);o+=band(v,pocket(i),rr(x,y,M.capW,M.capW,M.capR,fz-0.4),bs,'none',0).replace('fill-rule','opacity=".55" fill-rule')}
+  o+=`</g></g>`;
+  // optional chocolate rim: a raised frame sitting on the lip, inner edge flush with the recess
+  let RF=null;
+  if(S.rim){const RM=rimOf(),rf=RM.hex,rs=strokeOf2(RM.hex),zb=top-0.3,zt=top+1.3,zi=top-0.5;
+    const FoB=rr(0,0,M.bw-0.9,M.bl-0.9,M.br-0.45,zb),FoT=rr(0,0,M.bw-1.3,M.bl-1.3,M.br-0.65,zt),FiT=rr(0,0,M.bw-2*M.rim+0.2,M.bl-2*M.rim+0.2,M.br-M.rim+0.1,zt),FiB=rr(0,0,M.bw-2*M.rim,M.bl-2*M.rim,M.br-M.rim,zi);
+    RF={rf,rs,FoB,FoT,FiT,FiB,side:mix(rf,-0.14),inner:mix(rf,-0.3)};
+    let f=`<g data-part="body">`;
+    if(v.taper){const vis=nearSeg(FiT),N=FiT.length;for(let i=0;i<N;i++){if(vis[i])continue;const j=(i+1)%N;f+=poly(v,[FiB[i],FiB[j],FiT[j],FiT[i]],RF.inner,RF.inner,LW*0.4)}}
+    f+=band(v,FoT,FiT,rf,rs,LW)+`</g>`;o+=f}
+  // caps sorted far->near
+  const idx=[0,1,2,3,4,5,6,7].sort((a,b2)=>v.cam.dp([...worldCap(b2),0])-v.cam.dp([...worldCap(a),0]));
+  const up=[];
+  for(const i of idx){const[x,y]=worldCap(i),id=dispBtn(i),f=fillOf(id),st=strokeOf(id),sel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn'&&S.sel===i;
+    let upper=`<g data-i="${i}" style="cursor:pointer">`;
+    if(v.taper){
+      // cap rises from the bed: full width through the recess, then a convex taper to the smaller top face
+      const z0=fz-0.4,z1=top+0.2,zt=M.capH,wt=M.capTopIso,rt=4.2,rings=[rr(x,y,M.capW,M.capW,M.capR,z0),rr(x,y,M.capW,M.capW,M.capR,z1)];
+      for(let k=1;k<=10;k++){const t=k/10;const w=M.capW-(M.capW-wt)*Math.pow(t,2.4),r=M.capR-(M.capR-rt)*t;rings.push(rr(x,y,w,w,r,z1+(zt-z1)*t))}
+      upper+=hullPoly(v,rings[0],[].concat(...rings),f,st,LW);
+      const T=rings[rings.length-1];upper+=poly(v,T,f,st,LW);
+      upper+=capTop(v,x,y,zt,wt,rt,1.4,6.2,1.1,0.6,6.8,i,f,st,LW);
+      if(sel)upper+=hullPoly(v,rings[0],[].concat(...rings),'none','#D95F7C',0.8,'stroke-dasharray="1.6 1.1"');
+    }else{
+      const Bm=rr(x,y,M.capW,M.capW,M.capR,fz),T=rr(x,y,M.capTopW,M.capTopW,M.capTopR,M.capH),Tm=rr(x,y,M.capW*0.96,M.capW*0.96,M.capR,M.capH-2.2);
+      upper+=hullPoly(v,Bm,Tm,f,st,LW)+hullPoly(v,Tm,T,f,st,LW)+poly(v,T,f,st,LW);
+      upper+=capTop(v,x,y,M.capH,M.capTopW,M.capTopR,M.ringIn,M.sq,M.sqR,M.sqH,7.8,i,f,st,LW);
+      if(sel)upper+=hullPoly(v,Bm,T,'none','#D95F7C',0.8,'stroke-dasharray="1.6 1.1"');
+    }
+    up.push(upper+`</g>`)}
+  o+=up.join('');
+  if(loopFront)o+=loopSvg;
+  // near side of the rim drawn last: the recess wall and lip hide the bases of the front buttons
+  if(v.taper){const vis=nearSeg(Oi),N=Oi.length;let lip='';
+    for(let i=0;i<N;i++){if(!vis[i])continue;const j=(i+1)%N;lip+=poly(v,[Ct[i],Ct[j],Oi[j],Oi[i]],bf,bf,LW*0.5)}
+    o+=`<g data-part="body">${lip}</g>`;
+    // re-stroke the lip edges on the near side only
+    const segs=[];let seg=[];for(let i=0;i<N;i++){if(vis[i]){seg.push(i);}else if(seg.length){segs.push(seg);seg=[]}}if(seg.length)segs.push(seg);
+    for(const s of segs){const ids=[...s,(s[s.length-1]+1)%N];o+=`<polyline points="${pts(v,ids.map(k=>Oi[k]))}" fill="none" stroke="${bs}" stroke-width="${LW}"/><polyline points="${pts(v,ids.map(k=>Ct[k]))}" fill="none" stroke="${bs}" stroke-width="${LW*0.8}"/>`}
+  }else{o+=poly(v,Oi,'none',bs,LW)}
+  if(RF&&v.taper){const{FoB,FoT,FiT,rf,rs}=RF,vis=nearSeg(FiT),N=FiT.length;let g='';
+    for(let i=0;i<N;i++){if(!vis[i])continue;const j=(i+1)%N;g+=poly(v,[FoB[i],FoB[j],FoT[j],FoT[i]],RF.side,RF.side,LW*0.4)+poly(v,[FoT[i],FoT[j],FiT[j],FiT[i]],rf,rf,LW*0.4)}
+    const segs=[];let seg=[];for(let i=0;i<N;i++){if(vis[i])seg.push(i);else if(seg.length){segs.push(seg);seg=[]}}if(seg.length)segs.push(seg);
+    for(const s of segs){const ids=[...s,(s[s.length-1]+1)%N];g+=['FoB','FoT','FiT'].map(k=>`<polyline points="${pts(v,ids.map(q=>RF[k][q]))}" fill="none" stroke="${rs}" stroke-width="${LW*0.8}"/>`).join('')}
+    o+=`<g data-part="body">${g}</g>`}
+  // viewBox
+  const all=[...Bt,...Bb,...Lo,...Lo2,...capCenters().map((_,i)=>[...worldCap(i),M.capH+M.sqH])].map(p=>v.cam.pr(p));
+  let xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),pad=2.5,x0=Math.min(...xs)-pad,y0=Math.min(...ys)-pad,w=Math.max(...xs)-x0+pad,h=Math.max(...ys)-y0+pad;
+  const swLab=!forExport&&S.step==='sw';
+  if(v.taper){const c=v.cam.pr([0,0,11]);w=114;h=84;x0=c[0]-w/2;y0=c[1]-h/2}
+  v.vb=[x0,y0,w,h];
+  host.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0.toFixed(2)} ${y0.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}" role="img" aria-label="초콜릿 클리커 미리보기">${(patterns()+o).replaceAll('id="px-','id="'+v.id+'-px-').replaceAll('url(#px-','url(#'+v.id+'-px-')}</svg>`;
+  const out=host.innerHTML;
+  if(swLab){const ref=host.querySelector('svg');requestAnimationFrame(()=>{if(!host.hidden&&host.querySelector('svg')===ref&&!ref.querySelector('.sw-lab'))swLabels(v,host,xs)})}
+  return out;
+}
+// top details of one button by shape: ring line/band, square, heart
+function capTop(v,x,y,z,w,r,ri,sq,sqR,sqH,hs,i,f,st,LW){const sh=S.shp[i];let o='';
+  if(sh==='B'){o+=poly(v,rr(x,y,w-2*ri,w-2*ri,Math.max(0.6,r-ri*0.8),z),'none',st,LW*0.8);
+    const S0=rr(x,y,sq,sq,sqR,z),S1=rr(x,y,sq,sq,sqR,z+sqH);o+=hullPoly(v,S0,S1,f,st,LW*0.9)+poly(v,S1,f,st,LW*0.9);return o}
+  if(sh==='P')return o;
+  const a=accOf(i),af=fillOf(a),as=strokeOf(a),bw=0.6;
+  o+=band(v,rr(x,y,w-2*(ri-bw),w-2*(ri-bw),Math.max(0.6,r-(ri-bw)*0.8),z),rr(x,y,w-2*(ri+bw),w-2*(ri+bw),Math.max(0.5,r-(ri+bw)*0.8),z),af,as,LW*0.7);
+  if(sh==='H'){o+=extrude(v,heart(x,y,hs,z),heart(x,y,hs,z+sqH),af,as,LW*0.9)}
+  if(sh==='S'){const ss=hs*1.12,cy2=y+hs*0.03;o+=extrude(v,star(x,cy2,ss,z),star(x,cy2,ss,z+sqH),af,as,LW*0.9)}
+  return o}
+// switch-name labels in the stage margins (drawn outside the viewBox; svg overflow is visible, so the model keeps its size)
+function swLabels(v,host,xs){const svg=host.querySelector('svg'),stage=host.closest('.stage');if(!svg||!stage)return;
+  const m=svg.getScreenCTM();if(!m||!m.a)return;const sr=stage.getBoundingClientRect(),pxu=m.a;
+  const toU=(px,py)=>[(px-m.e)/m.a,(py-m.f)/m.d];const[vx0,vy0]=toU(sr.left,sr.top),[vx1,vy1]=toU(sr.right,sr.bottom);
+  const fs=12/pxu,gap=fs*1.6,mx0=Math.min(...xs),mx1=Math.max(...xs),cx=(mx0+mx1)/2,L=[],R=[];
+  for(let i=0;i<8;i++){const p=v.cam.pr([...worldCap(i),M.capH]);(p[0]<cx?L:R).push({i,p,y:p[1]})}
+  const lay=arr=>{arr.sort((a,b)=>a.y-b.y);for(let k=1;k<arr.length;k++)if(arr[k].y<arr[k-1].y+gap)arr[k].y=arr[k-1].y+gap;
+    const lim=vy1-fs*1.2;if(arr.length&&arr[arr.length-1].y>lim){const d=arr[arr.length-1].y-lim;arr.forEach(a=>a.y-=d)}};
+  lay(L);lay(R);
+  const tw=s=>[...s].reduce((t,ch)=>t+(/[ㄱ-힝]/.test(ch)?fs*1.0:fs*0.62),0);
+  let g='<g class="sw-lab" pointer-events="none" style="font-family:inherit">';
+  const one=(it,left)=>{const id=S.sw[it.i],x=SWM[id],sel=S.sel===it.i,nm=(it.i+1)+' '+x.name,W=tw(nm)+fs*1.1;
+    let edge=left?Math.max(mx0-fs*0.8,vx0+fs*0.6+W):Math.min(mx1+fs*0.8,vx1-fs*0.6-W);
+    const col=sel?'#D95F7C':'#8E7A70',dotX=left?edge-fs*0.35:edge+fs*0.35,txtX=left?edge-fs*0.95:edge+fs*0.95;
+    g+=`<line x1="${(left?edge+fs*0.2:edge-fs*0.2).toFixed(2)}" y1="${it.y.toFixed(2)}" x2="${it.p[0].toFixed(2)}" y2="${it.p[1].toFixed(2)}" stroke="${col}" stroke-width="${(sel?1.4:0.9)/pxu}" stroke-dasharray="${sel?'':(3/pxu)+' '+(2.5/pxu)}"/>`;
+    g+=`<circle cx="${it.p[0].toFixed(2)}" cy="${it.p[1].toFixed(2)}" r="${(2.2/pxu).toFixed(2)}" fill="${col}"/>`;
+    g+=`<circle cx="${dotX.toFixed(2)}" cy="${it.y.toFixed(2)}" r="${(fs*0.36).toFixed(2)}" fill="${x.hex}" stroke="#6E5A52" stroke-width="${0.6/pxu}"/>`;
+    g+=`<text x="${txtX.toFixed(2)}" y="${(it.y+fs*0.36).toFixed(2)}" font-size="${fs.toFixed(2)}" font-weight="${sel?700:500}" fill="${sel?'#D95F7C':'#3A2E2A'}" text-anchor="${left?'end':'start'}" paint-order="stroke" stroke="#FBF8F5" stroke-width="${3/pxu}" stroke-linejoin="round">${nm}</text>`};
+  L.forEach(it=>one(it,true));R.forEach(it=>one(it,false));svg.insertAdjacentHTML('beforeend',g+'</g>')}
+function draw(forExport){VIEWS.forEach(v=>drawView(v,forExport))}
+const SND={};
+// ───────────────────────── UI ─────────────────────────
+const $=s=>document.querySelector(s);
+const VIEW=!!window.SEDAL_VIEW;if(VIEW){document.documentElement.classList.add('view-mode');S=structuredClone(EXAMPLE);S.step='code';save=function(){}}
+let vwLoaded=false,vwInput='',vwImg='';
+function heartN(){return S.shp.filter(k=>k==='H').length}
+function starN(){return S.shp.filter(k=>k==='S').length}
+function optN(){return heartN()+starN()+(S.rim?1:0)}
+function heartMsg(){const n=heartN(),p=[];if(n)p.push(`<b>하트버튼 옵션 ${n}개</b>`);if(starN())p.push(`<b>별버튼 옵션 ${starN()}개</b>`);if(S.rim)p.push(`<b>${rimOf().name} 림 옵션 1개</b>`);return `네이버 스마트스토어 주문 시 ${p.join(', ')}를 추가해 주셔야 합니다.`}
+const STEPS=[{k:'body',name:'몸통 색상'},{k:'shape',name:'버튼 모양'},{k:'btn',name:'버튼 색상'},{k:'sw',name:'스위치 축'},{k:'code',name:'주문 코드'}];
+const PRICE={base:18900,T:500,RIM:2000};
+function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
+function total(){return PRICE.base+PRICE.T*twoCount()+(S.rim?PRICE.RIM:0)}
+function breakdown(){const h=heartN(),s=starN();return `기본 ${won(PRICE.base)}원${h?` + 하트(투톤) 버튼 ${h}개 × ${won(PRICE.T)}원`:''}${s?` + 별(투톤) 버튼 ${s}개 × ${won(PRICE.T)}원`:''}${S.rim?` + ${rimOf().name} 림 ${won(PRICE.RIM)}원`:''}`}
+function won(n){return n.toLocaleString('ko-KR')}
+function optPrice(k){return SH[k].acc?PRICE.T:0}
+function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1')}
+function heartD(cx,cy,w){return'M'+heart(0,0,w,0,48).map(p=>(cx+p[0]).toFixed(2)+' '+(cy-p[1]).toFixed(2)).join(' L')+' Z'}
+const BEST=[['sy',24],['ww',14],['cc',14]]; // 최근 주문 80개(9/24~9/27) 색상 비중
+const ORDER=['iv','ml','st','lv','cc','sy','sd','ch','ww','wd','be','sk'];
+if(!STEPS.some(s=>s.k===S.step))S.step='body';if(!['iso','top'].includes(S.view))S.view='iso';if(typeof S.sel!=='number'||S.sel<0||S.sel>7)S.sel=0;
+function stepIdx(){return STEPS.findIndex(s=>s.k===S.step)}
+function syncPart(){S.part=S.step==='body'?'body':'btn'}
+
+// camera (drag to rotate)
+const CAM0={th:-58*Math.PI/180,ph:38*Math.PI/180};let camS={...CAM0};
+function setCam(){VIEWS[1].cam=cam(camS.th,camS.ph)}
+const stage=$('#stage');let drag=null,hinted=false;
+stage.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,th:camS.th,ph:camS.ph,moved:false,target:e.target};try{stage.setPointerCapture(e.pointerId)}catch(_){}});
+stage.addEventListener('pointermove',e=>{if(!drag||S.view!=='iso')return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.moved&&Math.abs(dx)+Math.abs(dy)<5)return;drag.moved=true;stage.classList.add('grabbing');stage.classList.remove('hint');
+  camS.th=drag.th+dx*0.008;camS.ph=Math.min(72*Math.PI/180,Math.max(16*Math.PI/180,drag.ph-dy*0.006));setCam();drawView(VIEWS[1],false)});
+function endDrag(e){if(!drag)return;const d=drag;drag=null;stage.classList.remove('grabbing');if(d.moved||VIEW)return;
+  const g=d.target.closest&&d.target.closest('[data-i]');if(g){S.sel=+g.dataset.i;if(S.step==='body'||S.step==='code')S.step='btn';syncPart();lastPick=null;render();return}
+  if(d.target.closest&&d.target.closest('[data-part="body"]')){S.step='body';syncPart();lastPick=null;render()}}
+stage.addEventListener('pointerup',endDrag);stage.addEventListener('pointercancel',()=>{drag=null;stage.classList.remove('grabbing')});
+$('#cam-reset').onclick=()=>{camS={...CAM0};setCam();drawView(VIEWS[1],false)};
+$('#view-seg').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(!b)return;S.view=b.dataset.view;applyView();save()});
+function applyView(){const iso=S.view==='iso';$('#vw-iso').hidden=!iso;$('#vw-top').hidden=iso;$('.floor').hidden=!iso;$('#cam-reset').hidden=!iso;document.querySelectorAll('#view-seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===S.view))}
+
+// helpers
+function swatchBg(c){
+  if(c.dots){const d=c.dots,pts=[[22,30],[64,22],[40,58],[74,66],[30,78],[58,44],[82,40],[16,56],[48,84],[70,82]];
+    return 'background:'+pts.map((p,k)=>`radial-gradient(circle at ${p[0]}% ${p[1]}%, ${d[k%2]} 0 1.3px, transparent 2px)`).join(',')+`,${c.hex}`}
+  return `background:${c.hex}`}
+function lum(hex){const[r,g,b]=rgb(hex);return 0.299*r+0.587*g+0.114*b}
+function hasAcc(i=S.sel){return !!SH[S.shp[i]].acc}
+function anyAcc(){return S.shp.some(k=>SH[k].acc)}
+function accOn(){return false}
+let EXPORTING=false;
+// in the shape step the preview shows every button in white so only the shapes read
+function dispBtn(i){return (S.step==='shape'&&!EXPORTING)?'iv':S.btn[i]}
+function accOf(i){const b=dispBtn(i);return S.tone[i]==='2'?PAIR[b]:b}
+function curColor(){return S.step==='body'?S.body:S.btn[S.sel]}
+function finOf(id){return C[id].fin}
+function shapeIcon(k){const b='#E8DED6',l='#6E5A52',a='#8C5A48';let s=`<rect x="4" y="4" width="32" height="32" rx="9" fill="${b}" stroke="${l}" stroke-width="1.3"/>`;
+  if(k==='B')s+=`<rect x="8.5" y="8.5" width="23" height="23" rx="6" fill="none" stroke="${l}" stroke-width="1.1"/><rect x="14" y="14" width="12" height="12" rx="2" fill="${b}" stroke="${l}" stroke-width="1.1"/>`;
+  if(k==='H')s+=`<rect x="8.5" y="8.5" width="23" height="23" rx="6" fill="none" stroke="${a}" stroke-width="2.4"/><path d="${heartD(20,21.3,15)}" fill="${a}"/>`;
+  if(k==='S')s+=`<rect x="8.5" y="8.5" width="23" height="23" rx="6" fill="none" stroke="${a}" stroke-width="2.4"/><path d="${starD(20,20.6,16)}" fill="${a}" stroke-linejoin="round"/>`;
+  return`<svg class="ico" viewBox="0 0 40 40" aria-hidden="true">${s}</svg>`}
+function miniDeco(i){const k=S.shp[i],a=C[accOf(i)].hex,l='rgba(0,0,0,.35)';let g='';
+  if(k==='B')g=`<rect x="7" y="6" width="38" height="30" rx="7" fill="none" stroke="${l}" stroke-width="1.3"/><rect x="18" y="13" width="16" height="16" rx="2.5" fill="none" stroke="${l}" stroke-width="1.3"/>`;
+  if(k==='H')g=`<rect x="7" y="6" width="38" height="30" rx="7" fill="none" stroke="${a}" stroke-width="3.2"/><rect x="5.4" y="4.4" width="41.2" height="33.2" rx="8.5" fill="none" stroke="${l}" stroke-width=".7"/><rect x="8.6" y="7.6" width="34.8" height="26.8" rx="5.5" fill="none" stroke="${l}" stroke-width=".7"/><path d="${heartD(26,23.2,16)}" fill="${a}" stroke="${l}" stroke-width=".7"/>`;
+  if(k==='S')g=`<rect x="7" y="6" width="38" height="30" rx="7" fill="none" stroke="${a}" stroke-width="3.2"/><rect x="5.4" y="4.4" width="41.2" height="33.2" rx="8.5" fill="none" stroke="${l}" stroke-width=".7"/><rect x="8.6" y="7.6" width="34.8" height="26.8" rx="5.5" fill="none" stroke="${l}" stroke-width=".7"/><path d="${starD(26,21.6,18)}" fill="${a}" stroke="${l}" stroke-width=".7" stroke-linejoin="round"/>`;
+  return`<svg class="deco" viewBox="0 0 52 42" aria-hidden="true">${g}</svg>`}
+function miniGrid(){return`<div class="mini" aria-label="버튼 선택">${S.btn.map((_,i)=>{const id=dispBtn(i);return`<button type="button" aria-pressed="${S.sel===i}" data-sel="${i}" style="${swatchBg(C[id])}" aria-label="${i+1}번 버튼 ${SH[S.shp[i]].name} ${C[id].name}">${miniDeco(i)}<span class="n">${i+1}</span></button>`}).join('')}</div>`}
+function swatchGrid(scope){const cur=curColor();const L=ORDER.filter(id=>C[id]&&(!C[id].only||C[id].only===scope));
+  return`<div class="swatches">${L.map(id=>{const c=C[id];return`<button type="button" class="sw" aria-pressed="${cur===id}" data-color="${id}" title="${c.name}"><i style="${swatchBg(c)}"></i>${c.name}</button>`}).join('')}</div>`}
+function heartNote(){const b=S.step==='shape'?null:S.btn[S.sel],dot=c=>`<i style="${swatchBg(C[c])}"></i>`;
+  return`<p class="help heart-note">${b?`<span class="dots">${dot(b)}${dot(PAIR[b])}</span> `:''}하트형·별형은 <b>투톤</b>으로만 제작됩니다. 테두리·하트·별은 버튼 색에 맞춘 추천 색${b?' ('+C[PAIR[b]].name+')':''}으로 들어가며 버튼당 <b>+${won(PRICE.T)}원</b>이 추가됩니다.</p>`}
+function toneCards(){const generic=S.step==='shape';const b=generic?'iv':S.btn[S.sel],p=generic?'ch':PAIR[b];const dot=c=>`<i style="${swatchBg(C[c])}"></i>`;
+  return`<div class="sec"><div class="sec-head"><h3>테두리·하트 색</h3><span class="sel">${S.tone[S.sel]==='1'?'원톤':'투톤'+(generic?'':' · '+C[p].name)}</span></div>
+  <div class="tones"><button type="button" class="tone" data-tone="1" aria-pressed="${S.tone[S.sel]==='1'}"><span class="dots">${dot(b)}${dot(b)}</span><span><b>원톤 <small class="tp">추가금 없음</small></b><span>${generic?'버튼과 같은 색':'버튼과 같은 색 ('+C[b].name+')'}</span></span></button>
+  <button type="button" class="tone" data-tone="2" aria-pressed="${S.tone[S.sel]==='2'}"><span class="dots">${dot(b)}${dot(p)}</span><span><b>투톤 <small class="tp">+${won(PRICE.T)}원 / 버튼</small></b><span>${generic?'버튼 색에 맞춘 추천 색':'추천 조합 · '+C[p].name}</span></span></button></div></div>`}
+function groupBtn(arr=S.btn){const m={};arr.forEach(id=>m[id]=(m[id]||0)+1);return Object.entries(m).map(([id,n])=>`${C[id].name} ${n}`).join(' · ')}
+function shpCode(i){return S.shp[i]==='H'?'T':S.shp[i]}
+function squeeze(s){return /^(.)\1{7}$/.test(s)?s[0]:s}
+function code(){const ci=id=>COLORS.findIndex(c=>c.id===id).toString(36).toUpperCase(),si=id=>SW.findIndex(x=>x.id===id).toString(36).toUpperCase();
+  const sh=squeeze(S.btn.map((_,i)=>shpCode(i)).join('')),sw=squeeze(S.sw.map(si).join(''));
+  const swDef=sw===si(SW_DEF);
+  return `SD-${ci(S.body)}${S.rim?'R'+(S.rim==='pk'?'P':''):''}${S.logo?'L'+ci(S.logo):''}-${squeeze(S.btn.map(ci).join(''))}${(sh==='B'&&swDef)?'':'-'+sh}${swDef?'':'-'+sw}`}
+function chip(id,label,n){return`<span class="cdot">${n?`<em>${n}</em>`:''}<i style="${swatchBg(C[id])}"></i>${label}</span>`}
+function chipSw(id,label){return`<span class="cdot"><i style="background:${SWM[id].hex}"></i>${label}</span>`}
+function swIcon(x){const dk=lum(x.hex)<110,st=dk?'#111':'#6E5A52';return`<svg class="ico" viewBox="0 0 44 44" aria-hidden="true"><rect x="5" y="25" width="34" height="14" rx="3" fill="${x.house||x.hex}" fill-opacity="${x.house?1:.28}" stroke="#6E5A52" stroke-width="1.2"/><rect x="10" y="16" width="24" height="10" rx="2" fill="${x.house?mix(x.house,.35):'#FBF8F5'}" stroke="#6E5A52" stroke-width="1.2"/><path d="M14 16 v-7 h16 v7 Z" fill="${x.hex}" stroke="${st}" stroke-width="1"/><path d="M19.5 9 v-4.5 h5 v4.5" fill="${x.hex}" stroke="${st}" stroke-width="1"/><line x1="16" y1="12.5" x2="28" y2="12.5" stroke="${dk?'#fff':'#6E5A52'}" stroke-opacity=".45" stroke-width="1"/></svg>`}
+function summaryRows(){const sm={};S.shp.forEach(k=>sm[k]=(sm[k]||0)+1);const ac=S.btn.map((_,i)=>i).filter(i=>hasAcc(i));
+  const colorChips=arr=>{const m={};arr.forEach(id=>m[id]=(m[id]||0)+1);return Object.entries(m).map(([id,n])=>chip(id,`${C[id].name} ${n}`)).join('')};
+  let h=`<div class="row"><dt>몸통</dt><dd>${chip(S.body,C[S.body].name)}${S.rim?`<span class="cdot"><i style="background:${rimOf().hex}"></i>${rimOf().name} 림</span>`:''}</dd></div><div class="row"><dt>로고</dt><dd>${S.logo?chip(S.logo,C[S.logo].name):'몸통과 같은 색'}</dd></div>
+  <div class="row"><dt>버튼 모양</dt><dd>${SHAPES.filter(x=>sm[x.k]).map(x=>`${x.name} ${sm[x.k]}`).join(' · ')}</dd></div>
+  <div class="row"><dt>버튼 색상</dt><dd>${colorChips(S.btn)}</dd></div>`;
+  if(ac.length)h+=`<div class="row"><dt>테두리·하트·별</dt><dd>${['1','2'].map(t=>[t,ac.filter(i=>S.tone[i]===t).length]).filter(x=>x[1]).map(([t,n])=>(t==='1'?'원톤 ':'투톤 ')+n).join(' · ')}</dd></div>`;
+  const swm={};S.sw.forEach(k=>swm[k]=(swm[k]||0)+1);
+  h+=`<div class="row"><dt>스위치 축</dt><dd>${SW.filter(x=>swm[x.id]).map(x=>chipSw(x.id,`${swName(x.id)} (${x.type}) ${swm[x.id]}`)).join('')}</dd></div>`;
+  h+=`<div class="row"><dt>버튼별</dt><dd>${S.btn.map((id,i)=>chip(id,`${SH[S.shp[i]].name}${hasAcc(i)?(S.tone[i]==='2'?' · 투톤':' · 원톤'):''} · ${swName(S.sw[i])}`,i+1)).join('')}</dd></div>`;
+  const n=twoCount();h+=`<div class="row"><dt>금액</dt><dd>${breakdown()} = <b>${won(total())}원</b></dd></div>`;
+  return h}
+function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 커스텀]\n조합 코드: ${code()} (커스텀 페이지 상단 [코드 확인]에서 확인 가능)\n금액: ${won(total())}원 (${breakdown()})${heartN()?`\n하트버튼 옵션: ${heartN()}개 (스마트스토어 옵션 추가 필요)`:''}${starN()?`\n별버튼 옵션: ${starN()}개 (스마트스토어 옵션 추가 필요)`:''}${S.rim?`\n${rimOf().name} 림 옵션: 1개 (스마트스토어 옵션 추가 필요)`:''}\n몸통: ${C[S.body].name}${S.rim?' + '+rimOf().name+' 림':''}\n로고: ${S.logo?C[S.logo].name:'몸통과 같은 색'}\n버튼(모양 · 색 · 테두리·하트 · 축):\n${S.btn.map((id,i)=>`${i+1}번 ${SH[S.shp[i]].name} · ${C[id].name}${hasAcc(i)?(S.tone[i]==='2'?` (투톤: ${C[accOf(i)].name})`:' (원톤)'):''} · ${swName(S.sw[i])} (${SWM[S.sw[i]].type})`).join('\n')}`}
+
+// panel
+function renderSubsteps(){const i=stepIdx();$('#substeps').innerHTML=STEPS.map((s,k)=>`<li><button type="button" data-step="${s.k}" class="${k<i?'done':''}" ${k===i?'aria-current="step"':''}>${s.name}</button></li>`).join('')}
+function renderViewPanel(){const n=twoCount();
+  let h=`<h2 class="ptitle">내가 선택한 커스텀 확인</h2><p class="lead">주문할 때 받은 코드를 넣으면 제작될 모습과 금액이 나타납니다. 미리보기는 드래그해서 돌려 볼 수 있습니다.</p>
+  <div class="load"><input id="vw-code" placeholder="SD-3-6-T" aria-label="주문 코드" maxlength="40" autocomplete="off" value="${vwInput.replace(/"/g,'')}"><button type="button" class="btn primary" id="vw-go">확인</button></div><p class="status" id="status" role="status"></p>`;
+  if(vwLoaded){h+=`<div class="v-ok">✓ 확인된 코드 <b>${code()}</b></div><div class="v-img vw-mobile"><img id="vw-img" alt="이 코드로 제작될 클리커 미리보기"${vwImg?` src="${vwImg}"`:''}></div>
+  <dl class="summary">${summaryRows().replace(/<div class="row"><dt>금액<\/dt>[\s\S]*$/,'')}</dl>
+  <div class="v-price"><span>결제 금액</span><b>${won(total())}원</b><em>${breakdown()}</em></div>${optN()?`<p class="heart-alert">${heartMsg()}</p>`:''}
+  <details class="v-sheet"><summary>제작 시트 (버튼별 상세)</summary><table><thead><tr><th>#</th><th>모양</th><th>버튼 색</th><th>테두리·하트</th><th>축</th></tr></thead><tbody>${makerRows()}</tbody></table></details>
+  <div class="load"><button type="button" class="btn" id="img">이미지로 저장</button></div>`}
+  else h+=`<p class="help">예: SD-3-6-T-5 · 코드는 커스텀 페이지의 마지막 단계(주문 코드)에서 확인할 수 있습니다.</p>`;
+  $('#panel-body').innerHTML=h}
+function viewLoad(useInput=true){const el=$('#vw-code');if(useInput&&el)vwInput=el.value.trim();const r=parseCode(vwInput);if(r.err){status(r.err);return}Object.assign(S,structuredClone(r.st));S.step='code';vwLoaded=true;vwInput=code();vwImg='';render();snapImage(code(),url=>{vwImg=url;const im=$('#vw-img');if(im)im.src=url});draw(false);status('코드대로 불러왔습니다')}
+function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepIdx();
+  if(S.step==='body'){
+    const top=BEST[0];
+    h+=`<h2 class="ptitle">몸통 색상</h2>
+    <div class="best"><p class="tagline"><span class="tag">Best</span>다른 구매자들이 가장 많이 선택한 색상입니다</p>
+      <div class="best-box"><p>초콜릿 클리커 구매자 중 <b>${top[1]}%</b>가 <b class="hl">${C[top[0]].name}</b> 색상을 선택하셨습니다.</p>
+      <div class="best-row">${BEST.map(([id,p],k)=>{const c=C[id],sz=k===0?88:70,dark=lum(c.hex)<120;return`<button type="button" class="best-item" data-color="${id}" data-scope="body"><i style="width:${sz}px;height:${sz}px;${swatchBg(c)};color:${dark?'#fff':'#1B1512'}"><b>${p}<small>%</small></b></i>${c.name}</button>`}).join('')}</div>
+      <small>최근 주문 80개 기준 (2026.9.24 ~ 9.27)</small></div></div>
+    <div class="sec"><div class="sec-head"><h3>몸통 색상</h3><span class="sel">${C[S.body].name}</span></div>${swatchGrid('body')}</div>
+    <div class="sec"><div class="sec-head"><h3>튜닝 옵션 · 테두리 림</h3><span class="sel">${S.rim?rimOf().name+' 림':'림 없음'}</span></div>
+    <div class="tones rim-cards"><button type="button" class="tone" data-rim="0" aria-pressed="${!S.rim}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i></span><span><b>기본 <small class="tp">추가금 없음</small></b><span>몸통과 같은 색 테두리</span></span></button>
+    ${Object.entries(RIMS).map(([k,r])=>`<button type="button" class="tone" data-rim="${k}" aria-pressed="${S.rim===k}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i><i style="background:${r.hex}"></i></span><span><b>${r.name} 림 <small class="tp">+${won(PRICE.RIM)}원</small></b><span>테두리 위에 ${r.name}색 림을 덧댐</span></span></button>`).join('')}</div></div>
+    <div class="sec"><div class="sec-head"><h3>로고(SE:DAL) 색상</h3><span class="sel">${S.logo?C[S.logo].name:'몸통과 같은 색'}</span></div>
+    <p class="help">몸통 옆면의 SE:DAL 로고 색입니다. 추가금 없음.</p>
+    <div class="logo-row"><button type="button" class="logo-sw" data-logo="0" aria-pressed="${!S.logo}" title="몸통과 같은 색"><i style="${swatchBg(C[S.body])}"></i><span>몸통색</span></button>${COLORS.filter(c=>!c.only).map(c=>`<button type="button" class="logo-sw" data-logo="${c.id}" aria-pressed="${S.logo===c.id}" title="${c.name}"><i style="${swatchBg(c)}"></i><span>${c.name}</span></button>`).join('')}</div></div>`;
+  }else if(S.step==='shape'){
+    const k=S.shp[S.sel];
+    h+=`<h2 class="ptitle">버튼 모양</h2><p class="lead">버튼마다 다른 모양을 고를 수 있습니다. 번호를 누르거나 미리보기의 버튼을 눌러 선택하세요.</p>
+    <div class="mini-wrap">${miniGrid()}<div class="mini-side"><p><b>${S.sel+1}번 버튼</b>을 고르는 중입니다.<br>${SH[k].name}</p><p>색상은 다음 단계에서 고릅니다.</p><button type="button" class="link" id="shape-all">이 모양을 8개 모두에 적용</button></div></div>
+    <div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 모양</h3><span class="sel">${SH[k].name}</span></div>
+      <div class="cards shape-cards">${SHAPES.map(x=>`<button type="button" class="card" data-shape="${x.k}" aria-pressed="${k===x.k}">${shapeIcon(x.k)}<b>${x.name}</b><span>${x.desc}</span><em>${optPrice(x.k)?'+'+won(optPrice(x.k))+'원 / 버튼':'추가금 없음'}</em></button>`).join('')}</div></div>`;
+    if(SH[k].acc)h+=heartNote();
+  }else if(S.step==='btn'){
+    const id=S.btn[S.sel];
+    h+=`<h2 class="ptitle">버튼 색상</h2><p class="lead">색을 고르면 다음 번호로 넘어갑니다. 번호를 누르거나 미리보기의 버튼을 눌러 바꿀 수 있습니다.</p>
+    <div class="mini-wrap">${miniGrid()}<div class="mini-side"><p><b>${S.sel+1}번 버튼</b>을 고르는 중입니다.<br>${SH[S.shp[S.sel]].name} · ${C[id].name}</p><button type="button" class="link" id="apply-all">이 색을 8개 모두에 적용</button></div></div>
+    <div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 색상</h3><span class="sel">${C[id].name}</span></div>${swatchGrid('btn')}</div>`;
+    if(hasAcc())h+=heartNote();
+  }else if(S.step==='sw'){
+    const cur=S.sw[S.sel],cx=SWM[cur];
+    h+=`<h2 class="ptitle">스위치 축</h2><p class="lead">버튼마다 다른 축을 넣을 수 있습니다. 번호를 누르거나 미리보기의 버튼을 눌러 선택하세요.</p>
+    <div class="mini-wrap">${miniGrid()}<div class="mini-side"><p><b>${S.sel+1}번 버튼</b>을 고르는 중입니다.<br>${swName(cur)} (${cx.type}${cx.tag?' · '+cx.tag:''})</p><button type="button" class="link" id="sw-all">이 축을 8개 모두에 적용</button></div></div>
+    <div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 스위치 축</h3><span class="sel">${swName(cur)}</span></div>
+      ${['클리키','택타일','리니어'].map(ty=>`<div class="sw-group"><h4>${ty}</h4><div class="cards sw-cards">${SW.filter(x=>x.type===ty).map(x=>`<div class="sw-item"><button type="button" class="card sw" data-sw="${x.id}" aria-pressed="${cur===x.id}">${swIcon(x)}<b>${x.name}</b><span>(${x.type}${x.tag?' · '+x.tag:''})</span></button>${SND[x.id]?`<button type="button" class="play${playing===x.id?' on':''}" data-play="${x.id}" aria-label="${x.name} 소리 듣기" title="소리 듣기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor"/><path d="M11 5.5c1 .7 1.5 1.5 1.5 2.5s-.5 1.8-1.5 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>`:''}</div>`).join('')}</div></div>`).join('')}
+      ${Object.keys(SND).length?'<p class="help">축 카드의 스피커 버튼을 누르면 실제 녹음한 타건 소리를 들을 수 있습니다.</p>':''}<p class="help">축 색은 제조사 스템 색을 참고한 근사치입니다. 클리키는 딸깍 소리, 택타일은 걸림 있는 타건감, 리니어는 걸림 없는 부드러운 타건감입니다.</p></div>`;
+  }else{
+    h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문 요청사항에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
+    <dl class="summary">${summaryRows()}</dl>
+    <div class="codebox"><span class="code" id="code">${code()}</span><button type="button" class="btn primary" id="copy">요청사항 복사</button></div>
+    <p class="status" id="status" role="status"></p>
+    <p class="help">코드 읽는 법: <b>SD-몸통-버튼 색(8개)-버튼 모양(8개)-스위치 축(8개)</b>. 몸통 번호 뒤 R은 초코 림, RP는 핫핑크 림, L+번호는 로고 색상입니다. 8개가 모두 같으면 한 글자로 줄고, 모양이 전부 기본형이고 축이 전부 Y2면 뒤 칸은 생략됩니다. 모양 글자는 B 기본 · P 무지 · T 하트(투톤) · S 별(투톤), 축 번호는 ${SW.map((x,i)=>i.toString(36).toUpperCase()+' '+x.name).join(' · ')}입니다.</p>
+    <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="SD-3-6-T" aria-label="주문 코드 입력" maxlength="40" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
+    <div class="sec"><div class="sec-head"><h3>더 보기</h3></div><div class="load"><button type="button" class="btn" id="img">이미지로 저장</button><button type="button" class="btn" id="random">랜덤 조합</button><button type="button" class="btn ghost" id="example">초기 상태로</button></div></div>`;
+  }
+  $('#panel-body').innerHTML=h;
+  $('#prev').disabled=i===0;const nx=$('#next');nx.textContent=i===STEPS.length-1?'요청사항 복사':'다음';
+}
+function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():'기본가 · 옵션 추가금 없음'}
+function renderChip(){const id=S.step==='shape'?'iv':curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
+  pill.querySelector('span').textContent=S.step==='body'?`몸통 · ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
+function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code()}
+function render(){normTone();syncPart();draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
+
+// toast
+let toastT=null;function status(t){let el=$('#status');if(el)el.textContent=t;let ts=$('#toast');if(!ts){ts=document.createElement('div');ts.id='toast';ts.setAttribute('role','status');ts.style.cssText='position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:50;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(ts)}
+  ts.textContent=t;ts.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>ts.style.opacity='0',2200)}
+
+async function copyOrder(){try{await navigator.clipboard.writeText(orderText());status('복사했습니다. 주문 요청사항에 붙여 넣으세요')}catch(e){const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요')}}
+function go(k){S.step=k;syncPart();lastPick=null;render();window.scrollTo({top:0,behavior:'smooth'})}
+
+let lastPick=null;
+// switch sound preview (recordings in SND, id -> audio data URL)
+let playing=null,audio=null;
+function playSw(id){if(audio){audio.pause();audio=null}if(playing===id){playing=null;markPlay();return}
+  audio=new Audio(SND[id]);playing=id;markPlay();audio.onended=()=>{playing=null;markPlay()};audio.play().catch(()=>{playing=null;markPlay();status('소리를 재생하지 못했습니다')})}
+function markPlay(){document.querySelectorAll('[data-play]').forEach(b=>b.classList.toggle('on',b.dataset.play===playing))}
+function openNotice(){const n=optN(),el=$('#notice-heart');if(el){el.hidden=!n;el.innerHTML=n?heartMsg():''}$('#notice').hidden=false;$('#notice-ok').focus()}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.step){go(t.dataset.step);return}
+  if(t.id==='prev'){const i=stepIdx();if(i>0)go(STEPS[i-1].k);return}
+  if(t.id==='next'){const i=stepIdx();if(i<STEPS.length-1)go(STEPS[i+1].k);else openNotice();return}
+  if(t.id==='apply-all'){const c=lastPick||S.btn[S.sel];S.btn=S.btn.map(()=>c);render();status('8개 버튼에 같은 색을 적용했습니다');return}
+  if(t.id==='shape-all'){const k=S.shp[S.sel],tn=S.tone[S.sel];S.shp=S.shp.map(()=>k);S.tone=S.tone.map(()=>tn);render();status('8개 버튼을 '+SH[k].name+'으로 바꿨습니다');return}
+  if(t.dataset.shape){S.shp[S.sel]=t.dataset.shape;render();return}
+  if(t.id==='sw-all'){const k=S.sw[S.sel];S.sw=S.sw.map(()=>k);render();status('8개 버튼에 '+swName(k)+'을 적용했습니다');return}
+  if(t.dataset.sw){S.sw[S.sel]=t.dataset.sw;if(t.classList.contains('sw')&&S.sel<7)S.sel++;render();return}
+  if(t.dataset.rim){S.rim=t.dataset.rim==='0'?false:t.dataset.rim;render();status(S.rim?rimOf().name+' 림을 선택했습니다':'림을 뺐습니다');return}
+  if(t.dataset.logo){S.logo=t.dataset.logo==='0'?null:t.dataset.logo;render();status('로고 색상: '+(S.logo?C[S.logo].name:'몸통과 같은 색'));return}
+  if(t.dataset.tone){S.tone[S.sel]=t.dataset.tone;render();return}
+  if(t.dataset.sel){S.sel=+t.dataset.sel;lastPick=null;render();return}
+  if(t.dataset.color){const id=t.dataset.color;lastPick=id;const scope=t.dataset.scope||(S.step==='body'?'body':'btn');
+    if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;if(S.sel<7)S.sel++}render();return}
+  if(t.id==='copy'||t.id==='drawer-copy'){openNotice();return}
+  if(t.id==='notice-ok'){$('#notice').hidden=true;copyOrder();return}
+  if(t.id==='notice-cancel'){$('#notice').hidden=true;return}
+  if(t.dataset.play){playSw(t.dataset.play);return}
+  if(t.id==='random'){const pick=(bodyOnly)=>{const L=COLORS.filter(c=>!bodyOnly||!c.only);return L[Math.floor(Math.random()*L.length)].id};const a=pick(),b2=pick();S.body=pick(true);S.btn=S.btn.map((_,i)=>Math.random()<.2?pick():((i+Math.floor(i/2))%2?a:b2));render();status('랜덤 조합을 만들었습니다');return}
+  if(t.id==='example'){const st=S.step,vw=S.view;S=structuredClone(EXAMPLE);S.step=st;S.view=vw;render();status('초기 상태(화이트)로 돌아왔습니다');return}
+  if(t.id==='reset'){const vw=S.view;S=structuredClone(EXAMPLE);S.step='body';S.view=vw;camS={...CAM0};setCam();render();status('처음부터 다시 시작합니다');return}
+  if(t.id==='sum-toggle'){const d=$('#drawer');d.hidden=!d.hidden;t.setAttribute('aria-expanded',String(!d.hidden));if(!d.hidden)renderDrawer();return}
+  if(t.id==='drawer-close'){$('#drawer').hidden=true;$('#sum-toggle').setAttribute('aria-expanded','false');return}
+  if(t.id==='load'){loadCode();return}
+  if(t.id==='my-check'){openVerify($('#code-in').value.trim()||code());return}
+  if(t.id==='vw-go'){viewLoad();return}
+  if(t.id==='img'){exportImage();return}
+  if(t.id==='verify-open'){openVerify();return}
+  if(t.id==='v-run'){runVerify();return}
+  if(t.id==='v-close'){$('#verify').hidden=true;return}
+  if(t.id==='v-edit'&&vState){Object.assign(S,structuredClone(vState));$('#verify').hidden=true;go('code');status('확인한 코드로 불러왔습니다');return}
+  if(t.id==='close'){$('#modal').hidden=true;return}
+});
+$('#drawer').addEventListener('click',e=>{if(e.target.id==='drawer'){$('#drawer').hidden=true;$('#sum-toggle').setAttribute('aria-expanded','false')}});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')$('#modal').hidden=true});
+$('#notice').addEventListener('click',e=>{if(e.target.id==='notice')$('#notice').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#notice').hidden)$('#notice').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='code-in'){e.preventDefault();openVerify(e.target.value.trim()||code())}if(e.target.id==='vw-code'){e.preventDefault();viewLoad()}});
+
+function parseCode(raw){
+  let v=(raw||'').trim().toUpperCase().replace(/\s+/g,'');
+  const x8=s=>s.length===1?s.repeat(8):s;let m,btn,shp,tone,sw=null;
+  // current format: SD-body-btn(1|8)[-shape(1|8)[-switch(1|8)]]  shape: B 기본 · P 무지 · T 하트(투톤) · S 별(투톤) · H(구버전)=T
+  let rim=false,logo=null;const rm=v.match(/^SD-([0-9A-Z])(R(P)?)?(L([0-9A-Z]))?-/);if(rm&&(rm[2]||rm[4])){if(rm[2])rim=rm[3]?'pk':'ch';if(rm[4]){const lc=COLORS[parseInt(rm[5],36)];if(!lc||lc.only)return{err:'없는 로고 색상 번호가 있습니다'};logo=lc.id}v=v.replace(/^SD-([0-9A-Z])(R(P)?)?(L([0-9A-Z]))?-/,'SD-$1-')}
+  if(m=v.match(/^SD-([0-9A-Z])-([0-9A-Z]{8}|[0-9A-Z])(?:-([BPHTS]{8}|[BPHTS])(?:-([0-9A-Z]{8}|[0-9A-Z]))?)?$/)){btn=x8(m[2]);const sc=[...x8(m[3]||'B')];shp=sc.map(k=>k==='T'?'H':k);tone=shp.map(k=>k==='H'?'2':'1');if(m[4]){const d=[...x8(m[4])];if(d.some(c=>!SW[parseInt(c,36)]))return{err:'없는 스위치 축 번호가 있습니다'};sw=d.map(c=>SW[parseInt(c,36)].id)}}
+  // legacy formats
+  else if(m=v.match(/^SD-([0-9A-Z])-([0-9A-Z]{8})-([BRPH]{8})(?:-([0-9A-Z]{8}))?$/)){btn=m[2];shp=[...m[3]].map(k=>k==='R'?'B':k);const acc=m[4];tone=shp.map((k,i)=>!acc?'1':/^[012]{8}$/.test(acc)?(acc[i]==='1'?'1':'2'):'2')}
+  else if(m=v.match(/^SD-([0-9A-Z])-([0-9A-Z]{8})-([BRPH])([0-9A-Z]{8})?$/)){btn=m[2];shp=Array(8).fill(m[3]==='R'?'B':m[3]);tone=Array(8).fill(m[4]&&/^[012]{8}$/.test(m[4])&&m[4][0]==='1'?'1':'2')}
+  if(!m)return{err:v?'코드 형식이 다릅니다. 예: SD-3-6-T-5':'코드를 입력해 주세요'};
+  const g=d=>COLORS[parseInt(d,36)];if([m[1],...btn].some(d=>!g(d))||g(m[1]).only)return{err:'없는 색상 번호가 있습니다'};
+  tone=shp.map(k=>SH[k].acc?'2':'1');
+  return{st:{rim,logo,body:g(m[1]).id,btn:[...btn].map(d=>g(d).id),shp,tone,sw:sw||Array(8).fill(SW_DEF)}};
+}
+function loadCode(){const r=parseCode($('#code-in').value);if(r.err){status(r.err);return}Object.assign(S,r.st);render();status('코드대로 불러왔습니다')}
+function snapImage(label,cb){
+  const keep=camS;camS={...CAM0};setCam();EXPORTING=true;
+  const imgs=VIEWS.slice().reverse().map(v=>{const svg=drawView(v,true);return{svg,vb:v.vb}});EXPORTING=false;camS=keep;setCam();
+  const sc=12,pad=70,gap=80,Ws=imgs.map(i=>i.vb[2]*sc),Hs=imgs.map(i=>i.vb[3]*sc),w=Ws[0]+Ws[1]+gap+pad*2,h=Math.max(...Hs)+pad*2;
+  const e=document.createElement('canvas');e.width=w;e.height=h;const g=e.getContext('2d');g.fillStyle='#FFFFFF';g.fillRect(0,0,w,h);let done=0,x=pad;
+  imgs.forEach((it,k)=>{const im=new Image(),xx=x;x+=Ws[k]+gap;im.onload=()=>{g.drawImage(im,xx,h-pad-Hs[k],Ws[k],Hs[k]);if(++done===2){g.fillStyle='#8E8680';g.font='500 22px Noto Sans KR, sans-serif';g.fillText('SE:DAL  '+label,pad,h-22);cb(e.toDataURL('image/png'))}};
+    im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(it.svg.replace('<svg ',`<svg width="${Ws[k]}" height="${Hs[k]}" `))});
+}
+function exportImage(){snapImage(code(),url=>{$('#modal-img').src=url;$('#modal').hidden=false});draw(false)}
+// ── 주문코드 확인 (고객 최종 확인 · 판매자 제작 확인) ──
+let vState=null;
+function makerRows(){return `<tr><th>몸통</th><td colspan="4">${C[S.body].name}${S.rim?' + <b>'+rimOf().name+' 림</b>':''} · 로고 ${S.logo?'<b>'+C[S.logo].name+'</b>':'몸통색'}</td></tr>`+S.btn.map((id,i)=>`<tr><th>${i+1}</th><td>${SH[S.shp[i]].name}</td><td>${C[id].name}</td><td>${hasAcc(i)?(S.tone[i]==='2'?'투톤 · '+C[accOf(i)].name:'원톤'):'—'}</td><td>${swName(S.sw[i])}<small> ${SWM[S.sw[i]].type}</small></td></tr>`).join('')}
+function openVerify(pre){$('#verify').hidden=false;if(pre){$('#v-in').value=pre;runVerify()}else{$('#v-out').innerHTML='';$('#v-in').focus()}}
+function runVerify(){
+  const r=parseCode($('#v-in').value),out=$('#v-out');
+  if(r.err){vState=null;out.innerHTML=`<p class="v-err">${r.err}</p>`;return}
+  const keep=S;S={...structuredClone(S),...structuredClone(r.st)};
+  let html;
+  try{const cd=code(),n=twoCount();
+    html=`<div class="v-ok">✓ 확인된 코드 <b>${cd}</b></div><div class="v-img"><img id="v-img" alt="이 코드로 제작될 클리커 미리보기"></div>
+    <dl class="summary">${summaryRows().replace(/<div class="row"><dt>금액<\/dt>[\s\S]*$/,'')}</dl>
+    <div class="v-price"><span>결제 금액</span><b>${won(total())}원</b><em>${breakdown()}</em></div>${optN()?`<p class="heart-alert">${heartMsg()}</p>`:''}
+    <details class="v-sheet"><summary>제작 시트 (버튼별 상세)</summary><table><thead><tr><th>#</th><th>모양</th><th>버튼 색</th><th>테두리·하트</th><th>축</th></tr></thead><tbody>${makerRows()}</tbody></table></details>
+    <div class="row2"><button class="btn" id="v-edit" type="button">이 조합으로 편집</button></div>`;
+    snapImage(cd,url=>{const im=$('#v-img');if(im)im.src=url});
+  }finally{S=keep;draw(false)}
+  vState=r.st;out.innerHTML=html;$('.verify-card').scrollTop=0;
+}
+$('#verify').addEventListener('click',e=>{if(e.target.id==='verify')$('#verify').hidden=true});
+$('#v-in').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runVerify()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#verify').hidden)$('#verify').hidden=true});
+setCam();render();
+try{const hm=(location.hash||'').match(/(?:^#|&)c=([^&]+)/);if(hm){if(VIEW){vwInput=decodeURIComponent(hm[1]);viewLoad(false)}else openVerify(decodeURIComponent(hm[1]))}}catch(e){}
+stage.classList.add('hint');setTimeout(()=>stage.classList.remove('hint'),2600);
+let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(S.step==='sw')draw(false)},150)});
+</script>
+
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
+</body>
+</html>

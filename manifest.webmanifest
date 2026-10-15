@@ -1,0 +1,42 @@
+{
+  "name": "새달랩 초콜릿 클리커 커스텀",
+  "short_name": "새달랩 커스텀",
+  "description": "SE:DAL 초콜릿 클리커를 원하는 색과 모양으로 커스텀하고 주문 코드를 받는 페이지",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#4E2F23",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "주문코드 확인",
+      "short_name": "코드 확인",
+      "url": "./check.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
