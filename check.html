@@ -262,6 +262,44 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
   .panel-nav .btn{min-width:0}
 }
 @media (prefers-reduced-motion:reduce){.turn{transition:none}}
+/* ── mobile portrait (v52): compact step bar · sticky preview ── */
+.substeps .sn{display:none}
+@media (max-width:960px){
+  html:not(.view-mode) .stage-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar-h,64px) + var(--steps-h,52px));z-index:15;background:var(--bg);padding-top:10px;padding-bottom:10px;gap:8px;box-shadow:0 6px 12px -10px rgba(0,0,0,.35)}
+  html:not(.view-mode) .stage{min-height:0;aspect-ratio:auto;height:min(30vh,260px)}
+  html:not(.view-mode) .stage-foot .note{display:none}
+  html:not(.view-mode) .stage-foot{position:absolute;right:calc(clamp(16px,3vw,40px) + 8px);bottom:18px;z-index:3}
+  html:not(.view-mode) .stage-foot .seg button{padding:5px 10px;font-size:12px}
+  .stage-head{flex-wrap:nowrap;align-items:center}
+  .stage-head h1{font-size:15px}
+  .stage-head .sub{display:none}
+  .price strong{font-size:18px}
+  .price .lbl{display:none}
+  .price em{font-size:11px;max-width:160px}
+}
+@media (max-width:560px){
+  :root{--bar-h:56px;--steps-h:44px}
+  .steps{padding-left:12px;padding-right:12px;overflow:hidden}
+  .steps .step:first-child{display:none}
+  .step.on{width:100%;padding:8px 0}
+  .step.on>.num,.step.on>.name{display:none}
+  .substeps{margin:0;width:100%;justify-content:space-between}
+  .substeps li{flex:0 0 auto}
+  .substeps li + li{flex:1 1 auto}
+  .substeps li + li::before{width:auto;height:1px;border:0;background:var(--line);transform:none;margin:0 6px;flex:1;min-width:6px}
+  .substeps button{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px}
+  .substeps .sn{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);font-size:12px;font-weight:700;color:var(--ink-3)}
+  .substeps button.done .sn{border-color:var(--ink-2);color:var(--ink-2)}
+  .substeps button[aria-current="step"] .sn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink,#fff)}
+  .substeps .st{display:none}
+  .substeps button[aria-current="step"] .st{display:inline}
+  .substeps button[aria-current="step"]::after{display:none}
+  .stage-col{padding-left:12px;padding-right:12px}
+  html:not(.view-mode) .stage-foot{right:20px}
+  .stage-head .price em{display:none}
+  .ptitle{font-size:19px!important;margin-bottom:10px!important}
+}
+
 </style>
 
 </head>
@@ -581,7 +619,7 @@ function won(n){return n.toLocaleString('ko-KR')}
 function optPrice(k){return SH[k].acc?PRICE.T:0}
 function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1')}
 function heartD(cx,cy,w){return'M'+heart(0,0,w,0,48).map(p=>(cx+p[0]).toFixed(2)+' '+(cy-p[1]).toFixed(2)).join(' L')+' Z'}
-const BEST=[['sy',24],['ww',14],['cc',14]]; // 최근 주문 80개(9/24~9/27) 색상 비중
+const BEST=[['sy',24],['ww',14],['cc',14]]; // 최근 3개월 내 주문 기준 색상 비중
 const ORDER=['iv','ml','st','lv','cc','sy','sd','ch','ww','wd','be','sk'];
 if(!STEPS.some(s=>s.k===S.step))S.step='body';if(!['iso','top'].includes(S.view))S.view='iso';if(typeof S.sel!=='number'||S.sel<0||S.sel>7)S.sel=0;
 function stepIdx(){return STEPS.findIndex(s=>s.k===S.step)}
@@ -681,7 +719,7 @@ function summaryRows(){const sm={};S.shp.forEach(k=>sm[k]=(sm[k]||0)+1);const ac
 function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 커스텀]\n조합 코드: ${code()} (커스텀 페이지 상단 [코드 확인]에서 확인 가능)\n금액: ${won(total())}원 (${breakdown()})${heartN()?`\n하트버튼 옵션: ${heartN()}개 (스마트스토어 옵션 추가 필요)`:''}${starN()?`\n별버튼 옵션: ${starN()}개 (스마트스토어 옵션 추가 필요)`:''}${S.rim?`\n${rimOf().name} 림 옵션: 1개 (스마트스토어 옵션 추가 필요)`:''}\n본체: ${C[S.body].name}${S.rim?' + '+rimOf().name+' 림':''}\n로고: ${S.logo?C[S.logo].name:'본체와 같은 색'}\n버튼(모양 · 색 · 테두리·하트 · 축):\n${S.btn.map((id,i)=>`${i+1}번 ${SH[S.shp[i]].name} · ${C[id].name}${hasAcc(i)?(S.tone[i]==='2'?` (투톤: ${C[accOf(i)].name})`:' (원톤)'):''} · ${swName(S.sw[i])} (${SWM[S.sw[i]].type})`).join('\n')}`}
 
 // panel
-function renderSubsteps(){const i=stepIdx();$('#substeps').innerHTML=STEPS.map((s,k)=>`<li><button type="button" data-step="${s.k}" class="${k<i?'done':''}" ${k===i?'aria-current="step"':''}>${s.name}</button></li>`).join('')}
+function renderSubsteps(){const i=stepIdx();$('#substeps').innerHTML=STEPS.map((s,k)=>`<li><button type="button" data-step="${s.k}" class="${k<i?'done':''}" ${k===i?'aria-current="step"':''}><span class="sn">${k+1}</span><span class="st">${s.name}</span></button></li>`).join('')}
 function renderViewPanel(){const n=twoCount();
   let h=`<h2 class="ptitle">내가 선택한 커스텀 확인</h2><p class="lead">주문할 때 받은 코드를 넣으면 제작될 모습과 금액이 나타납니다. 미리보기는 드래그해서 돌려 볼 수 있습니다.</p>
   <div class="load"><input id="vw-code" placeholder="SD-1A2B-3C4D" aria-label="주문 코드" maxlength="200" autocomplete="off" value="${vwInput.replace(/"/g,'')}"><button type="button" class="btn primary" id="vw-go">확인</button></div><p class="status" id="status" role="status"></p>`;
@@ -700,7 +738,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     <div class="best"><p class="tagline"><span class="tag">Best</span>다른 구매자들이 가장 많이 선택한 색상입니다</p>
       <div class="best-box"><p>초콜릿 클리커 구매자 중 <b>${top[1]}%</b>가 <b class="hl">${C[top[0]].name}</b> 색상을 선택하셨습니다.</p>
       <div class="best-row">${BEST.map(([id,p],k)=>{const c=C[id],sz=k===0?88:70,dark=lum(c.hex)<120;return`<button type="button" class="best-item" data-color="${id}" data-scope="body"><i style="width:${sz}px;height:${sz}px;${swatchBg(c)};color:${dark?'#fff':'#1B1512'}"><b>${p}<small>%</small></b></i>${c.name}</button>`}).join('')}</div>
-      <small>최근 주문 80개 기준 (2026.9.24 ~ 9.27)</small></div></div>
+      <small>최근 3개월 내 주문 기준</small></div></div>
     <div class="sec"><div class="sec-head"><h3>본체 색상</h3><span class="sel">${C[S.body].name}</span></div>${swatchGrid('body')}</div>
     <div class="sec"><div class="sec-head"><h3>튜닝 옵션 · 테두리 림</h3><span class="sel">${S.rim?rimOf().name+' 림':'림 없음'}</span></div>
     <div class="tones rim-cards"><button type="button" class="tone" data-rim="0" aria-pressed="${!S.rim}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i></span><span><b>기본 <small class="tp">추가금 없음</small></b><span>본체와 같은 색 테두리</span></span></button>
