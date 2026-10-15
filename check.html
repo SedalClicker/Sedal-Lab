@@ -264,6 +264,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 @media (prefers-reduced-motion:reduce){.turn{transition:none}}
 /* ── mobile portrait (v52): compact step bar · sticky preview ── */
 .substeps .sn{display:none}
+.set-alert{margin:0;padding:12px 14px;border-radius:6px;background:#FFF4E5;color:#6B3E12;font-size:14px;line-height:1.55}.set-alert s{color:#9A8A7A}
 @media (max-width:960px){
   html:not(.view-mode) .stage-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar-h,64px) + var(--steps-h,52px));z-index:15;background:var(--bg);padding-top:10px;padding-bottom:10px;gap:8px;box-shadow:0 6px 12px -10px rgba(0,0,0,.35)}
   html:not(.view-mode) .stage{min-height:0;aspect-ratio:auto;height:min(30vh,260px)}
@@ -611,13 +612,15 @@ function starN(){return S.shp.filter(k=>k==='S').length}
 function optN(){return heartN()+starN()+(S.rim?1:0)}
 function heartMsg(){const n=heartN(),p=[];if(n)p.push(`<b>하트버튼 옵션 ${n}개</b>`);if(starN())p.push(`<b>별버튼 옵션 ${starN()}개</b>`);if(S.rim)p.push(`<b>${rimOf().name} 림 옵션 1개</b>`);return `네이버 스마트스토어 주문 시 ${p.join(', ')}를 추가해 주셔야 합니다.`}
 const STEPS=[{k:'body',name:'본체 색상'},{k:'shape',name:'버튼 모양'},{k:'btn',name:'버튼 색상'},{k:'sw',name:'스위치 축'},{k:'code',name:'주문 코드'}];
-const PRICE={base:18900,SET:16900,T:500,RIM:2000};
+const PRICE={base:18900,SET:16900,T:700,RIM:2000};
 // 단색 세트: 본체·버튼 8개·로고가 모두 같은 색 + 스위치 축 8개 통일 + 버튼 모양 통일(기본형 또는 무지형) + 유료 옵션(림·하트·별) 없음 → 기본 판매 제품과 같아 기본가 할인
 function isSet(){const b=S.body;return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&S.shp.every(x=>x===S.shp[0])&&!S.rim&&twoCount()===0}
-function basePrice(){return isSet()?PRICE.SET:PRICE.base}
+// 단색 할인은 마지막 [요청사항 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
+let setRevealed=false;function setOn(){return isSet()&&(setRevealed||!!window.SEDAL_VIEW)}
+function basePrice(){return setOn()?PRICE.SET:PRICE.base}
 function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
 function total(){return basePrice()+PRICE.T*twoCount()+(S.rim?PRICE.RIM:0)}
-function breakdown(){const h=heartN(),s=starN();return `${isSet()?'단색 세트 '+won(PRICE.SET):'기본 '+won(PRICE.base)}원${h?` + 하트(투톤) 버튼 ${h}개 × ${won(PRICE.T)}원`:''}${s?` + 별(투톤) 버튼 ${s}개 × ${won(PRICE.T)}원`:''}${S.rim?` + ${rimOf().name} 림 ${won(PRICE.RIM)}원`:''}`}
+function breakdown(){const h=heartN(),s=starN();return `${setOn()?'단색 세트 '+won(PRICE.SET):'기본 '+won(PRICE.base)}원${h?` + 하트(투톤) 버튼 ${h}개 × ${won(PRICE.T)}원`:''}${s?` + 별(투톤) 버튼 ${s}개 × ${won(PRICE.T)}원`:''}${S.rim?` + ${rimOf().name} 림 ${won(PRICE.RIM)}원`:''}`}
 function won(n){return n.toLocaleString('ko-KR')}
 function optPrice(k){return SH[k].acc?PRICE.T:0}
 function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1')}
@@ -781,7 +784,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
   $('#panel-body').innerHTML=h;
   $('#prev').disabled=i===0;const nx=$('#next');nx.textContent=i===STEPS.length-1?'요청사항 복사':'다음';
 }
-function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():isSet()?`단색 세트 할인 (기본 ${won(PRICE.base)}원 → ${won(PRICE.SET)}원)`:'기본가 · 옵션 추가금 없음'}
+function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():setOn()?`단색 세트 할인 (기본 ${won(PRICE.base)}원 → ${won(PRICE.SET)}원)`:'기본가 · 옵션 추가금 없음'}
 function renderChip(){const id=S.step==='shape'?'iv':curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
   pill.querySelector('span').textContent=S.step==='body'?`본체 · ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
 function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code()}
@@ -800,7 +803,7 @@ let playing=null,audio=null;
 function playSw(id){if(audio){audio.pause();audio=null}if(playing===id){playing=null;markPlay();return}
   audio=new Audio(SND[id]);playing=id;markPlay();audio.onended=()=>{playing=null;markPlay()};audio.play().catch(()=>{playing=null;markPlay();status('소리를 재생하지 못했습니다')})}
 function markPlay(){document.querySelectorAll('[data-play]').forEach(b=>b.classList.toggle('on',b.dataset.play===playing))}
-function openNotice(){const n=optN(),el=$('#notice-heart');if(el){el.hidden=!n;el.innerHTML=n?heartMsg():''}$('#notice').hidden=false;$('#notice-ok').focus()}
+function openNotice(){const n=optN(),el=$('#notice-heart');if(el){el.hidden=!n;el.innerHTML=n?heartMsg():''}let ns=$('#notice-set');if(!ns&&el){ns=document.createElement('p');ns.id='notice-set';ns.className='set-alert';el.after(ns)}if(ns){const on=isSet();ns.hidden=!on;ns.innerHTML=on?`🎉 <b>단색 세트 할인 적용</b><br>본체·버튼·로고 색과 버튼 모양·스위치 축이 모두 통일되어 기본 판매 제품과 같은 구성입니다.<br><s>${won(PRICE.base)}원</s> → <b>${won(PRICE.SET)}원</b>`:''}if(isSet()&&!setRevealed){setRevealed=true;renderPrice();if(typeof renderPanel==='function')renderPanel()}$('#notice').hidden=false;$('#notice-ok').focus()}
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.step){go(t.dataset.step);return}
