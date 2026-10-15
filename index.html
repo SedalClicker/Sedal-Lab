@@ -208,6 +208,14 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .drawer-card .close{appearance:none;border:0;background:none;position:absolute;right:14px;top:14px;width:32px;height:32px;cursor:pointer;font-size:22px;line-height:1;color:var(--ink-2)}
 
 .sw-item{position:relative;display:grid}
+.sw-tip{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translate(-50%,4px);width:210px;padding:10px 12px;border-radius:8px;background:#2A211D;color:#F6EFE9;font-size:12px;line-height:1.5;text-align:left;box-shadow:0 8px 20px -8px rgba(0,0,0,.45);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:30}
+.sw-tip::after{content:"";position:absolute;left:50%;top:100%;margin-left:calc(-6px - var(--dx,0px));border:6px solid transparent;border-top-color:#2A211D}
+.sw-tip b{display:block;font-size:13px;margin-bottom:2px}.sw-tip p{margin:0 0 4px}.sw-tip span{color:#E7B9C7;font-size:11px}
+@media (hover:hover){.sw-item:hover .sw-tip{opacity:1;visibility:visible;transform:translate(-50%,0)}}
+.sw-item:has(.sw:focus-visible) .sw-tip{opacity:1;visibility:visible;transform:translate(-50%,0)}
+@media (hover:none){.sw-tip{display:none}}
+.sw-desc{display:block;margin-top:4px;font-size:12px;color:var(--ink-2);line-height:1.45}
+
 .play{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);background:var(--bg);color:var(--ink-2);display:grid;place-items:center;cursor:pointer;padding:0;z-index:1}
 .play svg{width:14px;height:14px}
 .play:hover{color:var(--ink);border-color:var(--ink)}
@@ -409,18 +417,18 @@ const SH=Object.fromEntries(SHAPES.map(x=>[x.k,x]));
 const PAIR={ww:'wd',wd:'ww',ml:'sd',st:'lv',lv:'st',cc:'ch',sy:'sk',sd:'iv',iv:'ch',ch:'iv',be:'wd',sk:'iv'};
 // 스위치: 타입은 제조사 상품 정보 기준, 색은 스템 색을 참고해 근사치로 넣은 값
 const SW=[
-  {id:'bl',name:'청축',type:'클리키',hex:'#4D8BDC'},
-  {id:'nv',name:'네이비',type:'클리키',hex:'#22386B'},
-  {id:'sl',name:'딸기라떼',type:'택타일',hex:'#F6BFD0'},
-  {id:'bs',name:'흑당라떼',type:'리니어',hex:'#7A4B32'},
-  {id:'cr',name:'크림치즈',type:'택타일',hex:'#F5E9CF'},
-  {id:'md',name:'몽돌',type:'리니어',hex:'#2E2E30'},
-  {id:'ps',name:'핑크솔트',type:'택타일',tag:'저소음',hex:'#E8A2B6'},
-  {id:'lm',name:'라임',type:'택타일',tag:'저소음',hex:'#A9D15B'},
-  {id:'ss',name:'바다소금',type:'리니어',tag:'저소음',hex:'#BFDDEB'},
-  {id:'y2',name:'Y2',type:'리니어',hex:'#D8363C'},
-  {id:'lp',name:'리퍼',type:'리니어',hex:'#CFE59A',house:'#E3D3B4'},
-  {id:'jd',name:'제이드',type:'클리키',hex:'#2FA585'}];
+  {id:'bl',name:'청축',type:'클리키',hex:'#4D8BDC',d:'경쾌하고 선명한 클릭감의 클래식한 클릭축',t:['경쾌한 클릭감','시원한 소리','클래식한 타건감']},
+  {id:'nv',name:'네이비',type:'클리키',hex:'#22386B',d:'제이드축보다 무거운 클릭압, 강한 촉각 피드백',t:['묵직한 클릭감','강한 구분감','헤비한 타건감']},
+  {id:'sl',name:'딸기라떼',type:'택타일',hex:'#F6BFD0',d:'가볍고 부드러운 택타일, 산뜻한 구분감',t:['가벼운 키감','부드러운 구분감','산뜻한 타건감']},
+  {id:'bs',name:'흑당라떼',type:'리니어',hex:'#7A4B32',d:'부드럽고 달콤한 느낌의 리니어축',t:['부드러운 키감','달콤한 타건감','조용한 느낌']},
+  {id:'cr',name:'크림치즈',type:'택타일',hex:'#F5E9CF',d:'적당한 구분감이 느껴지는 부드러운 택타일축',t:['부드러운 키감','적당한 구분감','편안한 타건감']},
+  {id:'md',name:'몽돌',type:'리니어',hex:'#2E2E30',d:'매끄럽고 차분한 타건감의 리니어축',t:['조용한 키감','매끄러운 타건감','정갈한 느낌']},
+  {id:'ps',name:'핑크솔트',type:'택타일',tag:'저소음',hex:'#E8A2B6',d:'부드럽고 편안한 저소음 택타일축',t:['저소음','은은한 키감','편안한 타건감']},
+  {id:'lm',name:'라임',type:'택타일',tag:'저소음',hex:'#A9D15B',d:'가볍고 산뜻한 저소음 택타일축',t:['조용한 키감','산뜻한 구분감','가벼운 타건감']},
+  {id:'ss',name:'바다소금',type:'택타일',tag:'저소음',hex:'#BFDDEB',d:'조용하지만 분명한 구분감의 저소음 택타일축',t:['저소음','부드러운 키감','편안한 타건감']},
+  {id:'y2',name:'Y2',type:'리니어',hex:'#D8363C',d:'부드러우면서도 경쾌한 리니어축',t:['부드러운 키감','밸런스 좋은 타건감','깔끔한 소리']},
+  {id:'lp',name:'리퍼',type:'리니어',hex:'#CFE59A',house:'#E3D3B4',d:'가볍게 톡 눌리고 딸깍 소리가 경쾌한 리니어축',t:['가벼운 키감','경쾌한 소리','리듬감 있는 연타']},
+  {id:'jd',name:'제이드',type:'클리키',hex:'#2FA585',d:'두꺼운 클릭바로 강한 구분감과 깊고 묵직한 클릭음',t:['강한 클릭감','뚜렷한 구분감','묵직한 타건감']}];
 function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
 const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2';
 const RIMS={ch:{name:'초코',hex:'#6E5A48'},pk:{name:'핫핑크',hex:'#EAA6C8'}};
@@ -768,9 +776,9 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
   }else if(S.step==='sw'){
     const cur=S.sw[S.sel],cx=SWM[cur];
     h+=`<h2 class="ptitle">스위치 축</h2><p class="lead">버튼마다 다른 축을 넣을 수 있습니다. 번호를 누르거나 미리보기의 버튼을 눌러 선택하세요.</p>
-    <div class="mini-wrap">${miniGrid()}<div class="mini-side"><p><b>${S.sel+1}번 버튼</b>을 고르는 중입니다.<br>${swName(cur)} (${cx.type}${cx.tag?' · '+cx.tag:''})</p><button type="button" class="link" id="sw-all">이 축을 8개 모두에 적용</button></div></div>
+    <div class="mini-wrap">${miniGrid()}<div class="mini-side"><p><b>${S.sel+1}번 버튼</b>을 고르는 중입니다.<br>${swName(cur)} (${cx.type}${cx.tag?' · '+cx.tag:''})${cx.d?`<small class="sw-desc">${cx.d}<br>${cx.t.map(z=>'#'+z).join(' ')}</small>`:''}</p><button type="button" class="link" id="sw-all">이 축을 8개 모두에 적용</button></div></div>
     <div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 스위치 축</h3><span class="sel">${swName(cur)}</span></div>
-      ${['클리키','택타일','리니어'].map(ty=>`<div class="sw-group"><h4>${ty}</h4><div class="cards sw-cards">${SW.filter(x=>x.type===ty).map(x=>`<div class="sw-item"><button type="button" class="card sw" data-sw="${x.id}" aria-pressed="${cur===x.id}">${swIcon(x)}<b>${x.name}</b><span>(${x.type}${x.tag?' · '+x.tag:''})</span></button>${SND[x.id]?`<button type="button" class="play${playing===x.id?' on':''}" data-play="${x.id}" aria-label="${x.name} 소리 듣기" title="소리 듣기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor"/><path d="M11 5.5c1 .7 1.5 1.5 1.5 2.5s-.5 1.8-1.5 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>`:''}</div>`).join('')}</div></div>`).join('')}
+      ${['클리키','택타일','리니어'].map(ty=>`<div class="sw-group"><h4>${ty}</h4><div class="cards sw-cards">${SW.filter(x=>x.type===ty).map(x=>`<div class="sw-item"><button type="button" class="card sw" data-sw="${x.id}" aria-pressed="${cur===x.id}">${swIcon(x)}<b>${x.name}</b><span>(${x.type}${x.tag?' · '+x.tag:''})</span></button>${x.d?`<div class="sw-tip" role="tooltip"><b>${swName(x.id)}</b><p>${x.d}</p><span>${x.t.map(z=>'#'+z).join(' ')}</span></div>`:''}${SND[x.id]?`<button type="button" class="play${playing===x.id?' on':''}" data-play="${x.id}" aria-label="${x.name} 소리 듣기" title="소리 듣기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor"/><path d="M11 5.5c1 .7 1.5 1.5 1.5 2.5s-.5 1.8-1.5 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>`:''}</div>`).join('')}</div></div>`).join('')}
       ${Object.keys(SND).length?'<p class="help">축 카드의 스피커 버튼을 누르면 실제 녹음한 타건 소리를 들을 수 있습니다.</p>':''}<p class="help">축 색은 제조사 스템 색을 참고한 근사치입니다. 클리키는 딸깍 소리, 택타일은 걸림 있는 타건감, 리니어는 걸림 없는 부드러운 타건감입니다.</p></div>`;
   }else{
     h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문 요청사항에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
@@ -845,6 +853,8 @@ $('#notice').addEventListener('click',e=>{if(e.target.id==='notice')$('#notice')
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#notice').hidden)$('#notice').hidden=true});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='code-in'){e.preventDefault();openVerify(e.target.value.trim()||code())}if(e.target.id==='vw-code'){e.preventDefault();viewLoad()}});
 
+// keep switch tooltips inside the window
+document.addEventListener('mouseover',e=>{const it=e.target.closest&&e.target.closest('.sw-item');if(!it)return;const t=it.querySelector('.sw-tip');if(!t)return;t.style.marginLeft='0px';t.style.setProperty('--dx','0px');const r=t.getBoundingClientRect(),vw=document.documentElement.clientWidth;let dx=0;if(r.right>vw-8)dx=vw-8-r.right;if(r.left+dx<8)dx=8-r.left;t.style.marginLeft=dx+'px';t.style.setProperty('--dx',dx+'px')});
 function extractCode(raw){const m=String(raw||'').toUpperCase().match(/SD-[0-9A-Z]+(?:-[0-9A-Z]+)*/);return m?m[0]:String(raw||'').trim()}
 document.addEventListener('paste',e=>{const t=e.target;if(!t||!['code-in','v-in','vw-code'].includes(t.id))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/SD-/i.test(txt))return;e.preventDefault();t.value=extractCode(txt);t.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>{if(t.id==='v-in')runVerify();else if(t.id==='vw-code')viewLoad();else if(t.id==='code-in')openVerify(t.value)},0)});
 function parseCode(raw){
