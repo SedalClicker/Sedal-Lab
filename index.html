@@ -429,7 +429,7 @@ const SW=[
   {id:'y2',name:'Y2',type:'리니어',hex:'#D8363C',d:'물속에서 누르는 듯 포근한 소리의 리니어축',t:['포근한 소리','부드러운 키감','먹먹한 타건감']},
   {id:'lp',name:'리퍼',type:'리니어',hex:'#CFE59A',house:'#E3D3B4',d:'가볍게 톡 눌리고 딸깍 소리가 경쾌한 리니어축',t:['가벼운 키감','경쾌한 소리','리듬감 있는 연타']},
   {id:'jd',name:'제이드',type:'클리키',hex:'#2FA585',d:'두꺼운 클릭바로 강한 구분감과 깊고 묵직한 클릭음',t:['강한 클릭감','뚜렷한 구분감','묵직한 타건감']},
-  {id:'wm',name:'화이트마블',type:'리니어',hex:'#F3F1EC',house:'#FAF9F6',d:'대리석처럼 단단하고 따뜻한 \'도각\' 소리의 리니어축',t:['부드러운 키감','따뜻한 소리','단단한 타건감']}];
+  {id:'wm',name:'화이트마블',type:'리니어',hex:'#F3F1EC',house:'#FAF9F6',d:'몽돌보다 한 톤 높게 \'탁탁\' 돌이 부딪히는 경쾌한 소리의 리니어축',t:['경쾌한 소리','높은 피치','단단한 타건감']}];
 function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
 const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2';
 const RIMS={ch:{name:'초코',hex:'#6E5A48'},pk:{name:'핫핑크',hex:'#EAA6C8'}};
