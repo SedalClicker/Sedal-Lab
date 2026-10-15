@@ -332,7 +332,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
   <div class="modal-card notice-card verify-card" role="dialog" aria-modal="true" aria-labelledby="verify-t">
     <h3 id="verify-t">주문코드 확인</h3>
     <p>주문 요청사항에 적은 코드를 넣으면 실제로 제작될 모습과 결제 금액을 확인할 수 있습니다.</p>
-    <div class="load"><input id="v-in" placeholder="SD-3-6-T" maxlength="40" aria-label="주문 코드" autocomplete="off" autocapitalize="characters"><button class="btn primary" id="v-run" type="button">확인</button></div>
+    <div class="load"><input id="v-in" placeholder="SD-1A2B-3C4D" maxlength="200" aria-label="주문 코드" autocomplete="off" autocapitalize="characters"><button class="btn primary" id="v-run" type="button">확인</button></div>
     <div id="v-out" aria-live="polite"></div>
     <div class="row2"><button class="btn" id="v-close" type="button">닫기</button></div>
   </div>
@@ -638,7 +638,28 @@ function toneCards(){const generic=S.step==='shape';const b=generic?'iv':S.btn[S
 function groupBtn(arr=S.btn){const m={};arr.forEach(id=>m[id]=(m[id]||0)+1);return Object.entries(m).map(([id,n])=>`${C[id].name} ${n}`).join(' · ')}
 function shpCode(i){return S.shp[i]==='H'?'T':S.shp[i]}
 function squeeze(s){return /^(.)\1{7}$/.test(s)?s[0]:s}
-function code(){const ci=id=>COLORS.findIndex(c=>c.id===id).toString(36).toUpperCase(),si=id=>SW.findIndex(x=>x.id===id).toString(36).toUpperCase();
+// 압축 코드(v1): 본체·림·로고·버튼 색·모양·축을 하나의 수로 묶어 Crockford Base32로 표기. 색·축은 뒤에 추가만 할 것(기존 번호 유지).
+const B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ',CK1={c:12,w:12,h:'BPHS'};
+function code(){const ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.findIndex(x=>x.id===id),hi=k=>CK1.h.indexOf(k==='T'?'H':k);
+  const f=[[ci(S.body),CK1.c],[S.rim?(S.rim==='pk'?2:1):0,3],[S.logo?ci(S.logo)+1:0,CK1.c+1]],uni=a=>a.every(x=>x===a[0]);
+  const u=[uni(S.btn),uni(S.shp),uni(S.sw)];
+  [[S.btn,ci,CK1.c,u[0]],[S.shp,hi,4,u[1]],[S.sw,si,CK1.w,u[2]]].forEach(([a,g,r,one])=>(one?[a[0]]:a).forEach(x=>f.push([g(x),r])));
+  u.forEach(x=>f.push([x?1:0,2]));
+  let n=0n;for(const[v,r]of f)n=n*BigInt(r)+BigInt(Math.max(0,v));
+  let s='';do{s=B32[Number(n%32n)]+s;n/=32n}while(n>0n);
+  let ck=0;for(let i=0;i<s.length;i++)ck=(ck+B32.indexOf(s[i])*(i+1))%32;s+=B32[ck];
+  return 'SD-'+s.match(/.{1,4}/g).join('-')}
+function parseShort(v){const s=v.replace(/^SD-/,'').replace(/-/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');
+  if(s.length<3||[...s].some(c=>B32.indexOf(c)<0))return null;const d=s.slice(0,-1);let ck=0;for(let i=0;i<d.length;i++)ck=(ck+B32.indexOf(d[i])*(i+1))%32;
+  if(B32[ck]!==s.slice(-1))return{err:'코드가 맞지 않습니다. 한 글자씩 다시 확인해 주세요'};
+  let n=0n;for(const c of d)n=n*32n+BigInt(B32.indexOf(c));const pop=r=>{const x=Number(n%BigInt(r));n/=BigInt(r);return x};
+  const uw=pop(2),us=pop(2),ub=pop(2),take=(one,r)=>Array.from({length:one?1:8},()=>pop(r)).reverse(),x8=a=>a.length===1?Array(8).fill(a[0]):a;
+  const sw=x8(take(uw,CK1.w)),sh=x8(take(us,4)),bt=x8(take(ub,CK1.c)),lg=pop(CK1.c+1),rm=pop(3),bd=pop(CK1.c);
+  if(n!==0n)return{err:'코드가 맞지 않습니다'};
+  if(!COLORS[bd]||COLORS[bd].only||(lg&&(!COLORS[lg-1]||COLORS[lg-1].only))||bt.some(i=>!COLORS[i])||sw.some(i=>!SW[i]))return{err:'없는 색상·축 번호가 있습니다'};
+  const shp=sh.map(i=>CK1.h[i]);
+  return{st:{rim:rm?(rm===2?'pk':'ch'):false,logo:lg?COLORS[lg-1].id:null,body:COLORS[bd].id,btn:bt.map(i=>COLORS[i].id),shp,tone:shp.map(k=>SH[k].acc?'2':'1'),sw:sw.map(i=>SW[i].id)}}}
+function codeOld(){const ci=id=>COLORS.findIndex(c=>c.id===id).toString(36).toUpperCase(),si=id=>SW.findIndex(x=>x.id===id).toString(36).toUpperCase();
   const sh=squeeze(S.btn.map((_,i)=>shpCode(i)).join('')),sw=squeeze(S.sw.map(si).join(''));
   const swDef=sw===si(SW_DEF);
   return `SD-${ci(S.body)}${S.rim?'R'+(S.rim==='pk'?'P':''):''}${S.logo?'L'+ci(S.logo):''}-${squeeze(S.btn.map(ci).join(''))}${(sh==='B'&&swDef)?'':'-'+sh}${swDef?'':'-'+sw}`}
@@ -662,13 +683,13 @@ function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 �
 function renderSubsteps(){const i=stepIdx();$('#substeps').innerHTML=STEPS.map((s,k)=>`<li><button type="button" data-step="${s.k}" class="${k<i?'done':''}" ${k===i?'aria-current="step"':''}>${s.name}</button></li>`).join('')}
 function renderViewPanel(){const n=twoCount();
   let h=`<h2 class="ptitle">내가 선택한 커스텀 확인</h2><p class="lead">주문할 때 받은 코드를 넣으면 제작될 모습과 금액이 나타납니다. 미리보기는 드래그해서 돌려 볼 수 있습니다.</p>
-  <div class="load"><input id="vw-code" placeholder="SD-3-6-T" aria-label="주문 코드" maxlength="40" autocomplete="off" value="${vwInput.replace(/"/g,'')}"><button type="button" class="btn primary" id="vw-go">확인</button></div><p class="status" id="status" role="status"></p>`;
+  <div class="load"><input id="vw-code" placeholder="SD-1A2B-3C4D" aria-label="주문 코드" maxlength="200" autocomplete="off" value="${vwInput.replace(/"/g,'')}"><button type="button" class="btn primary" id="vw-go">확인</button></div><p class="status" id="status" role="status"></p>`;
   if(vwLoaded){h+=`<div class="v-ok">✓ 확인된 코드 <b>${code()}</b></div><div class="v-img vw-mobile"><img id="vw-img" alt="이 코드로 제작될 클리커 미리보기"${vwImg?` src="${vwImg}"`:''}></div>
   <dl class="summary">${summaryRows().replace(/<div class="row"><dt>금액<\/dt>[\s\S]*$/,'')}</dl>
   <div class="v-price"><span>결제 금액</span><b>${won(total())}원</b><em>${breakdown()}</em></div>${optN()?`<p class="heart-alert">${heartMsg()}</p>`:''}
   <details class="v-sheet"><summary>제작 시트 (버튼별 상세)</summary><table><thead><tr><th>#</th><th>모양</th><th>버튼 색</th><th>테두리·하트</th><th>축</th></tr></thead><tbody>${makerRows()}</tbody></table></details>
   <div class="load"><button type="button" class="btn" id="img">이미지로 저장</button></div>`}
-  else h+=`<p class="help">예: SD-3-6-T-5 · 코드는 커스텀 페이지의 마지막 단계(주문 코드)에서 확인할 수 있습니다.</p>`;
+  else h+=`<p class="help">예: SD-1A2B-3C4D · 코드는 커스텀 페이지의 마지막 단계(주문 코드)에서 확인할 수 있습니다.</p>`;
   $('#panel-body').innerHTML=h}
 function viewLoad(useInput=true){const el=$('#vw-code');if(useInput&&el)vwInput=el.value.trim();const r=parseCode(vwInput);if(r.err){status(r.err);return}Object.assign(S,structuredClone(r.st));S.step='code';vwLoaded=true;vwInput=code();vwImg='';render();snapImage(code(),url=>{vwImg=url;const im=$('#vw-img');if(im)im.src=url});draw(false);status('코드대로 불러왔습니다')}
 function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepIdx();
@@ -711,8 +732,8 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     <dl class="summary">${summaryRows()}</dl>
     <div class="codebox"><span class="code" id="code">${code()}</span><button type="button" class="btn primary" id="copy">요청사항 복사</button></div>
     <p class="status" id="status" role="status"></p>
-    <p class="help">코드 읽는 법: <b>SD-본체-버튼 색(8개)-버튼 모양(8개)-스위치 축(8개)</b>. 본체 번호 뒤 R은 초코 림, RP는 핫핑크 림, L+번호는 로고 색상입니다. 8개가 모두 같으면 한 글자로 줄고, 모양이 전부 기본형이고 축이 전부 Y2면 뒤 칸은 생략됩니다. 모양 글자는 B 기본 · P 무지 · T 하트(투톤) · S 별(투톤), 축 번호는 ${SW.map((x,i)=>i.toString(36).toUpperCase()+' '+x.name).join(' · ')}입니다.</p>
-    <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="SD-3-6-T" aria-label="주문 코드 입력" maxlength="40" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
+    <p class="help">주문 코드는 선택한 본체·림·로고·버튼·축 정보를 짧게 묶은 값입니다. 코드를 넣으면 어떤 조합인지 그대로 확인됩니다.</p>
+    <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="SD-1A2B-3C4D" aria-label="주문 코드 입력" maxlength="200" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
     <div class="sec"><div class="sec-head"><h3>더 보기</h3></div><div class="load"><button type="button" class="btn" id="img">이미지로 저장</button><button type="button" class="btn" id="random">랜덤 조합</button><button type="button" class="btn ghost" id="example">초기 상태로</button></div></div>`;
   }
   $('#panel-body').innerHTML=h;
@@ -779,8 +800,10 @@ $('#notice').addEventListener('click',e=>{if(e.target.id==='notice')$('#notice')
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#notice').hidden)$('#notice').hidden=true});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='code-in'){e.preventDefault();openVerify(e.target.value.trim()||code())}if(e.target.id==='vw-code'){e.preventDefault();viewLoad()}});
 
+function extractCode(raw){const m=String(raw||'').toUpperCase().match(/SD-[0-9A-Z]+(?:-[0-9A-Z]+)*/);return m?m[0]:String(raw||'').trim()}
+document.addEventListener('paste',e=>{const t=e.target;if(!t||!['code-in','v-in','vw-code'].includes(t.id))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/SD-/i.test(txt))return;e.preventDefault();t.value=extractCode(txt);t.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>{if(t.id==='v-in')runVerify();else if(t.id==='vw-code')viewLoad();else if(t.id==='code-in')openVerify(t.value)},0)});
 function parseCode(raw){
-  let v=(raw||'').trim().toUpperCase().replace(/\s+/g,'');
+  let v=extractCode(raw).toUpperCase().replace(/\s+/g,'');
   const x8=s=>s.length===1?s.repeat(8):s;let m,btn,shp,tone,sw=null;
   // current format: SD-body-btn(1|8)[-shape(1|8)[-switch(1|8)]]  shape: B 기본 · P 무지 · T 하트(투톤) · S 별(투톤) · H(구버전)=T
   let rim=false,logo=null;const rm=v.match(/^SD-([0-9A-Z])(R(P)?)?(L([0-9A-Z]))?-/);if(rm&&(rm[2]||rm[4])){if(rm[2])rim=rm[3]?'pk':'ch';if(rm[4]){const lc=COLORS[parseInt(rm[5],36)];if(!lc||lc.only)return{err:'없는 로고 색상 번호가 있습니다'};logo=lc.id}v=v.replace(/^SD-([0-9A-Z])(R(P)?)?(L([0-9A-Z]))?-/,'SD-$1-')}
@@ -788,7 +811,7 @@ function parseCode(raw){
   // legacy formats
   else if(m=v.match(/^SD-([0-9A-Z])-([0-9A-Z]{8})-([BRPH]{8})(?:-([0-9A-Z]{8}))?$/)){btn=m[2];shp=[...m[3]].map(k=>k==='R'?'B':k);const acc=m[4];tone=shp.map((k,i)=>!acc?'1':/^[012]{8}$/.test(acc)?(acc[i]==='1'?'1':'2'):'2')}
   else if(m=v.match(/^SD-([0-9A-Z])-([0-9A-Z]{8})-([BRPH])([0-9A-Z]{8})?$/)){btn=m[2];shp=Array(8).fill(m[3]==='R'?'B':m[3]);tone=Array(8).fill(m[4]&&/^[012]{8}$/.test(m[4])&&m[4][0]==='1'?'1':'2')}
-  if(!m)return{err:v?'코드 형식이 다릅니다. 예: SD-3-6-T-5':'코드를 입력해 주세요'};
+  if(!m){const r=v?parseShort(v):null;if(r)return r;return{err:v?'코드 형식이 다릅니다. 예: SD-1A2B-3C4D':'코드를 입력해 주세요'}}
   const g=d=>COLORS[parseInt(d,36)];if([m[1],...btn].some(d=>!g(d))||g(m[1]).only)return{err:'없는 색상 번호가 있습니다'};
   tone=shp.map(k=>SH[k].acc?'2':'1');
   return{st:{rim,logo,body:g(m[1]).id,btn:[...btn].map(d=>g(d).id),shp,tone,sw:sw||Array(8).fill(SW_DEF)}};
