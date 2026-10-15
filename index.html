@@ -208,6 +208,8 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .drawer-card .close{appearance:none;border:0;background:none;position:absolute;right:14px;top:14px;width:32px;height:32px;cursor:pointer;font-size:22px;line-height:1;color:var(--ink-2)}
 
 .sw-item{position:relative;display:grid}
+.opt-check{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:6px;cursor:pointer}.opt-check input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent)}.opt-check span{display:grid;gap:2px}.opt-check small{font-size:12px;color:var(--ink-2)}
+
 .sw-tip{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translate(-50%,4px);width:210px;padding:10px 12px;border-radius:8px;background:#2A211D;color:#F6EFE9;font-size:12px;line-height:1.5;text-align:left;box-shadow:0 8px 20px -8px rgba(0,0,0,.45);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:30}
 .sw-tip::after{content:"";position:absolute;left:50%;top:100%;margin-left:calc(-6px - var(--dx,0px));border:6px solid transparent;border-top-color:#2A211D}
 .sw-tip b{display:block;font-size:13px;margin-bottom:2px}.sw-tip p{margin:0 0 4px}.sw-tip span{color:#E7B9C7;font-size:11px}
@@ -434,9 +436,9 @@ function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
 const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2';
 const RIMS={ch:{name:'초코',hex:'#6E5A48'},pk:{name:'핫핑크',hex:'#EAA6C8'}};
 function rimOf(){return S.rim?RIMS[S.rim]||RIMS.ch:null}
-const EXAMPLE={rim:false,logo:null,body:'iv',btn:Array(8).fill('iv'),shp:Array(8).fill('B'),tone:Array(8).fill('2'),sw:Array(8).fill(SW_DEF),part:'body',sel:0,step:'body',view:'iso'};
+const EXAMPLE={rim:false,nomag:false,logo:null,body:'iv',btn:Array(8).fill('iv'),shp:Array(8).fill('B'),tone:Array(8).fill('2'),sw:Array(8).fill(SW_DEF),part:'body',sel:0,step:'body',view:'iso'};
 let S=load()||structuredClone(EXAMPLE);
-function load(){try{const v=JSON.parse(localStorage.getItem('sedal-choco-v3')||'null');if(v&&v.btn&&v.btn.length===8&&v.btn.every(x=>C[x])&&C[v.body]){if(v.shp)v.shp=v.shp.map(x=>x==='R'?'B':x);if(!(v.shp&&v.shp.length===8&&v.shp.every(x=>SH[x])))v.shp=Array(8).fill(SH[v.shape]?v.shape:'B');delete v.shape;if(!(v.tone&&v.tone.length===8&&v.tone.every(x=>x==='1'||x==='2')))v.tone=v.btn.map((b,i)=>v.acc&&v.acc[i]===b?'1':'2');delete v.acc;delete v.layer;v.tone=v.shp.map(k=>SH[k].acc?'2':'1');v.rim=v.rim===true?'ch':(RIMS[v.rim]?v.rim:false);if(!(v.logo&&C[v.logo]))v.logo=null;if(v.sw)v.sw=v.sw.map(x=>x==='rw'?'lp':x);if(!(v.sw&&v.sw.length===8&&v.sw.every(x=>SWM[x])))v.sw=Array(8).fill(SW_DEF);return v}}catch(e){}return null}
+function load(){try{const v=JSON.parse(localStorage.getItem('sedal-choco-v3')||'null');if(v&&v.btn&&v.btn.length===8&&v.btn.every(x=>C[x])&&C[v.body]){if(v.shp)v.shp=v.shp.map(x=>x==='R'?'B':x);if(!(v.shp&&v.shp.length===8&&v.shp.every(x=>SH[x])))v.shp=Array(8).fill(SH[v.shape]?v.shape:'B');delete v.shape;if(!(v.tone&&v.tone.length===8&&v.tone.every(x=>x==='1'||x==='2')))v.tone=v.btn.map((b,i)=>v.acc&&v.acc[i]===b?'1':'2');delete v.acc;delete v.layer;v.tone=v.shp.map(k=>SH[k].acc?'2':'1');v.rim=v.rim===true?'ch':(RIMS[v.rim]?v.rim:false);if(!(v.logo&&C[v.logo]))v.logo=null;v.nomag=v.nomag===true;if(v.sw)v.sw=v.sw.map(x=>x==='rw'?'lp':x);if(!(v.sw&&v.sw.length===8&&v.sw.every(x=>SWM[x])))v.sw=Array(8).fill(SW_DEF);return v}}catch(e){}return null}
 function save(){try{localStorage.setItem('sedal-choco-v3',JSON.stringify(S))}catch(e){}}
 function rgb(h){const n=parseInt(h.slice(1),16);return[n>>16,n>>8&255,n&255]}
 function mix(hex,amt){const[r,g,b]=rgb(hex),t=amt<0?0:255,p=Math.abs(amt);return'#'+[r,g,b].map(v=>Math.round(v+(t-v)*p).toString(16).padStart(2,'0')).join('')}
@@ -620,9 +622,9 @@ function starN(){return S.shp.filter(k=>k==='S').length}
 function optN(){return heartN()+starN()+(S.rim?1:0)}
 function heartMsg(){const n=heartN(),p=[];if(n)p.push(`<b>하트버튼 옵션 ${n}개</b>`);if(starN())p.push(`<b>별버튼 옵션 ${starN()}개</b>`);if(S.rim)p.push(`<b>${rimOf().name} 테두리 옵션 1개</b>`);return `네이버 스마트스토어 주문 시 ${p.join(', ')}를 추가해 주셔야 합니다.`}
 const STEPS=[{k:'body',name:'본체 색상'},{k:'shape',name:'버튼 모양'},{k:'btn',name:'버튼 색상'},{k:'sw',name:'스위치 축'},{k:'code',name:'주문 코드'}];
-const PRICE={base:18900,SET:16900,T:700,RIM:1500};
+const PRICE={base:18900,SET:16900,T:500,RIM:1500};
 // 단색 세트: 본체·버튼 8개·로고가 모두 같은 색 + 스위치 축 8개 통일 + 버튼 모양 통일(기본형 또는 무지형) + 유료 옵션(테두리·하트·별) 없음 → 기본 판매 제품과 같아 기본가 할인
-function isSet(){const b=S.body;return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&S.shp.every(x=>x===S.shp[0])&&!S.rim&&twoCount()===0}
+function isSet(){const b=S.body;return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&S.shp.every(x=>x===S.shp[0])&&!S.rim&&!S.nomag&&twoCount()===0}
 // 단색 할인은 마지막 [요청사항 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
 const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
 let setRevealed=false;function setOn(){return isSet()&&(setRevealed||!!window.SEDAL_VIEW)}
@@ -704,7 +706,7 @@ function code(){const K=CK2,ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.find
   let n=0n;for(const[v,r]of f)n=n*BigInt(r)+BigInt(Math.max(0,v));
   let s='';do{s=B32[Number(n%32n)]+s;n/=32n}while(n>0n);
   s+=ckOf(s,K);
-  return 'SD-'+s.match(/.{1,4}/g).join('-')}
+  return 'SD-'+s.match(/.{1,4}/g).join('-')+(S.nomag?'-U':'')}
 function decodeShort(s,K){if(s.length<=K.k)return null;const d=s.slice(0,-K.k);if(ckOf(d,K)!==s.slice(-K.k))return null;
   let n=0n;for(const c of d)n=n*32n+BigInt(B32.indexOf(c));const pop=r=>{const x=Number(n%BigInt(r));n/=BigInt(r);return x};
   const uw=pop(2),us=pop(2),ub=pop(2),take=(one,r)=>Array.from({length:one?1:8},()=>pop(r)).reverse(),x8=a=>a.length===1?Array(8).fill(a[0]):a;
@@ -726,7 +728,7 @@ function chipSw(id,label){return`<span class="cdot"><i style="background:${SWM[i
 function swIcon(x){const dk=lum(x.hex)<110,st=dk?'#111':'#6E5A52';return`<svg class="ico" viewBox="0 0 44 44" aria-hidden="true"><rect x="5" y="25" width="34" height="14" rx="3" fill="${x.house||x.hex}" fill-opacity="${x.house?1:.28}" stroke="#6E5A52" stroke-width="1.2"/><rect x="10" y="16" width="24" height="10" rx="2" fill="${x.house?mix(x.house,.35):'#FBF8F5'}" stroke="#6E5A52" stroke-width="1.2"/><path d="M14 16 v-7 h16 v7 Z" fill="${x.hex}" stroke="${st}" stroke-width="1"/><path d="M19.5 9 v-4.5 h5 v4.5" fill="${x.hex}" stroke="${st}" stroke-width="1"/><line x1="16" y1="12.5" x2="28" y2="12.5" stroke="${dk?'#fff':'#6E5A52'}" stroke-opacity=".45" stroke-width="1"/></svg>`}
 function summaryRows(){const sm={};S.shp.forEach(k=>sm[k]=(sm[k]||0)+1);const ac=S.btn.map((_,i)=>i).filter(i=>hasAcc(i));
   const colorChips=arr=>{const m={};arr.forEach(id=>m[id]=(m[id]||0)+1);return Object.entries(m).map(([id,n])=>chip(id,`${C[id].name} ${n}`)).join('')};
-  let h=`<div class="row"><dt>본체</dt><dd>${chip(S.body,C[S.body].name)}${S.rim?`<span class="cdot"><i style="background:${rimOf().hex}"></i>${rimOf().name} 테두리</span>`:''}</dd></div><div class="row"><dt>로고</dt><dd>${S.logo?chip(S.logo,C[S.logo].name):'본체와 같은 색'}</dd></div>
+  let h=`<div class="row"><dt>본체</dt><dd>${chip(S.body,C[S.body].name)}${S.rim?`<span class="cdot"><i style="background:${rimOf().hex}"></i>${rimOf().name} 테두리</span>`:''}</dd></div><div class="row"><dt>로고</dt><dd>${S.logo?chip(S.logo,C[S.logo].name):'본체와 같은 색'}</dd></div>${S.nomag?'<div class="row"><dt>자석</dt><dd><b>자석 없음</b> (자석 기능 빼기)</dd></div>':''}
   <div class="row"><dt>버튼 모양</dt><dd>${SHAPES.filter(x=>sm[x.k]).map(x=>`${x.name} ${sm[x.k]}`).join(' · ')}</dd></div>
   <div class="row"><dt>버튼 색상</dt><dd>${colorChips(S.btn)}</dd></div>`;
   if(ac.length)h+=`<div class="row"><dt>테두리·하트·별</dt><dd>${['1','2'].map(t=>[t,ac.filter(i=>S.tone[i]===t).length]).filter(x=>x[1]).map(([t,n])=>(t==='1'?'원톤 ':'투톤 ')+n).join(' · ')}</dd></div>`;
@@ -735,7 +737,7 @@ function summaryRows(){const sm={};S.shp.forEach(k=>sm[k]=(sm[k]||0)+1);const ac
   h+=`<div class="row"><dt>버튼별</dt><dd>${S.btn.map((id,i)=>chip(id,`${SH[S.shp[i]].name}${hasAcc(i)?(S.tone[i]==='2'?' · 투톤':' · 원톤'):''} · ${swName(S.sw[i])}`,i+1)).join('')}</dd></div>`;
   const n=twoCount();h+=`<div class="row"><dt>금액</dt><dd>${breakdown()} = <b>${won(total())}원</b></dd></div>`;
   return h}
-function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 커스텀]\n조합 코드: ${code()} (커스텀 페이지 상단 [코드 확인]에서 확인 가능)\n금액: ${won(total())}원 (${breakdown()})${heartN()?`\n하트버튼 옵션: ${heartN()}개 (스마트스토어 옵션 추가 필요)`:''}${starN()?`\n별버튼 옵션: ${starN()}개 (스마트스토어 옵션 추가 필요)`:''}${S.rim?`\n${rimOf().name} 테두리 옵션: 1개 (스마트스토어 옵션 추가 필요)`:''}\n본체: ${C[S.body].name}${S.rim?' + '+rimOf().name+' 테두리':''}\n로고: ${S.logo?C[S.logo].name:'본체와 같은 색'}\n버튼(모양 · 색 · 테두리·하트 · 축):\n${S.btn.map((id,i)=>`${i+1}번 ${SH[S.shp[i]].name} · ${C[id].name}${hasAcc(i)?(S.tone[i]==='2'?` (투톤: ${C[accOf(i)].name})`:' (원톤)'):''} · ${swName(S.sw[i])} (${SWM[S.sw[i]].type})`).join('\n')}`}
+function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 커스텀]\n조합 코드: ${code()} (커스텀 페이지 상단 [코드 확인]에서 확인 가능)\n금액: ${won(total())}원 (${breakdown()})${heartN()?`\n하트버튼 옵션: ${heartN()}개 (스마트스토어 옵션 추가 필요)`:''}${starN()?`\n별버튼 옵션: ${starN()}개 (스마트스토어 옵션 추가 필요)`:''}${S.rim?`\n${rimOf().name} 테두리 옵션: 1개 (스마트스토어 옵션 추가 필요)`:''}\n본체: ${C[S.body].name}${S.rim?' + '+rimOf().name+' 테두리':''}\n로고: ${S.logo?C[S.logo].name:'본체와 같은 색'}${S.nomag?'\n자석: 없음 (자석 기능 빼기)':''}\n버튼(모양 · 색 · 테두리·하트 · 축):\n${S.btn.map((id,i)=>`${i+1}번 ${SH[S.shp[i]].name} · ${C[id].name}${hasAcc(i)?(S.tone[i]==='2'?` (투톤: ${C[accOf(i)].name})`:' (원톤)'):''} · ${swName(S.sw[i])} (${SWM[S.sw[i]].type})`).join('\n')}`}
 
 // panel
 function renderSubsteps(){const i=stepIdx();$('#substeps').innerHTML=STEPS.map((s,k)=>`<li><button type="button" data-step="${s.k}" class="${k<i?'done':''}" ${k===i?'aria-current="step"':''}><span class="sn">${k+1}</span><span class="st">${s.name}</span></button></li>`).join('')}
@@ -784,7 +786,8 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     <div class="mini-wrap">${miniGrid()}<div class="mini-side"><p><b>${S.sel+1}번 버튼</b>을 고르는 중입니다.<br>${swName(cur)} (${cx.type}${cx.tag?' · '+cx.tag:''})${cx.d?`<small class="sw-desc">${cx.d}<br>${cx.t.map(z=>'#'+z).join(' ')}</small>`:''}</p><button type="button" class="link" id="sw-all">이 축을 8개 모두에 적용</button></div></div>
     <div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 스위치 축</h3><span class="sel">${swName(cur)}</span></div>
       ${['클리키','택타일','리니어'].map(ty=>`<div class="sw-group"><h4>${ty}</h4><div class="cards sw-cards">${SW.filter(x=>x.type===ty).map(x=>`<div class="sw-item"><button type="button" class="card sw" data-sw="${x.id}" aria-pressed="${cur===x.id}">${swIcon(x)}<b>${x.name}</b><span>(${x.type}${x.tag?' · '+x.tag:''})</span></button>${x.d?`<div class="sw-tip" role="tooltip"><b>${swName(x.id)}</b><p>${x.d}</p><span>${x.t.map(z=>'#'+z).join(' ')}</span></div>`:''}${SND[x.id]?`<button type="button" class="play${playing===x.id?' on':''}" data-play="${x.id}" aria-label="${x.name} 소리 듣기" title="소리 듣기"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor"/><path d="M11 5.5c1 .7 1.5 1.5 1.5 2.5s-.5 1.8-1.5 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>`:''}</div>`).join('')}</div></div>`).join('')}
-      ${Object.keys(SND).length?'<p class="help">축 카드의 스피커 버튼을 누르면 실제 녹음한 타건 소리를 들을 수 있습니다.</p>':''}<p class="help">축 색은 제조사 스템 색을 참고한 근사치입니다. 클리키는 딸깍 소리, 택타일은 걸림 있는 타건감, 리니어는 걸림 없는 부드러운 타건감입니다.</p></div>`;
+      ${Object.keys(SND).length?'<p class="help">축 카드의 스피커 버튼을 누르면 실제 녹음한 타건 소리를 들을 수 있습니다.</p>':''}<p class="help">축 색은 제조사 스템 색을 참고한 근사치입니다. 클리키는 딸깍 소리, 택타일은 걸림 있는 타건감, 리니어는 걸림 없는 부드러운 타건감입니다.</p></div>
+    <div class="sec"><div class="sec-head"><h3>추가 옵션</h3></div><label class="opt-check"><input type="checkbox" id="nomag" ${S.nomag?'checked':''}><span><b>자석 기능 빼기</b><small>바닥 자석 없이 제작합니다. 추가 금액은 없습니다.</small></span></label></div>`;
   }else{
     h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문 요청사항에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
     <dl class="summary">${summaryRows()}</dl>
@@ -817,6 +820,7 @@ function playSw(id){if(audio){audio.pause();audio=null}if(playing===id){playing=
   audio=new Audio(SND[id]);playing=id;markPlay();audio.onended=()=>{playing=null;markPlay()};audio.play().catch(()=>{playing=null;markPlay();status('소리를 재생하지 못했습니다')})}
 function markPlay(){document.querySelectorAll('[data-play]').forEach(b=>b.classList.toggle('on',b.dataset.play===playing))}
 function openNotice(){const n=optN(),el=$('#notice-heart');if(el){el.hidden=!n;el.innerHTML=n?heartMsg():''}let ns=$('#notice-set');if(!ns&&el){ns=document.createElement('p');ns.id='notice-set';ns.className='set-alert';el.after(ns)}if(ns){const on=isSet();ns.hidden=!on;ns.innerHTML=on?`🎉 <b>기본 판매 제품과 같은 구성이에요</b><br>본체·버튼·로고 색과 버튼 모양·스위치 축이 모두 통일되어 있어요. 커스텀 상품이 아닌 <b>기본 상품으로 주문</b>하시면 <s>${won(PRICE.base)}원</s> → <b>${won(PRICE.SET)}원</b>에 구매하실 수 있습니다.<a class="set-link" href="${BASIC_URL}" target="_blank" rel="noopener">기본 상품 주문하러 가기 →</a>`:''}if(isSet()&&!setRevealed){setRevealed=true;renderPrice();if(typeof renderPanel==='function')renderPanel()}$('#notice').hidden=false;$('#notice-ok').focus()}
+document.addEventListener('change',e=>{if(e.target.id!=='nomag')return;S.nomag=e.target.checked;render();status(S.nomag?'자석 없이 제작합니다':'자석을 넣어 제작합니다')});
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.step){go(t.dataset.step);return}
@@ -862,7 +866,9 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id
 document.addEventListener('mouseover',e=>{const it=e.target.closest&&e.target.closest('.sw-item');if(!it)return;const t=it.querySelector('.sw-tip');if(!t)return;t.style.marginLeft='0px';t.style.setProperty('--dx','0px');const r=t.getBoundingClientRect(),vw=document.documentElement.clientWidth;let dx=0;if(r.right>vw-8)dx=vw-8-r.right;if(r.left+dx<8)dx=8-r.left;t.style.marginLeft=dx+'px';t.style.setProperty('--dx',dx+'px')});
 function extractCode(raw){const m=String(raw||'').toUpperCase().match(/SD-[0-9A-Z]+(?:-[0-9A-Z]+)*/);return m?m[0]:String(raw||'').trim()}
 document.addEventListener('paste',e=>{const t=e.target;if(!t||!['code-in','v-in','vw-code'].includes(t.id))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/SD-/i.test(txt))return;e.preventDefault();t.value=extractCode(txt);t.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>{if(t.id==='v-in')runVerify();else if(t.id==='vw-code')viewLoad();else if(t.id==='code-in')openVerify(t.value)},0)});
-function parseCode(raw){
+// 자석 빼기는 코드 끝 '-U'(Base32에 없는 글자)로 표시
+function parseCode(raw){let v=extractCode(raw).toUpperCase().replace(/\s+/g,'');const nm=/-?U$/.test(v);if(nm)v=v.replace(/-?U$/,'');const r=parseCode0(v);if(r&&r.st)r.st.nomag=nm;return r}
+function parseCode0(raw){
   let v=extractCode(raw).toUpperCase().replace(/\s+/g,'');
   const x8=s=>s.length===1?s.repeat(8):s;let m,btn,shp,tone,sw=null;
   // current format: SD-body-btn(1|8)[-shape(1|8)[-switch(1|8)]]  shape: B 기본 · P 무지 · T 하트(투톤) · S 별(투톤) · H(구버전)=T
@@ -888,7 +894,7 @@ function snapImage(label,cb){
 function exportImage(){snapImage(code(),url=>{$('#modal-img').src=url;$('#modal').hidden=false});draw(false)}
 // ── 주문코드 확인 (고객 최종 확인 · 판매자 제작 확인) ──
 let vState=null;
-function makerRows(){return `<tr><th>본체</th><td colspan="4">${C[S.body].name}${S.rim?' + <b>'+rimOf().name+' 테두리</b>':''} · 로고 ${S.logo?'<b>'+C[S.logo].name+'</b>':'본체색'}</td></tr>`+S.btn.map((id,i)=>`<tr><th>${i+1}</th><td>${SH[S.shp[i]].name}</td><td>${C[id].name}</td><td>${hasAcc(i)?(S.tone[i]==='2'?'투톤 · '+C[accOf(i)].name:'원톤'):'—'}</td><td>${swName(S.sw[i])}<small> ${SWM[S.sw[i]].type}</small></td></tr>`).join('')}
+function makerRows(){return `<tr><th>본체</th><td colspan="4">${C[S.body].name}${S.rim?' + <b>'+rimOf().name+' 테두리</b>':''} · 로고 ${S.logo?'<b>'+C[S.logo].name+'</b>':'본체색'}${S.nomag?' · <b>자석 없음</b>':''}</td></tr>`+S.btn.map((id,i)=>`<tr><th>${i+1}</th><td>${SH[S.shp[i]].name}</td><td>${C[id].name}</td><td>${hasAcc(i)?(S.tone[i]==='2'?'투톤 · '+C[accOf(i)].name:'원톤'):'—'}</td><td>${swName(S.sw[i])}<small> ${SWM[S.sw[i]].type}</small></td></tr>`).join('')}
 function openVerify(pre){$('#verify').hidden=false;if(pre){$('#v-in').value=pre;runVerify()}else{$('#v-out').innerHTML='';$('#v-in').focus()}}
 function runVerify(){
   const r=parseCode($('#v-in').value),out=$('#v-out');
