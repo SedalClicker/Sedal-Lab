@@ -348,7 +348,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 window.SEDAL_VIEW=1;
 const COLORS=[
   {id:'ww',name:'화이트초코',hex:'#D6C7A2',fin:'우드',dots:['#AF8F62','#C9AE84'],p:.06},
-  {id:'wd',name:'초코',hex:'#6B4F41',fin:'우드',dots:['#4A372A','#8D715B'],p:.06},
+  {id:'wd',name:'초코',hex:'#6E5A48',fin:'우드',dots:['#4D3F32','#8F7B68'],p:.06},
   {id:'ml',name:'메론',hex:'#C4DDC2',fin:'매트'},
   {id:'st',name:'스트로베리',hex:'#E2B8C4',fin:'매트'},
   {id:'lv',name:'라벤다',hex:'#BEB6DA',fin:'매트'},
@@ -463,7 +463,8 @@ function drawView(v,forExport){
     if(facing&&v.taper){const lcol=S.logo?C[S.logo].hex:bs,P=(u,w)=>[xw+0.02,yc+u,zc+w];
       const o0=v.cam.pr(P(0,0)),ou=v.cam.pr(P(1,0)),ow=v.cam.pr(P(0,1));const a=ou[0]-o0[0],b=ou[1]-o0[1],cc=-(ow[0]-o0[0]),d=-(ow[1]-o0[1]);
       const rect=[P(-Lw/2,-Lh/2),P(Lw/2,-Lh/2),P(Lw/2,Lh/2),P(-Lw/2,Lh/2)];
-      o+=poly(v,rect,'none',lcol,S.logo?0.55:0.35)+`<text transform="matrix(${a.toFixed(4)} ${b.toFixed(4)} ${cc.toFixed(4)} ${d.toFixed(4)} ${o0[0].toFixed(3)} ${o0[1].toFixed(3)})" x="0" y="1.35" font-size="3.8" font-family="Montserrat,Arial,sans-serif" font-weight="700" text-anchor="middle" letter-spacing=".25" fill="${lcol}" ${S.logo?'':'opacity=".75"'}>SE:DAL</text>`}}
+      const lum=(()=>{const[r,g,b]=rgb(lcol);return(0.299*r+0.587*g+0.114*b)/255})(),tcol=S.logo?mix(lcol,lum>0.55?-0.32:0.32):lcol,ecol=S.logo?mix(lcol,lum>0.55?-0.4:0.4):lcol;
+      o+=poly(v,rect,S.logo?lcol:'none',ecol,S.logo?0.45:0.35)+`<text transform="matrix(${a.toFixed(4)} ${b.toFixed(4)} ${cc.toFixed(4)} ${d.toFixed(4)} ${o0[0].toFixed(3)} ${o0[1].toFixed(3)})" x="0" y="1.35" font-size="3.8" font-family="Montserrat,Arial,sans-serif" font-weight="700" text-anchor="middle" letter-spacing=".25" fill="${tcol}" ${S.logo?'':'opacity=".75"'}>SE:DAL</text>`}}
   // rounded lip: crest ring slightly inset, inner edge drops into the recess
   const Ct=rr(0,0,M.bw-1.4,M.bl-1.4,M.br-0.7,top),Oi=rr(0,0,M.bw-2*M.rim,M.bl-2*M.rim,M.br-M.rim,top-0.5);
   const lipBand=`<path d="M${pts(v,Ct).replace(/ /g,' L')} Z M${pts(v,Oi).replace(/ /g,' L')} Z" fill="${bf}" fill-rule="evenodd" stroke="${bs}" stroke-width="${LW}"/>`;
