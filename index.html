@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#4E2F23">
-<meta name="description" content="새달랩(SE:DAL) 초콜릿 클리커 커스텀 · 몸통, 버튼, 스위치 축을 골라 나만의 클리커를 만들어 보세요.">
+<meta name="description" content="새달랩(SE:DAL) 초콜릿 클리커 커스텀 · 본체, 버튼, 스위치 축을 골라 나만의 클리커를 만들어 보세요.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -360,7 +360,7 @@ const COLORS=[
   {id:'sk',name:'핫핑크',hex:'#EAA6C8',fin:'매트',only:'btn'}
 ];
 const PARTS=[
-  {k:'body',name:'몸통',desc:'받침, 테두리, 버튼 사이 채움 면과 고리까지 한 색'},
+  {k:'body',name:'본체',desc:'받침, 테두리, 버튼 사이 채움 면과 고리까지 한 색'},
   {k:'btn',name:'버튼',desc:'2열 4행 누름 버튼 8개를 하나씩 선택'}
 ];
 const C=Object.fromEntries(COLORS.map(c=>[c.id,c]));
@@ -571,7 +571,7 @@ function heartN(){return S.shp.filter(k=>k==='H').length}
 function starN(){return S.shp.filter(k=>k==='S').length}
 function optN(){return heartN()+starN()+(S.rim?1:0)}
 function heartMsg(){const n=heartN(),p=[];if(n)p.push(`<b>하트버튼 옵션 ${n}개</b>`);if(starN())p.push(`<b>별버튼 옵션 ${starN()}개</b>`);if(S.rim)p.push(`<b>${rimOf().name} 림 옵션 1개</b>`);return `네이버 스마트스토어 주문 시 ${p.join(', ')}를 추가해 주셔야 합니다.`}
-const STEPS=[{k:'body',name:'몸통 색상'},{k:'shape',name:'버튼 모양'},{k:'btn',name:'버튼 색상'},{k:'sw',name:'스위치 축'},{k:'code',name:'주문 코드'}];
+const STEPS=[{k:'body',name:'본체 색상'},{k:'shape',name:'버튼 모양'},{k:'btn',name:'버튼 색상'},{k:'sw',name:'스위치 축'},{k:'code',name:'주문 코드'}];
 const PRICE={base:18900,T:500,RIM:2000};
 function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
 function total(){return PRICE.base+PRICE.T*twoCount()+(S.rim?PRICE.RIM:0)}
@@ -647,7 +647,7 @@ function chipSw(id,label){return`<span class="cdot"><i style="background:${SWM[i
 function swIcon(x){const dk=lum(x.hex)<110,st=dk?'#111':'#6E5A52';return`<svg class="ico" viewBox="0 0 44 44" aria-hidden="true"><rect x="5" y="25" width="34" height="14" rx="3" fill="${x.house||x.hex}" fill-opacity="${x.house?1:.28}" stroke="#6E5A52" stroke-width="1.2"/><rect x="10" y="16" width="24" height="10" rx="2" fill="${x.house?mix(x.house,.35):'#FBF8F5'}" stroke="#6E5A52" stroke-width="1.2"/><path d="M14 16 v-7 h16 v7 Z" fill="${x.hex}" stroke="${st}" stroke-width="1"/><path d="M19.5 9 v-4.5 h5 v4.5" fill="${x.hex}" stroke="${st}" stroke-width="1"/><line x1="16" y1="12.5" x2="28" y2="12.5" stroke="${dk?'#fff':'#6E5A52'}" stroke-opacity=".45" stroke-width="1"/></svg>`}
 function summaryRows(){const sm={};S.shp.forEach(k=>sm[k]=(sm[k]||0)+1);const ac=S.btn.map((_,i)=>i).filter(i=>hasAcc(i));
   const colorChips=arr=>{const m={};arr.forEach(id=>m[id]=(m[id]||0)+1);return Object.entries(m).map(([id,n])=>chip(id,`${C[id].name} ${n}`)).join('')};
-  let h=`<div class="row"><dt>몸통</dt><dd>${chip(S.body,C[S.body].name)}${S.rim?`<span class="cdot"><i style="background:${rimOf().hex}"></i>${rimOf().name} 림</span>`:''}</dd></div><div class="row"><dt>로고</dt><dd>${S.logo?chip(S.logo,C[S.logo].name):'몸통과 같은 색'}</dd></div>
+  let h=`<div class="row"><dt>본체</dt><dd>${chip(S.body,C[S.body].name)}${S.rim?`<span class="cdot"><i style="background:${rimOf().hex}"></i>${rimOf().name} 림</span>`:''}</dd></div><div class="row"><dt>로고</dt><dd>${S.logo?chip(S.logo,C[S.logo].name):'본체와 같은 색'}</dd></div>
   <div class="row"><dt>버튼 모양</dt><dd>${SHAPES.filter(x=>sm[x.k]).map(x=>`${x.name} ${sm[x.k]}`).join(' · ')}</dd></div>
   <div class="row"><dt>버튼 색상</dt><dd>${colorChips(S.btn)}</dd></div>`;
   if(ac.length)h+=`<div class="row"><dt>테두리·하트·별</dt><dd>${['1','2'].map(t=>[t,ac.filter(i=>S.tone[i]===t).length]).filter(x=>x[1]).map(([t,n])=>(t==='1'?'원톤 ':'투톤 ')+n).join(' · ')}</dd></div>`;
@@ -656,7 +656,7 @@ function summaryRows(){const sm={};S.shp.forEach(k=>sm[k]=(sm[k]||0)+1);const ac
   h+=`<div class="row"><dt>버튼별</dt><dd>${S.btn.map((id,i)=>chip(id,`${SH[S.shp[i]].name}${hasAcc(i)?(S.tone[i]==='2'?' · 투톤':' · 원톤'):''} · ${swName(S.sw[i])}`,i+1)).join('')}</dd></div>`;
   const n=twoCount();h+=`<div class="row"><dt>금액</dt><dd>${breakdown()} = <b>${won(total())}원</b></dd></div>`;
   return h}
-function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 커스텀]\n조합 코드: ${code()} (커스텀 페이지 상단 [코드 확인]에서 확인 가능)\n금액: ${won(total())}원 (${breakdown()})${heartN()?`\n하트버튼 옵션: ${heartN()}개 (스마트스토어 옵션 추가 필요)`:''}${starN()?`\n별버튼 옵션: ${starN()}개 (스마트스토어 옵션 추가 필요)`:''}${S.rim?`\n${rimOf().name} 림 옵션: 1개 (스마트스토어 옵션 추가 필요)`:''}\n몸통: ${C[S.body].name}${S.rim?' + '+rimOf().name+' 림':''}\n로고: ${S.logo?C[S.logo].name:'몸통과 같은 색'}\n버튼(모양 · 색 · 테두리·하트 · 축):\n${S.btn.map((id,i)=>`${i+1}번 ${SH[S.shp[i]].name} · ${C[id].name}${hasAcc(i)?(S.tone[i]==='2'?` (투톤: ${C[accOf(i)].name})`:' (원톤)'):''} · ${swName(S.sw[i])} (${SWM[S.sw[i]].type})`).join('\n')}`}
+function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 커스텀]\n조합 코드: ${code()} (커스텀 페이지 상단 [코드 확인]에서 확인 가능)\n금액: ${won(total())}원 (${breakdown()})${heartN()?`\n하트버튼 옵션: ${heartN()}개 (스마트스토어 옵션 추가 필요)`:''}${starN()?`\n별버튼 옵션: ${starN()}개 (스마트스토어 옵션 추가 필요)`:''}${S.rim?`\n${rimOf().name} 림 옵션: 1개 (스마트스토어 옵션 추가 필요)`:''}\n본체: ${C[S.body].name}${S.rim?' + '+rimOf().name+' 림':''}\n로고: ${S.logo?C[S.logo].name:'본체와 같은 색'}\n버튼(모양 · 색 · 테두리·하트 · 축):\n${S.btn.map((id,i)=>`${i+1}번 ${SH[S.shp[i]].name} · ${C[id].name}${hasAcc(i)?(S.tone[i]==='2'?` (투톤: ${C[accOf(i)].name})`:' (원톤)'):''} · ${swName(S.sw[i])} (${SWM[S.sw[i]].type})`).join('\n')}`}
 
 // panel
 function renderSubsteps(){const i=stepIdx();$('#substeps').innerHTML=STEPS.map((s,k)=>`<li><button type="button" data-step="${s.k}" class="${k<i?'done':''}" ${k===i?'aria-current="step"':''}>${s.name}</button></li>`).join('')}
@@ -674,18 +674,18 @@ function viewLoad(useInput=true){const el=$('#vw-code');if(useInput&&el)vwInput=
 function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepIdx();
   if(S.step==='body'){
     const top=BEST[0];
-    h+=`<h2 class="ptitle">몸통 색상</h2>
+    h+=`<h2 class="ptitle">본체 색상</h2>
     <div class="best"><p class="tagline"><span class="tag">Best</span>다른 구매자들이 가장 많이 선택한 색상입니다</p>
       <div class="best-box"><p>초콜릿 클리커 구매자 중 <b>${top[1]}%</b>가 <b class="hl">${C[top[0]].name}</b> 색상을 선택하셨습니다.</p>
       <div class="best-row">${BEST.map(([id,p],k)=>{const c=C[id],sz=k===0?88:70,dark=lum(c.hex)<120;return`<button type="button" class="best-item" data-color="${id}" data-scope="body"><i style="width:${sz}px;height:${sz}px;${swatchBg(c)};color:${dark?'#fff':'#1B1512'}"><b>${p}<small>%</small></b></i>${c.name}</button>`}).join('')}</div>
       <small>최근 주문 80개 기준 (2026.9.24 ~ 9.27)</small></div></div>
-    <div class="sec"><div class="sec-head"><h3>몸통 색상</h3><span class="sel">${C[S.body].name}</span></div>${swatchGrid('body')}</div>
+    <div class="sec"><div class="sec-head"><h3>본체 색상</h3><span class="sel">${C[S.body].name}</span></div>${swatchGrid('body')}</div>
     <div class="sec"><div class="sec-head"><h3>튜닝 옵션 · 테두리 림</h3><span class="sel">${S.rim?rimOf().name+' 림':'림 없음'}</span></div>
-    <div class="tones rim-cards"><button type="button" class="tone" data-rim="0" aria-pressed="${!S.rim}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i></span><span><b>기본 <small class="tp">추가금 없음</small></b><span>몸통과 같은 색 테두리</span></span></button>
+    <div class="tones rim-cards"><button type="button" class="tone" data-rim="0" aria-pressed="${!S.rim}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i></span><span><b>기본 <small class="tp">추가금 없음</small></b><span>본체와 같은 색 테두리</span></span></button>
     ${Object.entries(RIMS).map(([k,r])=>`<button type="button" class="tone" data-rim="${k}" aria-pressed="${S.rim===k}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i><i style="background:${r.hex}"></i></span><span><b>${r.name} 림 <small class="tp">+${won(PRICE.RIM)}원</small></b><span>테두리 위에 ${r.name}색 림을 덧댐</span></span></button>`).join('')}</div></div>
-    <div class="sec"><div class="sec-head"><h3>로고(SE:DAL) 색상</h3><span class="sel">${S.logo?C[S.logo].name:'몸통과 같은 색'}</span></div>
-    <p class="help">몸통 옆면의 SE:DAL 로고 색입니다. 추가금 없음.</p>
-    <div class="logo-row"><button type="button" class="logo-sw" data-logo="0" aria-pressed="${!S.logo}" title="몸통과 같은 색"><i style="${swatchBg(C[S.body])}"></i><span>몸통색</span></button>${COLORS.filter(c=>!c.only).map(c=>`<button type="button" class="logo-sw" data-logo="${c.id}" aria-pressed="${S.logo===c.id}" title="${c.name}"><i style="${swatchBg(c)}"></i><span>${c.name}</span></button>`).join('')}</div></div>`;
+    <div class="sec"><div class="sec-head"><h3>로고(SE:DAL) 색상</h3><span class="sel">${S.logo?C[S.logo].name:'본체와 같은 색'}</span></div>
+    <p class="help">본체 옆면의 SE:DAL 로고 색입니다. 추가금 없음.</p>
+    <div class="logo-row"><button type="button" class="logo-sw" data-logo="0" aria-pressed="${!S.logo}" title="본체와 같은 색"><i style="${swatchBg(C[S.body])}"></i><span>본체색</span></button>${COLORS.filter(c=>!c.only).map(c=>`<button type="button" class="logo-sw" data-logo="${c.id}" aria-pressed="${S.logo===c.id}" title="${c.name}"><i style="${swatchBg(c)}"></i><span>${c.name}</span></button>`).join('')}</div></div>`;
   }else if(S.step==='shape'){
     const k=S.shp[S.sel];
     h+=`<h2 class="ptitle">버튼 모양</h2><p class="lead">버튼마다 다른 모양을 고를 수 있습니다. 번호를 누르거나 미리보기의 버튼을 눌러 선택하세요.</p>
@@ -711,7 +711,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     <dl class="summary">${summaryRows()}</dl>
     <div class="codebox"><span class="code" id="code">${code()}</span><button type="button" class="btn primary" id="copy">요청사항 복사</button></div>
     <p class="status" id="status" role="status"></p>
-    <p class="help">코드 읽는 법: <b>SD-몸통-버튼 색(8개)-버튼 모양(8개)-스위치 축(8개)</b>. 몸통 번호 뒤 R은 초코 림, RP는 핫핑크 림, L+번호는 로고 색상입니다. 8개가 모두 같으면 한 글자로 줄고, 모양이 전부 기본형이고 축이 전부 Y2면 뒤 칸은 생략됩니다. 모양 글자는 B 기본 · P 무지 · T 하트(투톤) · S 별(투톤), 축 번호는 ${SW.map((x,i)=>i.toString(36).toUpperCase()+' '+x.name).join(' · ')}입니다.</p>
+    <p class="help">코드 읽는 법: <b>SD-본체-버튼 색(8개)-버튼 모양(8개)-스위치 축(8개)</b>. 본체 번호 뒤 R은 초코 림, RP는 핫핑크 림, L+번호는 로고 색상입니다. 8개가 모두 같으면 한 글자로 줄고, 모양이 전부 기본형이고 축이 전부 Y2면 뒤 칸은 생략됩니다. 모양 글자는 B 기본 · P 무지 · T 하트(투톤) · S 별(투톤), 축 번호는 ${SW.map((x,i)=>i.toString(36).toUpperCase()+' '+x.name).join(' · ')}입니다.</p>
     <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="SD-3-6-T" aria-label="주문 코드 입력" maxlength="40" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
     <div class="sec"><div class="sec-head"><h3>더 보기</h3></div><div class="load"><button type="button" class="btn" id="img">이미지로 저장</button><button type="button" class="btn" id="random">랜덤 조합</button><button type="button" class="btn ghost" id="example">초기 상태로</button></div></div>`;
   }
@@ -720,7 +720,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
 }
 function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():'기본가 · 옵션 추가금 없음'}
 function renderChip(){const id=S.step==='shape'?'iv':curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
-  pill.querySelector('span').textContent=S.step==='body'?`몸통 · ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
+  pill.querySelector('span').textContent=S.step==='body'?`본체 · ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
 function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code()}
 function render(){normTone();syncPart();draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
 
@@ -749,7 +749,7 @@ document.addEventListener('click',e=>{
   if(t.id==='sw-all'){const k=S.sw[S.sel];S.sw=S.sw.map(()=>k);render();status('8개 버튼에 '+swName(k)+'을 적용했습니다');return}
   if(t.dataset.sw){S.sw[S.sel]=t.dataset.sw;if(t.classList.contains('sw')&&S.sel<7)S.sel++;render();return}
   if(t.dataset.rim){S.rim=t.dataset.rim==='0'?false:t.dataset.rim;render();status(S.rim?rimOf().name+' 림을 선택했습니다':'림을 뺐습니다');return}
-  if(t.dataset.logo){S.logo=t.dataset.logo==='0'?null:t.dataset.logo;render();status('로고 색상: '+(S.logo?C[S.logo].name:'몸통과 같은 색'));return}
+  if(t.dataset.logo){S.logo=t.dataset.logo==='0'?null:t.dataset.logo;render();status('로고 색상: '+(S.logo?C[S.logo].name:'본체와 같은 색'));return}
   if(t.dataset.tone){S.tone[S.sel]=t.dataset.tone;render();return}
   if(t.dataset.sel){S.sel=+t.dataset.sel;lastPick=null;render();return}
   if(t.dataset.color){const id=t.dataset.color;lastPick=id;const scope=t.dataset.scope||(S.step==='body'?'body':'btn');
@@ -805,7 +805,7 @@ function snapImage(label,cb){
 function exportImage(){snapImage(code(),url=>{$('#modal-img').src=url;$('#modal').hidden=false});draw(false)}
 // ── 주문코드 확인 (고객 최종 확인 · 판매자 제작 확인) ──
 let vState=null;
-function makerRows(){return `<tr><th>몸통</th><td colspan="4">${C[S.body].name}${S.rim?' + <b>'+rimOf().name+' 림</b>':''} · 로고 ${S.logo?'<b>'+C[S.logo].name+'</b>':'몸통색'}</td></tr>`+S.btn.map((id,i)=>`<tr><th>${i+1}</th><td>${SH[S.shp[i]].name}</td><td>${C[id].name}</td><td>${hasAcc(i)?(S.tone[i]==='2'?'투톤 · '+C[accOf(i)].name:'원톤'):'—'}</td><td>${swName(S.sw[i])}<small> ${SWM[S.sw[i]].type}</small></td></tr>`).join('')}
+function makerRows(){return `<tr><th>본체</th><td colspan="4">${C[S.body].name}${S.rim?' + <b>'+rimOf().name+' 림</b>':''} · 로고 ${S.logo?'<b>'+C[S.logo].name+'</b>':'본체색'}</td></tr>`+S.btn.map((id,i)=>`<tr><th>${i+1}</th><td>${SH[S.shp[i]].name}</td><td>${C[id].name}</td><td>${hasAcc(i)?(S.tone[i]==='2'?'투톤 · '+C[accOf(i)].name:'원톤'):'—'}</td><td>${swName(S.sw[i])}<small> ${SWM[S.sw[i]].type}</small></td></tr>`).join('')}
 function openVerify(pre){$('#verify').hidden=false;if(pre){$('#v-in').value=pre;runVerify()}else{$('#v-out').innerHTML='';$('#v-in').focus()}}
 function runVerify(){
   const r=parseCode($('#v-in').value),out=$('#v-out');
