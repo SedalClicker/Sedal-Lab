@@ -264,7 +264,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 @media (prefers-reduced-motion:reduce){.turn{transition:none}}
 /* ── mobile portrait (v52): compact step bar · sticky preview ── */
 .substeps .sn{display:none}
-.set-alert{margin:0;padding:12px 14px;border-radius:6px;background:#FFF4E5;color:#6B3E12;font-size:14px;line-height:1.55}.set-alert s{color:#9A8A7A}
+.set-alert{margin:0;padding:12px 14px;border-radius:6px;background:#FFF4E5;color:#6B3E12;font-size:14px;line-height:1.55}.set-alert s{color:#9A8A7A}.set-alert .set-link{display:block;margin-top:10px;padding:10px 12px;border-radius:6px;background:#03C75A;color:#fff;font-weight:700;text-align:center;text-decoration:none}
 @media (max-width:960px){
   html:not(.view-mode) .stage-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar-h,64px) + var(--steps-h,52px));z-index:15;background:var(--bg);padding-top:10px;padding-bottom:10px;gap:8px;box-shadow:0 6px 12px -10px rgba(0,0,0,.35)}
   html:not(.view-mode) .stage{min-height:0;aspect-ratio:auto;height:min(30vh,260px)}
@@ -615,6 +615,7 @@ const PRICE={base:18900,SET:16900,T:700,RIM:2000};
 // 단색 세트: 본체·버튼 8개·로고가 모두 같은 색 + 스위치 축 8개 통일 + 버튼 모양 통일(기본형 또는 무지형) + 유료 옵션(림·하트·별) 없음 → 기본 판매 제품과 같아 기본가 할인
 function isSet(){const b=S.body;return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&S.shp.every(x=>x===S.shp[0])&&!S.rim&&twoCount()===0}
 // 단색 할인은 마지막 [요청사항 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
+const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
 let setRevealed=false;function setOn(){return isSet()&&(setRevealed||!!window.SEDAL_VIEW)}
 function basePrice(){return setOn()?PRICE.SET:PRICE.base}
 function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
@@ -802,7 +803,7 @@ let playing=null,audio=null;
 function playSw(id){if(audio){audio.pause();audio=null}if(playing===id){playing=null;markPlay();return}
   audio=new Audio(SND[id]);playing=id;markPlay();audio.onended=()=>{playing=null;markPlay()};audio.play().catch(()=>{playing=null;markPlay();status('소리를 재생하지 못했습니다')})}
 function markPlay(){document.querySelectorAll('[data-play]').forEach(b=>b.classList.toggle('on',b.dataset.play===playing))}
-function openNotice(){const n=optN(),el=$('#notice-heart');if(el){el.hidden=!n;el.innerHTML=n?heartMsg():''}let ns=$('#notice-set');if(!ns&&el){ns=document.createElement('p');ns.id='notice-set';ns.className='set-alert';el.after(ns)}if(ns){const on=isSet();ns.hidden=!on;ns.innerHTML=on?`🎉 <b>단색 세트 할인 적용</b><br>본체·버튼·로고 색과 버튼 모양·스위치 축이 모두 통일되어 기본 판매 제품과 같은 구성입니다.<br><s>${won(PRICE.base)}원</s> → <b>${won(PRICE.SET)}원</b>`:''}if(isSet()&&!setRevealed){setRevealed=true;renderPrice();if(typeof renderPanel==='function')renderPanel()}$('#notice').hidden=false;$('#notice-ok').focus()}
+function openNotice(){const n=optN(),el=$('#notice-heart');if(el){el.hidden=!n;el.innerHTML=n?heartMsg():''}let ns=$('#notice-set');if(!ns&&el){ns=document.createElement('p');ns.id='notice-set';ns.className='set-alert';el.after(ns)}if(ns){const on=isSet();ns.hidden=!on;ns.innerHTML=on?`🎉 <b>기본 판매 제품과 같은 구성이에요</b><br>본체·버튼·로고 색과 버튼 모양·스위치 축이 모두 통일되어 있어요. 커스텀 상품이 아닌 <b>기본 상품으로 주문</b>하시면 <s>${won(PRICE.base)}원</s> → <b>${won(PRICE.SET)}원</b>에 구매하실 수 있습니다.<a class="set-link" href="${BASIC_URL}" target="_blank" rel="noopener">기본 상품 주문하러 가기 →</a>`:''}if(isSet()&&!setRevealed){setRevealed=true;renderPrice();if(typeof renderPanel==='function')renderPanel()}$('#notice').hidden=false;$('#notice-ok').focus()}
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.step){go(t.dataset.step);return}
