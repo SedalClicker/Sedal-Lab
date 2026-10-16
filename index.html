@@ -626,7 +626,7 @@ function won(n){return n.toLocaleString('ko-KR')}
 function optPrice(k){return SH[k].acc?PRICE.T:0}
 function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1')}
 function heartD(cx,cy,w){return'M'+heart(0,0,w,0,48).map(p=>(cx+p[0]).toFixed(2)+' '+(cy-p[1]).toFixed(2)).join(' L')+' Z'}
-const BEST=[['sy',24],['ww',14],['cc',14]]; // 최근 3개월 내 주문 기준 색상 비중
+const BEST=[['sy',23],['ww',19],['cc',13]]; // 최근 3개월 내 주문 기준 색상 비중
 const ORDER=['iv','ml','st','lv','cc','sy','sd','ch','ww','wd','be','sk'];
 if(!STEPS.some(s=>s.k===S.step))S.step='body';if(!['iso','top'].includes(S.view))S.view='iso';if(typeof S.sel!=='number'||S.sel<0||S.sel>7)S.sel=0;
 function stepIdx(){return STEPS.findIndex(s=>s.k===S.step)}
