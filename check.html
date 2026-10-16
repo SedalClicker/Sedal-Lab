@@ -649,7 +649,7 @@ function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1')}
 function heartD(cx,cy,w){return'M'+heart(0,0,w,0,48).map(p=>(cx+p[0]).toFixed(2)+' '+(cy-p[1]).toFixed(2)).join(' L')+' Z'}
 // 추천 디자인: 사장님이 고른 주문 코드 + 이름 + 한 줄 설명. 비어 있으면 표시 안 함. tag는 'NEW'·'BEST' 등(선택)
 const PRESETS=[
-  {code:'SD-D2B6-ANK5-APAM-950',name:'달마시안',desc:'달마시안 강아지처럼 귀여운 클리커',tag:'추천'},
+  {code:'SD-D1B6-ANK5-APAM-94R',name:'달마시안',desc:'달마시안 강아지처럼 귀여운 클리커',tag:'추천'},
   {code:'SD-K048-0242-2R4H-4P',name:'믹스초콜릿',desc:'과자 같은 귀여운 클리커',tag:'추천'},
   {code:'SD-VX25-A6EX-PBFP',name:'핑크그라데이션',desc:'공주 같은 핑크 클리커',tag:'추천'},
 ];
@@ -790,7 +790,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     ${Object.entries(RIMS).map(([k,r])=>`<button type="button" class="tone" data-rim="${k}" aria-pressed="${S.rim===k}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i><i style="background:${r.hex}"></i></span><span><b>${r.name} 테두리 <small class="tp">+${won(PRICE.RIM)}원</small></b><span>본체 가장자리에 ${r.name}색 테두리를 덧댐</span></span></button>`).join('')}</div></div>
     <div class="sec"><div class="sec-head"><h3>로고(SE:DAL) 색상</h3><span class="sel">${S.logo?C[S.logo].name:'본체와 같은 색'}</span></div>
     <p class="help">본체 옆면의 SE:DAL 로고 색입니다. 추가금 없음.</p>
-    <div class="logo-row"><button type="button" class="logo-sw" data-logo="0" aria-pressed="${!S.logo}" title="본체와 같은 색"><i style="${swatchBg(C[S.body])}"></i><span>본체색</span></button>${COLORS.filter(c=>!c.only).map(c=>`<button type="button" class="logo-sw" data-logo="${c.id}" aria-pressed="${S.logo===c.id}" title="${c.name}"><i style="${swatchBg(c)}"></i><span>${c.name}</span></button>`).join('')}</div></div>`;
+    <div class="logo-row"><button type="button" class="logo-sw" data-logo="0" aria-pressed="${!S.logo}" title="본체와 같은 색"><i style="${swatchBg(C[S.body])}"></i><span>본체색</span></button>${COLORS.filter(c=>!c.only&&!c.nobody).map(c=>`<button type="button" class="logo-sw" data-logo="${c.id}" aria-pressed="${S.logo===c.id}" title="${c.name}"><i style="${swatchBg(c)}"></i><span>${c.name}</span></button>`).join('')}</div></div>`;
   }else if(S.step==='shape'){
     const k=S.shp[S.sel];
     h+=`<h2 class="ptitle">버튼 모양</h2><p class="lead">버튼마다 다른 모양을 고를 수 있습니다. 번호를 누르거나 미리보기의 버튼을 눌러 선택하세요.</p>
