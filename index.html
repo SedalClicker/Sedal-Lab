@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#4E2F23">
+<meta name="theme-color" content="#F0EBE3">
 <meta name="description" content="새달랩(SE:DAL) 초콜릿 클리커 커스텀 · 본체, 버튼, 스위치 축을 골라 나만의 클리커를 만들어 보세요.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
@@ -17,6 +17,7 @@
 <style>
 /* Layout: car-configurator pattern — cream top bar + step bar, sticky white product stage on the left, scrolling option panel on the right with a fixed prev/next rail. */
 :root{
+  color-scheme:light;
   --bg:#FFFFFF; --bar:#F0EBE3; --sunken:#F6F3EF; --stage:#FFFFFF;
   --ink:#1B1512; --ink-2:#6E655F; --ink-3:#A39A93; --line:#E6DFD8; --line-2:#D4CBC2;
   --accent:#4E2F23; --accent-ink:#FFFFFF; --check:#4E2F23; --best:#D6432F; --focus:#9A6B55;
@@ -24,22 +25,6 @@
   --body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --wordmark:"Montserrat","Noto Sans KR",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme:dark;
-    --bg:#15110F; --bar:#1F1915; --sunken:#1E1915; --stage:#F4F1EC;
-    --ink:#F2ECE7; --ink-2:#B5AAA2; --ink-3:#7E746D; --line:#33291F; --line-2:#4A3C32;
-    --accent:#E6C3B3; --accent-ink:#1B1512; --check:#E6C3B3; --best:#F06A57; --focus:#E6C3B3;
-    --shadow:0 22px 44px -30px rgba(0,0,0,.8);
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme:dark;
-  --bg:#15110F; --bar:#1F1915; --sunken:#1E1915; --stage:#F4F1EC;
-  --ink:#F2ECE7; --ink-2:#B5AAA2; --ink-3:#7E746D; --line:#33291F; --line-2:#4A3C32;
-  --accent:#E6C3B3; --accent-ink:#1B1512; --check:#E6C3B3; --best:#F06A57; --focus:#E6C3B3;
-  --shadow:0 22px 44px -30px rgba(0,0,0,.8);
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -111,6 +96,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .stage-tools svg{width:16px;height:16px}
 .stage-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .stage-foot .note{margin:0;font-size:12px;color:var(--ink-3);line-height:1.5}
+.stage .disclaim{position:absolute;left:12px;bottom:8px;margin:0;font-size:11px;line-height:1.3;color:#8A7F78;pointer-events:none;z-index:2}
 .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
 .seg button{appearance:none;border:0;background:transparent;color:var(--ink-2);padding:9px 18px;font-size:14px;font-weight:500;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
@@ -279,6 +265,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
   html:not(.view-mode) .stage-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar-h,64px) + var(--steps-h,52px));z-index:15;background:var(--bg);padding-top:10px;padding-bottom:10px;gap:8px;box-shadow:0 6px 12px -10px rgba(0,0,0,.35)}
   html:not(.view-mode) .stage{min-height:0;aspect-ratio:auto;height:min(30vh,260px)}
   html:not(.view-mode) .stage-foot .note{display:none}
+  html:not(.view-mode) .stage .floor::after{display:none}
   html:not(.view-mode) .stage-foot{position:absolute;right:calc(clamp(16px,3vw,40px) + 8px);bottom:18px;z-index:3}
   html:not(.view-mode) .stage-foot .seg button{padding:5px 10px;font-size:12px}
   .stage-head{flex-wrap:nowrap;align-items:center}
@@ -345,6 +332,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
         <div class="turn">360°</div>
         <div class="view v-iso" id="vw-iso"></div>
         <div class="view v-top" id="vw-top" hidden></div>
+        <p class="disclaim">실제 제품은 이미지와 다를 수 있습니다.</p>
       </div>
       <div class="stage-foot">
         <p class="note">* 미리보기는 실제 치수를 바탕으로 그린 일러스트입니다. 드래그하면 돌려 볼 수 있고, 버튼을 누르면 바로 선택됩니다.<br>&nbsp;&nbsp;화면 색은 실제 필라멘트 색과 조금 다를 수 있습니다.</p>
