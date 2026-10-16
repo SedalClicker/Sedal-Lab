@@ -97,6 +97,8 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .stage-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .stage-foot .note{margin:0;font-size:12px;color:var(--ink-3);line-height:1.5}
 .stage.btn-step .turn{opacity:0}
+.sel-ring{animation:selp 1.3s ease-in-out infinite}@keyframes selp{0%,100%{stroke-opacity:.9;stroke-width:1.1}50%{stroke-opacity:.25;stroke-width:2.6}}
+.stage .view g[data-i]{transition:opacity .2s}
 .stage .disclaim{position:absolute;left:12px;bottom:8px;margin:0;font-size:11px;line-height:1.3;color:#8A7F78;pointer-events:none;z-index:2}
 .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
 .seg button{appearance:none;border:0;background:transparent;color:var(--ink-2);padding:9px 18px;font-size:14px;font-weight:500;cursor:pointer}
@@ -542,10 +544,12 @@ function drawView(v,forExport){
     f+=band(v,FoT,FiT,rf,rs,LW)+`</g>`;o+=f}
   // caps sorted far->near
   const idx=[0,1,2,3,4,5,6,7].sort((a,b2)=>v.cam.dp([...worldCap(b2),0])-v.cam.dp([...worldCap(a),0]));
-  const up=[];let selTop='';const SELC='#D6432F';
-  const selOut=(A,B)=>hullPoly(v,A,B,'none',SELC,2.8,'stroke-opacity=".25"')+hullPoly(v,A,B,'none',SELC,1.05);
+  const up=[];let selTop='';const SELST=window.SELSTYLE||'lift',anySel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn';
+  const SELC='#D6432F',selOut=(A,B)=>hullPoly(v,A,B,'none',SELC,2.8,'stroke-opacity=".25"')+hullPoly(v,A,B,'none',SELC,1.05);
+  const frost=(A,B)=>hullPoly(v,A,B,`rgba(255,255,255,${SELST==='spot'?0.62:0.5})`,'none',0);
+  const selTag=(px,py,n)=>`<g class="sel-tag" pointer-events="none"><rect x="${(px-5.2).toFixed(2)}" y="${(py-3.6).toFixed(2)}" width="10.4" height="7.2" rx="3.6" fill="${SELC}"/><text x="${px.toFixed(2)}" y="${(py+1.75).toFixed(2)}" text-anchor="middle" font-size="4.6" font-weight="700" fill="#fff" font-family="Montserrat,sans-serif">${n}</text></g>`;
   for(const i of idx){const[x,y]=worldCap(i),id=dispBtn(i),f=fillOf(id),st=strokeOf(id),sel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn'&&S.sel===i;
-    let upper=`<g data-i="${i}" style="cursor:pointer">`;
+    const lift=sel&&v.taper&&SELST==='lift';let upper=(lift?hullPoly(v,rr(x,y,M.capW,M.capW,M.capR,fz-0.4),rr(x,y,M.capW+1.2,M.capW+1.2,M.capR,fz-0.4),'rgba(40,24,14,.28)','none',0):'')+`<g data-i="${i}" style="cursor:pointer"${lift?' transform="translate(0,-3.2)"':''}>`;
     if(v.taper){
       // cap rises from the bed: full width through the recess, then a convex taper to the smaller top face
       const z0=fz-0.4,z1=top+0.2,zt=M.capH,wt=M.capTopIso,rt=4.2,rings=[rr(x,y,M.capW,M.capW,M.capR,z0),rr(x,y,M.capW,M.capW,M.capR,z1)];
@@ -553,12 +557,13 @@ function drawView(v,forExport){
       upper+=hullPoly(v,rings[0],[].concat(...rings),f,st,LW);
       const T=rings[rings.length-1];upper+=poly(v,T,f,st,LW);
       upper+=capTop(v,x,y,zt,wt,rt,1.4,6.2,1.1,0.6,6.8,i,f,st,LW);
-      if(sel){upper+=selOut(rings[0],[].concat(...rings));const b=v.cam.pr([x,y,zt+11]),t=v.cam.pr([x,y,zt+1.2]);selTop=`<g class="sel-pin" pointer-events="none"><line x1="${t[0].toFixed(2)}" y1="${t[1].toFixed(2)}" x2="${b[0].toFixed(2)}" y2="${b[1].toFixed(2)}" stroke="${SELC}" stroke-width="0.7"/><circle cx="${b[0].toFixed(2)}" cy="${b[1].toFixed(2)}" r="4.6" fill="${SELC}" stroke="#fff" stroke-width="0.6"/><text x="${b[0].toFixed(2)}" y="${(b[1]+1.8).toFixed(2)}" text-anchor="middle" font-size="5.2" font-weight="700" fill="#fff" font-family="Montserrat,sans-serif">${i+1}</text></g>`}
+      if(anySel&&!sel)upper+=frost(rings[0],[].concat(...rings));
+      if(sel){upper+=selOut(rings[0],[].concat(...rings));const b=v.cam.pr([x,y,zt+9.5]);selTop=selTag(b[0],b[1]-(lift?3.2:0),i+1)}
     }else{
       const Bm=rr(x,y,M.capW,M.capW,M.capR,fz),T=rr(x,y,M.capTopW,M.capTopW,M.capTopR,M.capH),Tm=rr(x,y,M.capW*0.96,M.capW*0.96,M.capR,M.capH-2.2);
       upper+=hullPoly(v,Bm,Tm,f,st,LW)+hullPoly(v,Tm,T,f,st,LW)+poly(v,T,f,st,LW);
       upper+=capTop(v,x,y,M.capH,M.capTopW,M.capTopR,M.ringIn,M.sq,M.sqR,M.sqH,7.8,i,f,st,LW);
-      if(sel)upper+=selOut(Bm,T);
+      if(sel)upper+=selOut(Bm,T);else if(anySel)upper+=frost(Bm,T);
     }
     up.push(upper+`</g>`)}
   o+=up.join('');
