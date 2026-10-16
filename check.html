@@ -545,7 +545,7 @@ function drawView(v,forExport){
   // caps sorted far->near
   const idx=[0,1,2,3,4,5,6,7].sort((a,b2)=>v.cam.dp([...worldCap(b2),0])-v.cam.dp([...worldCap(a),0]));
   const up=[];let selTop='';const SELST=window.SELSTYLE||'lift',anySel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn';
-  const SELC='#D6432F',selOut=(A,B)=>hullPoly(v,A,B,'none',SELC,2.8,'stroke-opacity=".25"')+hullPoly(v,A,B,'none',SELC,1.05);
+  const SELC='#D6432F',selOut=(A,B)=>hullPoly(v,A,B,'none',SELC,1.1);
   const frost=(A,B)=>hullPoly(v,A,B,`rgba(255,255,255,${SELST==='spot'?0.62:0.5})`,'none',0);
   const selTag=(px,py,n)=>`<g class="sel-tag" pointer-events="none"><rect x="${(px-5.2).toFixed(2)}" y="${(py-3.6).toFixed(2)}" width="10.4" height="7.2" rx="3.6" fill="${SELC}"/><text x="${px.toFixed(2)}" y="${(py+1.75).toFixed(2)}" text-anchor="middle" font-size="4.6" font-weight="700" fill="#fff" font-family="Montserrat,sans-serif">${n}</text></g>`;
   for(const i of idx){const[x,y]=worldCap(i),id=dispBtn(i),f=fillOf(id),st=strokeOf(id),sel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn'&&S.sel===i;
