@@ -96,6 +96,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .stage-tools svg{width:16px;height:16px}
 .stage-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .stage-foot .note{margin:0;font-size:12px;color:var(--ink-3);line-height:1.5}
+.stage.btn-step .turn{opacity:0}
 .stage .disclaim{position:absolute;left:12px;bottom:8px;margin:0;font-size:11px;line-height:1.3;color:#8A7F78;pointer-events:none;z-index:2}
 .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:3px;overflow:hidden}
 .seg button{appearance:none;border:0;background:transparent;color:var(--ink-2);padding:9px 18px;font-size:14px;font-weight:500;cursor:pointer}
@@ -540,7 +541,8 @@ function drawView(v,forExport){
     f+=band(v,FoT,FiT,rf,rs,LW)+`</g>`;o+=f}
   // caps sorted far->near
   const idx=[0,1,2,3,4,5,6,7].sort((a,b2)=>v.cam.dp([...worldCap(b2),0])-v.cam.dp([...worldCap(a),0]));
-  const up=[];
+  const up=[];let selTop='';const SELC='#D6432F';
+  const selOut=(A,B)=>hullPoly(v,A,B,'none',SELC,2.8,'stroke-opacity=".25"')+hullPoly(v,A,B,'none',SELC,1.05);
   for(const i of idx){const[x,y]=worldCap(i),id=dispBtn(i),f=fillOf(id),st=strokeOf(id),sel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn'&&S.sel===i;
     let upper=`<g data-i="${i}" style="cursor:pointer">`;
     if(v.taper){
@@ -550,12 +552,12 @@ function drawView(v,forExport){
       upper+=hullPoly(v,rings[0],[].concat(...rings),f,st,LW);
       const T=rings[rings.length-1];upper+=poly(v,T,f,st,LW);
       upper+=capTop(v,x,y,zt,wt,rt,1.4,6.2,1.1,0.6,6.8,i,f,st,LW);
-      if(sel)upper+=hullPoly(v,rings[0],[].concat(...rings),'none','#D95F7C',0.8,'stroke-dasharray="1.6 1.1"');
+      if(sel){upper+=selOut(rings[0],[].concat(...rings));const b=v.cam.pr([x,y,zt+11]),t=v.cam.pr([x,y,zt+1.2]);selTop=`<g class="sel-pin" pointer-events="none"><line x1="${t[0].toFixed(2)}" y1="${t[1].toFixed(2)}" x2="${b[0].toFixed(2)}" y2="${b[1].toFixed(2)}" stroke="${SELC}" stroke-width="0.7"/><circle cx="${b[0].toFixed(2)}" cy="${b[1].toFixed(2)}" r="4.6" fill="${SELC}" stroke="#fff" stroke-width="0.6"/><text x="${b[0].toFixed(2)}" y="${(b[1]+1.8).toFixed(2)}" text-anchor="middle" font-size="5.2" font-weight="700" fill="#fff" font-family="Montserrat,sans-serif">${i+1}</text></g>`}
     }else{
       const Bm=rr(x,y,M.capW,M.capW,M.capR,fz),T=rr(x,y,M.capTopW,M.capTopW,M.capTopR,M.capH),Tm=rr(x,y,M.capW*0.96,M.capW*0.96,M.capR,M.capH-2.2);
       upper+=hullPoly(v,Bm,Tm,f,st,LW)+hullPoly(v,Tm,T,f,st,LW)+poly(v,T,f,st,LW);
       upper+=capTop(v,x,y,M.capH,M.capTopW,M.capTopR,M.ringIn,M.sq,M.sqR,M.sqH,7.8,i,f,st,LW);
-      if(sel)upper+=hullPoly(v,Bm,T,'none','#D95F7C',0.8,'stroke-dasharray="1.6 1.1"');
+      if(sel)upper+=selOut(Bm,T);
     }
     up.push(upper+`</g>`)}
   o+=up.join('');
@@ -573,6 +575,7 @@ function drawView(v,forExport){
     const segs=[];let seg=[];for(let i=0;i<N;i++){if(vis[i])seg.push(i);else if(seg.length){segs.push(seg);seg=[]}}if(seg.length)segs.push(seg);
     for(const s of segs){const ids=[...s,(s[s.length-1]+1)%N];g+=['FoB','FoT','FiT'].map(k=>`<polyline points="${pts(v,ids.map(q=>RF[k][q]))}" fill="none" stroke="${rs}" stroke-width="${LW*0.8}"/>`).join('')}
     o+=`<g data-part="body">${g}</g>`}
+  o+=selTop;
   // viewBox
   const all=[...Bt,...Bb,...Lo,...Lo2,...capCenters().map((_,i)=>[...worldCap(i),M.capH+M.sqH])].map(p=>v.cam.pr(p));
   let xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),pad=2.5,x0=Math.min(...xs)-pad,y0=Math.min(...ys)-pad,w=Math.max(...xs)-x0+pad,h=Math.max(...ys)-y0+pad;
@@ -819,7 +822,7 @@ function renderPrice(){$('#price-total').textContent=won(total());const n=twoCou
 function renderChip(){const id=S.step==='shape'?'iv':curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
   pill.querySelector('span').textContent=S.step==='body'?`본체 · ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
 function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code()}
-function render(){normTone();syncPart();draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
+function render(){normTone();syncPart();{const sg=$('#stage');if(sg)sg.classList.toggle('btn-step',S.part==='btn'&&!VIEW)}draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
 
 // toast
 let toastT=null;function status(t){let el=$('#status');if(el)el.textContent=t;let ts=$('#toast');if(!ts){ts=document.createElement('div');ts.id='toast';ts.setAttribute('role','status');ts.style.cssText='position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:50;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(ts)}
