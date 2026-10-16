@@ -410,7 +410,7 @@ const COLORS=[
   {id:'sy',name:'딸기요거트',hex:'#EEE3E8',fin:'스페클',dots:['#D9708C','#B8566E'],p:.04},
   {id:'sd',name:'소다',hex:'#8CC6E6',fin:'매트'},
   {id:'iv',name:'화이트',hex:'#F5F2EA',fin:'매트'},
-  {id:'ch',name:'블랙',hex:'#3A3B3E',fin:'매트'},
+  {id:'ch',name:'블랙',hex:'#3A3B3E',fin:'매트',nobody:1},
   {id:'be',name:'베이지',hex:'#F1E7CF',fin:'매트',only:'btn'},
   {id:'sk',name:'핫핑크',hex:'#EAA6C8',fin:'매트',only:'btn'}
 ];
@@ -707,7 +707,7 @@ function miniDeco(i){const k=S.shp[i],a=C[accOf(i)].hex,l='rgba(0,0,0,.35)';let 
   if(k==='S')g=`<rect x="7" y="6" width="38" height="30" rx="7" fill="none" stroke="${a}" stroke-width="3.2"/><rect x="5.4" y="4.4" width="41.2" height="33.2" rx="8.5" fill="none" stroke="${l}" stroke-width=".7"/><rect x="8.6" y="7.6" width="34.8" height="26.8" rx="5.5" fill="none" stroke="${l}" stroke-width=".7"/><path d="${starD(26,21.6,18)}" fill="${a}" stroke="${l}" stroke-width=".7" stroke-linejoin="round"/>`;
   return`<svg class="deco" viewBox="0 0 52 42" aria-hidden="true">${g}</svg>`}
 function miniGrid(){return`<div class="mini" aria-label="버튼 선택">${S.btn.map((_,i)=>{const id=dispBtn(i);return`<button type="button" aria-pressed="${S.sel===i}" data-sel="${i}" style="${swatchBg(C[id])}" aria-label="${i+1}번 버튼 ${SH[S.shp[i]].name} ${C[id].name}">${miniDeco(i)}<span class="n">${i+1}</span></button>`}).join('')}</div>`}
-function swatchGrid(scope){const cur=curColor();const L=ORDER.filter(id=>C[id]&&(!C[id].only||C[id].only===scope));
+function swatchGrid(scope){const cur=curColor();const L=ORDER.filter(id=>C[id]&&(!C[id].only||C[id].only===scope)&&!(scope==='body'&&C[id].nobody));
   return`<div class="swatches">${L.map(id=>{const c=C[id];return`<button type="button" class="sw" aria-pressed="${cur===id}" data-color="${id}" title="${c.name}"><i style="${swatchBg(c)}"></i>${c.name}</button>`}).join('')}</div>`}
 function heartNote(){const b=S.step==='shape'?null:S.btn[S.sel],dot=c=>`<i style="${swatchBg(C[c])}"></i>`;
   return`<p class="help heart-note">${b?`<span class="dots">${dot(b)}${dot(PAIR[b])}</span> `:''}하트형·별형은 <b>투톤</b>으로만 제작됩니다. 테두리·하트·별은 버튼 색에 맞춘 추천 색${b?' ('+C[PAIR[b]].name+')':''}으로 들어가며 버튼당 <b>+${won(PRICE.T)}원</b>이 추가됩니다.</p>`}
@@ -866,7 +866,7 @@ document.addEventListener('click',e=>{
   if(t.id==='notice-ok'){$('#notice').hidden=true;copyOrder();return}
   if(t.id==='notice-cancel'){$('#notice').hidden=true;return}
   if(t.dataset.play){playSw(t.dataset.play);return}
-  if(t.id==='random'){const pick=(bodyOnly)=>{const L=COLORS.filter(c=>!bodyOnly||!c.only);return L[Math.floor(Math.random()*L.length)].id};const a=pick(),b2=pick();S.body=pick(true);S.btn=S.btn.map((_,i)=>Math.random()<.2?pick():((i+Math.floor(i/2))%2?a:b2));render();status('랜덤 조합을 만들었습니다');return}
+  if(t.id==='random'){const pick=(bodyOnly)=>{const L=COLORS.filter(c=>!bodyOnly||(!c.only&&!c.nobody));return L[Math.floor(Math.random()*L.length)].id};const a=pick(),b2=pick();S.body=pick(true);S.btn=S.btn.map((_,i)=>Math.random()<.2?pick():((i+Math.floor(i/2))%2?a:b2));render();status('랜덤 조합을 만들었습니다');return}
   if(t.id==='example'){const st=S.step,vw=S.view;S=structuredClone(EXAMPLE);S.step=st;S.view=vw;render();status('초기 상태(화이트)로 돌아왔습니다');return}
   if(t.id==='reset'){const vw=S.view;S=structuredClone(EXAMPLE);S.step='body';S.view=vw;camS={...CAM0};setCam();render();status('처음부터 다시 시작합니다');return}
   if(t.id==='sum-toggle'){const d=$('#drawer');d.hidden=!d.hidden;t.setAttribute('aria-expanded',String(!d.hidden));if(!d.hidden)renderDrawer();return}
