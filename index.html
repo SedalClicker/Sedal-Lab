@@ -111,6 +111,18 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .best{display:grid;gap:12px}
 .best .tagline{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;margin:0}
 .tag{display:inline-block;background:var(--best);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;letter-spacing:.02em}
+.presets{display:grid;gap:12px}
+.tag.pre{background:#2F6B3A;margin-right:6px}
+.presets .tagline small{display:block;margin-top:4px;font-size:12px;color:var(--ink-3);font-weight:400}
+.pre-row{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.pre-card{appearance:none;flex:0 0 168px;scroll-snap-align:start;position:relative;display:grid;gap:4px;justify-items:start;text-align:left;padding:10px 10px 12px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);cursor:pointer;font:inherit;color:var(--ink)}
+.pre-card:hover{border-color:var(--ink)}
+.pre-card .pre-img{width:100%;aspect-ratio:4/3;display:grid;place-items:center;background:#fff;border-radius:4px;overflow:hidden}
+.pre-card .pre-img svg{width:100%;height:100%;transform:scale(1.15)}
+.pre-card b{font-size:14px;margin-top:4px}
+.pre-card small{font-size:12px;color:var(--ink-2);line-height:1.4}
+.pre-card em{font-style:normal;font-size:13px;font-weight:700;margin-top:2px}
+.pre-tag{position:absolute;top:8px;left:8px;z-index:1;background:var(--best);color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px}
 .best-box{background:var(--sunken);border-radius:4px;padding:20px 22px;display:grid;gap:16px}
 .best-box p{margin:0;font-size:14px}
 .best-box p b.hl{color:var(--accent)}
@@ -626,6 +638,19 @@ function won(n){return n.toLocaleString('ko-KR')}
 function optPrice(k){return SH[k].acc?PRICE.T:0}
 function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1')}
 function heartD(cx,cy,w){return'M'+heart(0,0,w,0,48).map(p=>(cx+p[0]).toFixed(2)+' '+(cy-p[1]).toFixed(2)).join(' L')+' Z'}
+// 추천 디자인: 사장님이 고른 주문 코드 + 이름 + 한 줄 설명. 비어 있으면 표시 안 함. tag는 'NEW'·'BEST' 등(선택)
+const PRESETS=[
+  {code:'SD-D2B6-ANK5-APAM-950',name:'달마시안',desc:'달마시안 강아지처럼 귀여운 클리커',tag:'추천'},
+  {code:'SD-K048-0242-2R4H-4P',name:'믹스초콜릿',desc:'과자 같은 귀여운 클리커',tag:'추천'},
+  {code:'SD-VX25-A6EX-PBFP',name:'핑크그라데이션',desc:'공주 같은 핑크 클리커',tag:'추천'},
+];
+const PRE_THUMB={};
+function presetState(p){const r=parseCode(p.code);return r&&!r.err?r.st:null}
+function withState(st,fn){const keep=structuredClone(S),kc=camS;Object.assign(S,structuredClone(st));S.step='code';camS={...CAM0};setCam();EXPORTING=true;let out;try{out=fn()}finally{EXPORTING=false;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,keep);camS=kc;setCam()}return out}
+function presetCard(p,k){const st=presetState(p);if(!st)return'';if(!PRE_THUMB[p.code])PRE_THUMB[p.code]=withState(st,()=>({svg:drawView(VIEWS[1],true),price:total()}));const t=PRE_THUMB[p.code];
+  return`<button type="button" class="pre-card" data-preset="${k}">${p.tag?`<span class="pre-tag">${p.tag}</span>`:''}<span class="pre-img">${t.svg}</span><b>${p.name}</b>${p.desc?`<small>${p.desc}</small>`:''}<em>${won(t.price)}원</em></button>`}
+function presetsHTML(){if(!PRESETS.length||VIEW)return'';const n0=Object.keys(PRE_THUMB).length,cards=PRESETS.map(presetCard).join('');if(Object.keys(PRE_THUMB).length!==n0)draw(false);if(!cards)return'';
+  return`<div class="presets"><p class="tagline"><span class="tag pre">추천</span>추천 디자인에서 시작해 보세요 <small>누르면 불러온 뒤 자유롭게 바꿀 수 있습니다</small></p><div class="pre-row">${cards}</div></div>`}
 const BEST=[['sy',23],['ww',19],['cc',13]]; // 최근 3개월 내 주문 기준 색상 비중
 const ORDER=['iv','ml','st','lv','cc','sy','sd','ch','ww','wd','be','sk'];
 if(!STEPS.some(s=>s.k===S.step))S.step='body';if(!['iso','top'].includes(S.view))S.view='iso';if(typeof S.sel!=='number'||S.sel<0||S.sel>7)S.sel=0;
@@ -745,7 +770,7 @@ function viewLoad(useInput=true){const el=$('#vw-code');if(useInput&&el)vwInput=
 function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepIdx();
   if(S.step==='body'){
     const top=BEST[0];
-    h+=`<h2 class="ptitle">본체 색상</h2>
+    h+=`<h2 class="ptitle">본체 색상</h2>${presetsHTML()}
     <div class="best"><p class="tagline"><span class="tag">Best</span>다른 구매자들이 가장 많이 선택한 색상입니다</p>
       <div class="best-box"><p>초콜릿 클리커 구매자 중 <b>${top[1]}%</b>가 <b class="hl">${C[top[0]].name}</b> 색상을 선택하셨습니다.</p>
       <div class="best-row">${BEST.map(([id,p],k)=>{const c=C[id],sz=k===0?88:70,dark=lum(c.hex)<120;return`<button type="button" class="best-item" data-color="${id}" data-scope="body"><i style="width:${sz}px;height:${sz}px;${swatchBg(c)};color:${dark?'#fff':'#1B1512'}"><b>${p}<small>%</small></b></i>${c.name}</button>`}).join('')}</div>
@@ -800,7 +825,7 @@ function render(){normTone();syncPart();draw(false);applyView();renderSubsteps()
 let toastT=null;function status(t){let el=$('#status');if(el)el.textContent=t;let ts=$('#toast');if(!ts){ts=document.createElement('div');ts.id='toast';ts.setAttribute('role','status');ts.style.cssText='position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:50;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(ts)}
   ts.textContent=t;ts.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>ts.style.opacity='0',2200)}
 
-async function copyOrder(){try{await navigator.clipboard.writeText(orderText());status('복사했습니다. 주문 요청사항에 붙여 넣으세요')}catch(e){const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요')}}
+async function copyOrder(){try{await navigator.clipboard.writeText(code());status('코드를 복사했습니다. 주문 요청사항에 붙여 넣으세요')}catch(e){const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요')}}
 function go(k){S.step=k;syncPart();lastPick=null;render();window.scrollTo({top:0,behavior:'smooth'})}
 
 let lastPick=null;
@@ -814,6 +839,7 @@ document.addEventListener('change',e=>{if(e.target.id!=='nomag')return;S.nomag=e
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.dataset.step){go(t.dataset.step);return}
+  if(t.dataset.preset!=null){const p=PRESETS[+t.dataset.preset],st=p&&presetState(p);if(st){Object.assign(S,structuredClone(st));S.sel=0;render();status('추천 디자인 「'+p.name+'」을 불러왔습니다. 원하는 부분을 바꿔 보세요')}return}
   if(t.id==='prev'){const i=stepIdx();if(i>0)go(STEPS[i-1].k);return}
   if(t.id==='next'){const i=stepIdx();if(i<STEPS.length-1)go(STEPS[i+1].k);else openNotice();return}
   if(t.id==='apply-all'){const c=lastPick||S.btn[S.sel];S.btn=S.btn.map(()=>c);render();status('8개 버튼에 같은 색을 적용했습니다');return}
