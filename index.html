@@ -201,6 +201,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .load input{flex:1 1 200px;min-width:0;font:500 14px var(--mono);padding:10px 12px;border-radius:3px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);text-transform:uppercase}
 .status{font-size:13px;color:var(--ink-2);min-height:1.2em;margin:0}
 .help{margin:0;font-size:13px;color:var(--ink-2)}
+.order-guide{margin:0 0 12px;padding:12px 14px;border-radius:6px;background:#EEF4EA;color:#2F4A2A;font-size:14px;line-height:1.55}.order-guide>b{display:block;margin-bottom:6px}.order-guide ol{margin:0;padding-left:20px}.order-guide li{margin:3px 0}.order-guide li b{color:#1F3A1B}
 .panel-nav{position:sticky;bottom:env(safe-area-inset-bottom,0px);margin-top:auto;display:flex;justify-content:space-between;gap:10px;padding:14px clamp(16px,3vw,40px) calc(14px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line);z-index:5}
 .panel-nav .btn{padding:13px 22px;font-size:15px;min-width:120px;justify-content:center}
 .panel-nav .btn.primary{flex:1;max-width:260px}
@@ -419,7 +420,7 @@ const PARTS=[
   {k:'btn',name:'버튼',desc:'2열 4행 누름 버튼 8개를 하나씩 선택'}
 ];
 const C=Object.fromEntries(COLORS.map(c=>[c.id,c]));
-const SHAPES=[{k:'B',name:'기본형',desc:'네모+테두리',acc:false},{k:'P',name:'무지형',desc:'무지',acc:false},{k:'H',name:'하트형',desc:'하트 · 투톤',acc:'테두리·하트',price:500},{k:'S',name:'별형',desc:'별 · 투톤',acc:'테두리·별',price:500},{k:'R',name:'링형',desc:'테두리만 · 투톤',acc:'테두리',price:500}];
+const SHAPES=[{k:'B',name:'기본형',desc:'네모+테두리',acc:false},{k:'P',name:'무지형',desc:'무지',acc:false},{k:'H',name:'하트형',desc:'하트 · 투톤',acc:'테두리·하트',price:500},{k:'S',name:'별형',desc:'별 · 투톤',acc:'테두리·별',price:500},{k:'R',name:'링형',desc:'테두리만 · 투톤',acc:'테두리',price:300}];
 const SH=Object.fromEntries(SHAPES.map(x=>[x.k,x]));
 // two-tone pair: button body color -> ring/heart color
 const PAIR={ww:'wd',wd:'ww',ml:'sd',st:'lv',lv:'st',cc:'ch',sy:'sk',sd:'iv',iv:'ch',ch:'iv',be:'wd',sk:'iv'};
@@ -635,21 +636,26 @@ function optSum(){return S.shp.reduce((a,k,i)=>a+(S.tone[i]==='2'?optPrice(k):0)
 function optN(){return heartN()+starN()+ringN()+(S.rim?1:0)}
 function heartMsg(){const n=heartN(),p=[];if(n)p.push(`<b>하트버튼 옵션 ${n}개</b>`);if(starN())p.push(`<b>별버튼 옵션 ${starN()}개</b>`);if(ringN())p.push(`<b>링버튼 옵션 ${ringN()}개</b>`);if(S.rim)p.push(`<b>${rimOf().name} 테두리 옵션 1개</b>`);return `네이버 스마트스토어 주문 시 ${p.join(', ')}를 추가해 주셔야 합니다.`}
 const STEPS=[{k:'body',name:'본체 색상'},{k:'shape',name:'버튼 모양'},{k:'btn',name:'버튼 색상'},{k:'sw',name:'스위치 축'},{k:'code',name:'주문 코드'}];
-const PRICE={base:18900,SET:16900,T:500,RIM:2000};
+const PRICE={base:18900,SET:16900,T:500,RIM:2000,SOLO:{B:800,H:1300,S:1300,R:1100}};
+// 개별판매가: 기본버튼 800, 링 투톤 1,100, 하트·별 투톤 1,300. 단색 세트(기본 상품)+개별 옵션 합이 커스텀가보다 싸면 기본 주문으로 안내.
+function soloSum(){return S.shp.reduce((a,k,i)=>a+(SH[k].acc&&S.tone[i]==='2'?PRICE.SOLO[k]:0),0)}
+function customPrice(){return PRICE.base+optSum()+(S.rim?PRICE.RIM:0)}
+function altPrice(){return PRICE.SET+soloSum()+(S.rim?PRICE.RIM:0)}
+function altCheaper(){return isSet()&&altPrice()<customPrice()}
 // 단색 세트: 본체·버튼 8개·로고가 모두 같은 색 + 스위치 축 8개 통일 + 버튼 모양 통일(기본형 또는 무지형) + 유료 옵션(테두리·하트·별) 없음 → 기본 판매 제품과 같아 기본가 할인
 function isSet(){const b=S.body,free=S.shp.filter(k=>!SH[k].acc);return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&free.every(x=>x===free[0])}
 function nomagNote(){return S.nomag?`<br><b>자석 기능 빼기</b>는 추가금 없이 주문 요청사항에 <b>"자석 없이 제작"</b>이라고 적어 주시면 됩니다.`:''}
 function optList(){const p=[];if(S.rim)p.push(`${rimOf().name} 테두리 1개`);if(heartN())p.push(`하트 버튼 ${heartN()}개`);if(starN())p.push(`별 버튼 ${starN()}개`);if(ringN())p.push(`링 버튼 ${ringN()}개`);return p}
 // 단색 할인은 마지막 [요청사항 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
 const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
-let setRevealed=false;function setOn(){return isSet()&&(setRevealed||!!window.SEDAL_VIEW)}
+let setRevealed=false;function setOn(){return altCheaper()&&(setRevealed||!!window.SEDAL_VIEW)}
 function basePrice(){return setOn()?PRICE.SET:PRICE.base}
 function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
-function total(){return basePrice()+optSum()+(S.rim?PRICE.RIM:0)}
-function breakdown(){const h=heartN(),s=starN(),r=ringN();return `${setOn()?'단색 세트 '+won(PRICE.SET):'기본 '+won(PRICE.base)}원${h?` + 하트(투톤) 버튼 ${h}개 × ${won(SH.H.price)}원`:''}${s?` + 별(투톤) 버튼 ${s}개 × ${won(SH.S.price)}원`:''}${r?` + 링(투톤) 버튼 ${r}개 × ${won(SH.R.price)}원`:''}${S.rim?` + ${rimOf().name} 테두리 ${won(PRICE.RIM)}원`:''}`}
+function total(){return setOn()?altPrice():customPrice()}
+function breakdown(){const h=heartN(),s=starN(),r=ringN(),p=k=>setOn()?PRICE.SOLO[k]:SH[k].price;return `${setOn()?'기본 상품 '+won(PRICE.SET):'기본 '+won(PRICE.base)}원${h?` + 하트(투톤) 버튼 ${h}개 × ${won(p('H'))}원`:''}${s?` + 별(투톤) 버튼 ${s}개 × ${won(p('S'))}원`:''}${r?` + 링(투톤) 버튼 ${r}개 × ${won(p('R'))}원`:''}${S.rim?` + ${rimOf().name} 테두리 ${won(PRICE.RIM)}원`:''}`}
 function won(n){return n.toLocaleString('ko-KR')}
 function optPrice(k){return SH[k].price||0}
-function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1');if(!S.acc||S.acc.length!==8)S.acc=Array(8).fill(null);S.acc=S.acc.map((x,i)=>x&&C[x]&&x!==S.btn[i]?x:null)}
+function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1');if(!S.acc||S.acc.length!==8)S.acc=Array(8).fill(null);S.acc=S.acc.map(x=>x&&C[x]?x:null)}
 function heartD(cx,cy,w){return'M'+heart(0,0,w,0,48).map(p=>(cx+p[0]).toFixed(2)+' '+(cy-p[1]).toFixed(2)).join(' L')+' Z'}
 // 추천 디자인: 사장님이 고른 주문 코드 + 이름 + 한 줄 설명. 비어 있으면 표시 안 함. tag는 'NEW'·'BEST' 등(선택)
 const PRESETS=[
@@ -660,7 +666,7 @@ const PRESETS=[
 const PRE_THUMB={};
 function presetState(p){const r=parseCode(p.code);return r&&!r.err?r.st:null}
 function withState(st,fn){const keep=structuredClone(S),kc=camS;Object.assign(S,structuredClone(st));S.step='code';camS={...CAM0};setCam();EXPORTING=true;let out;try{out=fn()}finally{EXPORTING=false;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,keep);camS=kc;setCam()}return out}
-function presetCard(p,k){const st=presetState(p);if(!st)return'';if(!PRE_THUMB[p.code])PRE_THUMB[p.code]=withState(st,()=>({svg:drawView(VIEWS[1],true),price:total()}));const t=PRE_THUMB[p.code];
+function presetCard(p,k){const st=presetState(p);if(!st)return'';if(!PRE_THUMB[p.code])PRE_THUMB[p.code]=withState(st,()=>({svg:drawView(VIEWS[1],true).replaceAll('vw-iso-px-','pre'+k+'-px-'),price:total()}));const t=PRE_THUMB[p.code];
   return`<button type="button" class="pre-card" data-preset="${k}">${p.tag?`<span class="pre-tag">${p.tag}</span>`:''}<span class="pre-img">${t.svg}</span><b>${p.name}</b>${p.desc?`<small>${p.desc}</small>`:''}<em>${won(t.price)}원</em></button>`}
 function presetsHTML(){if(!PRESETS.length||VIEW)return'';const n0=Object.keys(PRE_THUMB).length,cards=PRESETS.map(presetCard).join('');if(Object.keys(PRE_THUMB).length!==n0)draw(false);if(!cards)return'';
   return`<div class="presets"><p class="tagline"><span class="tag pre">추천</span>추천 디자인에서 시작해 보세요 <small>누르면 불러온 뒤 자유롭게 바꿀 수 있습니다</small></p><div class="pre-row">${cards}</div></div>`}
@@ -698,7 +704,7 @@ let EXPORTING=false;
 // in the shape step the preview shows every button in white so only the shapes read
 function dispBtn(i){return (S.step==='shape'&&!EXPORTING)?'iv':S.btn[i]}
 function accOf(i){const b=dispBtn(i);if(S.tone[i]!=='2')return b;if(S.step==='shape'&&!EXPORTING)return PAIR[b];return (S.acc&&S.acc[i])||PAIR[b]}
-function accGrid(){const i=S.sel,b=S.btn[i],cur=accOf(i),rec=PAIR[b];const L=ORDER.filter(id=>C[id]&&(!C[id].only||C[id].only==='btn')&&id!==b);
+function accGrid(){const i=S.sel,b=S.btn[i],cur=accOf(i),rec=PAIR[b];const L=ORDER.filter(id=>C[id]&&(!C[id].only||C[id].only==='btn'));
   return`<div class="swatches">${L.map(id=>{const c=C[id];return`<button type="button" class="sw" aria-pressed="${cur===id}" data-acc="${id}" title="${c.name}"><i style="${swatchBg(c)}">${id===rec?'<em class="rec">추천</em>':''}</i>${c.name}</button>`}).join('')}</div>`}
 function curColor(){return S.step==='body'?S.body:S.btn[S.sel]}
 function finOf(id){return C[id].fin}
@@ -718,7 +724,7 @@ function miniGrid(){return`<div class="mini" aria-label="버튼 선택">${S.btn.
 function swatchGrid(scope){const cur=curColor();const L=ORDER.filter(id=>C[id]&&(!C[id].only||C[id].only===scope)&&!(scope==='body'&&C[id].nobody));
   return`<div class="swatches">${L.map(id=>{const c=C[id];return`<button type="button" class="sw" aria-pressed="${cur===id}" data-color="${id}" title="${c.name}"><i style="${swatchBg(c)}"></i>${c.name}</button>`}).join('')}</div>`}
 function heartNote(){const b=S.step==='shape'?null:S.btn[S.sel],dot=c=>`<i style="${swatchBg(C[c])}"></i>`;
-  return`<p class="help heart-note">${b?`<span class="dots">${dot(b)}${dot(PAIR[b])}</span> `:''}하트형·별형·링형은 <b>투톤</b>으로 제작됩니다. 테두리·하트·별 색은 버튼 색과 자유롭게 조합할 수 있고(기본은 추천 색${b?' · '+C[PAIR[b]].name:''}), 버튼당 <b>+${won(SH.H.price)}원</b>이 추가됩니다.</p>`}
+  return`<p class="help heart-note">${b?`<span class="dots">${dot(b)}${dot(PAIR[b])}</span> `:''}하트형·별형·링형은 <b>투톤</b>으로 제작됩니다. 테두리·하트·별 색은 버튼 색과 자유롭게 조합할 수 있고(기본은 추천 색${b?' · '+C[PAIR[b]].name:''}), 버튼당 <b>하트·별 +${won(SH.H.price)}원, 링 +${won(SH.R.price)}원</b>이 추가됩니다.</p>`}
 function toneCards(){const generic=S.step==='shape';const b=generic?'iv':S.btn[S.sel],p=generic?'ch':PAIR[b];const dot=c=>`<i style="${swatchBg(C[c])}"></i>`;
   return`<div class="sec"><div class="sec-head"><h3>테두리·하트 색</h3><span class="sel">${S.tone[S.sel]==='1'?'원톤':'투톤'+(generic?'':' · '+C[p].name)}</span></div>
   <div class="tones"><button type="button" class="tone" data-tone="1" aria-pressed="${S.tone[S.sel]==='1'}"><span class="dots">${dot(b)}${dot(b)}</span><span><b>원톤 <small class="tp">추가금 없음</small></b><span>${generic?'버튼과 같은 색':'버튼과 같은 색 ('+C[b].name+')'}</span></span></button>
@@ -811,7 +817,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     h+=`<h2 class="ptitle">버튼 색상</h2><p class="lead">색을 고르면 다음 번호로 넘어갑니다(투톤 버튼은 두 번째 색까지). 번호를 누르거나 미리보기의 버튼을 눌러 바꿀 수 있습니다.</p>
     <div class="mini-wrap">${miniGrid()}<div class="mini-side"><p><b>${S.sel+1}번 버튼</b>을 고르는 중입니다.<br>${SH[S.shp[S.sel]].name} · ${C[id].name}</p><button type="button" class="link" id="apply-all">이 색을 8개 모두에 적용</button></div></div>
     <div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 색상</h3><span class="sel">${C[id].name}</span></div>${swatchGrid('btn')}</div>`;
-    if(hasAcc()){h+=`<div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 ${SH[S.shp[S.sel]].acc} 색</h3><span class="sel">${C[accOf(S.sel)].name}${S.acc[S.sel]?'':' (추천)'}</span></div><p class="help">투톤의 두 번째 색입니다. 버튼 색과 자유롭게 조합할 수 있고, 고르면 다음 번호로 넘어갑니다.</p>${accGrid()}</div>`;h+=heartNote()}
+    if(hasAcc()){h+=`<div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 ${SH[S.shp[S.sel]].acc} 색</h3><span class="sel">${C[accOf(S.sel)].name}${S.acc[S.sel]?'':' (추천)'}</span></div><p class="help">투톤의 두 번째 색입니다. 버튼 색과 자유롭게 조합할 수 있고(같은 색도 가능), 고르면 다음 번호로 넘어갑니다.</p>${accGrid()}</div>`;h+=heartNote()}
   }else if(S.step==='sw'){
     const cur=S.sw[S.sel],cx=SWM[cur];
     h+=`<h2 class="ptitle">스위치 축</h2><p class="lead">버튼마다 다른 축을 넣을 수 있습니다. 번호를 누르거나 미리보기의 버튼을 눌러 선택하세요.</p>
@@ -823,6 +829,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
   }else{
     h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문 요청사항에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
     <dl class="summary">${summaryRows()}</dl>
+    <div class="order-guide"><b>📋 주문 방법</b><ol><li><b>요청사항 복사</b> 버튼을 눌러 조합 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>커스텀 클리커 상품</b>을 주문하면서 <b>요청사항(판매자에게 전하는 말) 란에 붙여넣기</b> 해 주세요.</li><li>테두리·하트·별·링 등 <b>추가 옵션이 있으면 주문 시 함께 선택</b>해 주세요.</li></ol></div>
     <div class="codebox"><span class="code" id="code">${code()}</span><button type="button" class="btn primary" id="copy">요청사항 복사</button></div>
     <p class="status" id="status" role="status"></p>
     <p class="help">주문 코드는 선택한 본체·테두리·로고·버튼·축 정보를 짧게 묶은 값입니다. 코드를 넣으면 어떤 조합인지 그대로 확인됩니다.</p>
@@ -851,7 +858,7 @@ let playing=null,audio=null;
 function playSw(id){if(audio){audio.pause();audio=null}if(playing===id){playing=null;markPlay();return}
   audio=new Audio(SND[id]);playing=id;markPlay();audio.onended=()=>{playing=null;markPlay()};audio.play().catch(()=>{playing=null;markPlay();status('소리를 재생하지 못했습니다')})}
 function markPlay(){document.querySelectorAll('[data-play]').forEach(b=>b.classList.toggle('on',b.dataset.play===playing))}
-function openNotice(){const n=optN(),el=$('#notice-heart');if(el){el.hidden=!n;el.innerHTML=n?heartMsg():''}let ns=$('#notice-set');if(!ns&&el){ns=document.createElement('p');ns.id='notice-set';ns.className='set-alert';el.after(ns)}if(ns){const on=isSet(),ol=optList();ns.hidden=!on;if(el&&on&&ol.length)el.hidden=true;ns.innerHTML=on?(ol.length?`💡 <b>${ol.join(' · ')}만 추가하실 경우, 기본 제품에 ${ol.length>1?'옵션':ol[0].replace(/ \d+개$/,'')}만 추가하시는 게 더 저렴해요!</b><br>본체·버튼·로고 색과 스위치 축이 모두 같아서 커스텀(${won(PRICE.base+optSum()+(S.rim?PRICE.RIM:0))}원)이 아닌 <b>기본 상품 ${won(PRICE.SET)}원 + ${ol.map(x=>x.replace(/ \d+개$/,'')).join('·')} 옵션</b>으로 주문하시면 <b>${won(PRICE.SET+optSum()+(S.rim?PRICE.RIM:0))}원</b>이에요. 기본 상품 페이지에서 옵션을 함께 담아 주세요.${nomagNote()}<a class="set-link" href="${BASIC_URL}" target="_blank" rel="noopener">기본 상품 + 옵션으로 주문하러 가기 →</a>`:`🎉 <b>기본 판매 제품과 같은 구성이에요</b><br>본체·버튼·로고 색과 버튼 모양·스위치 축이 모두 통일되어 있어요. 커스텀 상품이 아닌 <b>기본 상품으로 주문</b>하시면 <s>${won(PRICE.base)}원</s> → <b>${won(PRICE.SET)}원</b>에 구매하실 수 있습니다.${nomagNote()}<a class="set-link" href="${BASIC_URL}" target="_blank" rel="noopener">기본 상품 주문하러 가기 →</a>`):''}if(isSet()&&!setRevealed){setRevealed=true;renderPrice();if(typeof renderPanel==='function')renderPanel()}$('#notice').hidden=false;$('#notice-ok').focus()}
+function openNotice(){const n=optN(),el=$('#notice-heart');if(el){el.hidden=!n;el.innerHTML=n?heartMsg():''}let ns=$('#notice-set');if(!ns&&el){ns=document.createElement('p');ns.id='notice-set';ns.className='set-alert';el.after(ns)}if(ns){const on=altCheaper(),ol=optList();ns.hidden=!on;if(el&&on&&ol.length)el.hidden=true;const sp=[];if(S.rim)sp.push(`${rimOf().name} 테두리 ${won(PRICE.RIM)}원`);if(heartN())sp.push(`하트 버튼 ${heartN()}개 × ${won(PRICE.SOLO.H)}원`);if(starN())sp.push(`별 버튼 ${starN()}개 × ${won(PRICE.SOLO.S)}원`);if(ringN())sp.push(`링 버튼 ${ringN()}개 × ${won(PRICE.SOLO.R)}원`);ns.innerHTML=on?(ol.length?`💡 <b>이 조합은 기본 제품 + 개별 옵션으로 주문하시는 게 ${won(customPrice()-altPrice())}원 더 저렴해요!</b><br>본체·버튼·로고 색과 스위치 축이 모두 같아서 커스텀(${won(customPrice())}원) 대신 <b>기본 상품 ${won(PRICE.SET)}원 + ${sp.join(' + ')} = ${won(altPrice())}원</b>으로 주문하실 수 있어요. 기본 상품 페이지에서 옵션을 함께 담아 주세요.${nomagNote()}<a class="set-link" href="${BASIC_URL}" target="_blank" rel="noopener">기본 상품 + 옵션으로 주문하러 가기 →</a>`:`🎉 <b>기본 판매 제품과 같은 구성이에요</b><br>본체·버튼·로고 색과 버튼 모양·스위치 축이 모두 통일되어 있어요. 커스텀 상품이 아닌 <b>기본 상품으로 주문</b>하시면 <s>${won(PRICE.base)}원</s> → <b>${won(PRICE.SET)}원</b>에 구매하실 수 있습니다.${nomagNote()}<a class="set-link" href="${BASIC_URL}" target="_blank" rel="noopener">기본 상품 주문하러 가기 →</a>`):''}if(altCheaper()&&!setRevealed){setRevealed=true;renderPrice();if(typeof renderPanel==='function')renderPanel()}$('#notice').hidden=false;$('#notice-ok').focus()}
 document.addEventListener('change',e=>{if(e.target.id!=='nomag')return;S.nomag=e.target.checked;render();status(S.nomag?'자석 없이 제작합니다':'자석을 넣어 제작합니다')});
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
@@ -869,7 +876,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.tone){S.tone[S.sel]=t.dataset.tone;render();return}
   if(t.dataset.sel){S.sel=+t.dataset.sel;lastPick=null;render();return}
   if(t.dataset.color){const id=t.dataset.color;lastPick=id;const scope=t.dataset.scope||(S.step==='body'?'body':'btn');
-    if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;if(S.acc[S.sel]===id)S.acc[S.sel]=null;if(!hasAcc())S.sel=(S.sel+1)%8}render();return}
+    if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;if(!hasAcc())S.sel=(S.sel+1)%8}render();return}
   if(t.dataset.acc){const id=t.dataset.acc;S.acc[S.sel]=id===PAIR[S.btn[S.sel]]?null:id;lastPick=null;S.sel=(S.sel+1)%8;render();return}
   if(t.id==='copy'||t.id==='drawer-copy'){openNotice();return}
   if(t.id==='notice-ok'){$('#notice').hidden=true;copyOrder();return}
