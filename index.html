@@ -441,7 +441,7 @@ const SW=[
   {id:'wm',name:'화이트마블',type:'리니어',hex:'#F3F1EC',house:'#FAF9F6',d:'몽돌보다 한 톤 높게 \'탁탁\' 돌이 부딪히는 경쾌한 소리의 리니어축',t:['경쾌한 소리','높은 피치','단단한 타건감']}];
 function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
 const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2';
-const RIMS={ch:{name:'초코',hex:'#6E5A48'},pk:{name:'핫핑크',hex:'#EAA6C8'}};
+const RIMS={ch:{name:'초코',hex:'#6E5A48',col:'wd'},pk:{name:'핫핑크',hex:'#EAA6C8',col:'sk'},iv:{name:'화이트',hex:'#F5F2EA',col:'iv'},ml:{name:'메론',hex:'#C4DDC2',col:'ml'},st:{name:'스트로베리',hex:'#E2B8C4',col:'st'},sd:{name:'소다',hex:'#8CC6E6',col:'sd'},lv:{name:'라벤더',hex:'#BEB6DA',col:'lv'},ww:{name:'화이트초코',hex:'#D6C7A2',col:'ww'}};const RIMKEYS=Object.keys(RIMS);
 function rimOf(){return S.rim?RIMS[S.rim]||RIMS.ch:null}
 const EXAMPLE={rim:false,nomag:false,logo:null,body:'iv',btn:Array(8).fill('iv'),shp:Array(8).fill('B'),tone:Array(8).fill('2'),acc:Array(8).fill(null),sw:Array(8).fill(SW_DEF),part:'body',sel:0,step:'body',view:'iso'};
 let S=load()||structuredClone(EXAMPLE);
@@ -537,7 +537,7 @@ function drawView(v,forExport){
   o+=`</g></g>`;
   // optional chocolate rim: a raised frame sitting on the lip, inner edge flush with the recess
   let RF=null;
-  if(S.rim){const RM=rimOf(),rf=RM.hex,rs=strokeOf2(RM.hex),zb=top-0.3,zt=top+1.3,zi=top-0.5;
+  if(S.rim){const RM=rimOf(),rf=RM.col&&C[RM.col]&&C[RM.col].dots?fillOf(RM.col):RM.hex,rs=strokeOf2(RM.hex),zb=top-0.3,zt=top+1.3,zi=top-0.5;
     const FoB=rr(0,0,M.bw-0.9,M.bl-0.9,M.br-0.45,zb),FoT=rr(0,0,M.bw-1.3,M.bl-1.3,M.br-0.65,zt),FiT=rr(0,0,M.bw-2*M.rim+0.2,M.bl-2*M.rim+0.2,M.br-M.rim+0.1,zt),FiB=rr(0,0,M.bw-2*M.rim,M.bl-2*M.rim,M.br-M.rim,zi);
     RF={rf,rs,FoB,FoT,FiT,FiB,side:mix(rf,-0.14),inner:mix(rf,-0.3)};
     let f=`<g data-part="body">`;
@@ -734,10 +734,10 @@ function shpCode(i){return S.shp[i]==='H'?'T':S.shp[i]}
 function squeeze(s){return /^(.)\1{7}$/.test(s)?s[0]:s}
 // 압축 코드(v1): 본체·테두리·로고·버튼 색·모양·축을 하나의 수로 묶어 Crockford Base32로 표기. 색·축은 뒤에 추가만 할 것(기존 번호 유지).
 // 압축 코드: v1(체크 1글자, 색12·축12) / v2(체크 2글자, 색16·축16 여유). 새 코드는 v2. 색·축은 목록 뒤에만 추가할 것.
-const B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ',CK1={c:12,w:12,h:'BPHS',k:1,salt:0},CK2={c:16,w:16,h:'BPHS',hr:4,k:2,salt:577},CK3={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:911},CK4={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:1301,a:1};
+const B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ',CK1={c:12,w:12,h:'BPHS',k:1,salt:0},CK2={c:16,w:16,h:'BPHS',hr:4,k:2,salt:577},CK3={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:911},CK4={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:1301,a:1},CK5={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:1777,a:1,r:1};
 function ckOf(d,K){let x=K.salt;for(let i=0;i<d.length;i++)x=(x+B32.indexOf(d[i])*(i+1)*(K.k>1?(i%7)+3:1))%(32**K.k);let o='';for(let j=0;j<K.k;j++){o=B32[x%32]+o;x=Math.floor(x/32)}return o}
-function code(){const K=CK4,ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.findIndex(x=>x.id===id),hi=k=>K.h.indexOf(k==='T'?'H':k);
-  const f=[[ci(S.body),K.c],[S.rim?(S.rim==='pk'?2:1):0,3],[S.logo?ci(S.logo)+1:0,K.c+1]],uni=a=>a.every(x=>x===a[0]);
+function code(){const K=CK5,ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.findIndex(x=>x.id===id),hi=k=>K.h.indexOf(k==='T'?'H':k);
+  const f=[[ci(S.body),K.c],[S.rim?(K.r?RIMKEYS.indexOf(S.rim)+1:(S.rim==='pk'?2:1)):0,K.r?RIMKEYS.length+1:3],[S.logo?ci(S.logo)+1:0,K.c+1]],uni=a=>a.every(x=>x===a[0]);
   const acc=S.shp.map((k,i)=>SH[k].acc&&S.acc[i]?ci(S.acc[i])+1:0);const u=[uni(S.btn),uni(S.shp),uni(S.sw)];if(K.a)u.push(uni(acc));
   [[S.btn,ci,K.c,u[0]],[S.shp,hi,K.hr||4,u[1]],[S.sw,si,K.w,u[2]]].concat(K.a?[[acc,x=>x,K.c+1,u[3]]]:[]).forEach(([a,g,r,one])=>(one?[a[0]]:a).forEach(x=>f.push([g(x),r])));
   u.forEach(x=>f.push([x?1:0,2]));
@@ -748,15 +748,16 @@ function code(){const K=CK4,ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.find
 function decodeShort(s,K){if(s.length<=K.k)return null;const d=s.slice(0,-K.k);if(ckOf(d,K)!==s.slice(-K.k))return null;
   let n=0n;for(const c of d)n=n*32n+BigInt(B32.indexOf(c));const pop=r=>{const x=Number(n%BigInt(r));n/=BigInt(r);return x};
   const ua=K.a?pop(2):0,uw=pop(2),us=pop(2),ub=pop(2),take=(one,r)=>Array.from({length:one?1:8},()=>pop(r)).reverse(),x8=a=>a.length===1?Array(8).fill(a[0]):a;
-  const ac=K.a?x8(take(ua,K.c+1)):Array(8).fill(0),sw=x8(take(uw,K.w)),sh=x8(take(us,K.hr||4)),bt=x8(take(ub,K.c)),lg=pop(K.c+1),rm=pop(3),bd=pop(K.c);
+  const ac=K.a?x8(take(ua,K.c+1)):Array(8).fill(0),sw=x8(take(uw,K.w)),sh=x8(take(us,K.hr||4)),bt=x8(take(ub,K.c)),lg=pop(K.c+1),rm=pop(K.r?RIMKEYS.length+1:3),bd=pop(K.c);
   if(n!==0n)return{err:'코드가 맞지 않습니다'};
   if(!COLORS[bd]||COLORS[bd].only||(lg&&(!COLORS[lg-1]||COLORS[lg-1].only))||bt.some(i=>!COLORS[i])||sw.some(i=>!SW[i])||sh.some(i=>i>=K.h.length)||ac.some(i=>i&&!COLORS[i-1]))return{err:'없는 색상·축 번호가 있습니다'};
   const shp=sh.map(i=>K.h[i]);
-  return{st:{rim:rm?(rm===2?'pk':'ch'):false,logo:lg?COLORS[lg-1].id:null,body:COLORS[bd].id,btn:bt.map(i=>COLORS[i].id),shp,tone:shp.map(k=>SH[k].acc?'2':'1'),acc:ac.map((i,j)=>i&&SH[shp[j]].acc?COLORS[i-1].id:null),sw:sw.map(i=>SW[i].id)}}}
+  if(K.r&&rm>RIMKEYS.length)return{err:'없는 테두리 번호가 있습니다'};
+  return{st:{rim:rm?(K.r?RIMKEYS[rm-1]:(rm===2?'pk':'ch')):false,logo:lg?COLORS[lg-1].id:null,body:COLORS[bd].id,btn:bt.map(i=>COLORS[i].id),shp,tone:shp.map(k=>SH[k].acc?'2':'1'),acc:ac.map((i,j)=>i&&SH[shp[j]].acc?COLORS[i-1].id:null),sw:sw.map(i=>SW[i].id)}}}
 function parseShort(v){const s=v.replace(/^SD-/,'').replace(/-/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');
   if(s.length<3||[...s].some(c=>B32.indexOf(c)<0))return null;
-  const r4=decodeShort(s,CK4);if(r4&&!r4.err)return r4;const r3=decodeShort(s,CK3);if(r3&&!r3.err)return r3;const r2=decodeShort(s,CK2);if(r2&&!r2.err)return r2;const r1=decodeShort(s,CK1);if(r1&&!r1.err)return r1;
-  return r4||r3||r2||r1||{err:'코드가 맞지 않습니다. 한 글자씩 다시 확인해 주세요'}}
+  const r5=decodeShort(s,CK5);if(r5&&!r5.err)return r5;const r4=decodeShort(s,CK4);if(r4&&!r4.err)return r4;const r3=decodeShort(s,CK3);if(r3&&!r3.err)return r3;const r2=decodeShort(s,CK2);if(r2&&!r2.err)return r2;const r1=decodeShort(s,CK1);if(r1&&!r1.err)return r1;
+  return r5||r4||r3||r2||r1||{err:'코드가 맞지 않습니다. 한 글자씩 다시 확인해 주세요'}}
 function codeOld(){const ci=id=>COLORS.findIndex(c=>c.id===id).toString(36).toUpperCase(),si=id=>SW.findIndex(x=>x.id===id).toString(36).toUpperCase();
   const sh=squeeze(S.btn.map((_,i)=>shpCode(i)).join('')),sw=squeeze(S.sw.map(si).join(''));
   const swDef=sw===si(SW_DEF);
@@ -766,7 +767,7 @@ function chipSw(id,label){return`<span class="cdot"><i style="background:${SWM[i
 function swIcon(x){const dk=lum(x.hex)<110,st=dk?'#111':'#6E5A52';return`<svg class="ico" viewBox="0 0 44 44" aria-hidden="true"><rect x="5" y="25" width="34" height="14" rx="3" fill="${x.house||x.hex}" fill-opacity="${x.house?1:.28}" stroke="#6E5A52" stroke-width="1.2"/><rect x="10" y="16" width="24" height="10" rx="2" fill="${x.house?mix(x.house,.35):'#FBF8F5'}" stroke="#6E5A52" stroke-width="1.2"/><path d="M14 16 v-7 h16 v7 Z" fill="${x.hex}" stroke="${st}" stroke-width="1"/><path d="M19.5 9 v-4.5 h5 v4.5" fill="${x.hex}" stroke="${st}" stroke-width="1"/><line x1="16" y1="12.5" x2="28" y2="12.5" stroke="${dk?'#fff':'#6E5A52'}" stroke-opacity=".45" stroke-width="1"/></svg>`}
 function summaryRows(){const sm={};S.shp.forEach(k=>sm[k]=(sm[k]||0)+1);const ac=S.btn.map((_,i)=>i).filter(i=>hasAcc(i));
   const colorChips=arr=>{const m={};arr.forEach(id=>m[id]=(m[id]||0)+1);return Object.entries(m).map(([id,n])=>chip(id,`${C[id].name} ${n}`)).join('')};
-  let h=`<div class="row"><dt>본체</dt><dd>${chip(S.body,C[S.body].name)}${S.rim?`<span class="cdot"><i style="background:${rimOf().hex}"></i>${rimOf().name} 테두리</span>`:''}</dd></div><div class="row"><dt>로고</dt><dd>${S.logo?chip(S.logo,C[S.logo].name):'본체와 같은 색'}</dd></div>${S.nomag?'<div class="row"><dt>자석</dt><dd><b>자석 없음</b> (자석 기능 빼기)</dd></div>':''}
+  let h=`<div class="row"><dt>본체</dt><dd>${chip(S.body,C[S.body].name)}${S.rim?`<span class="cdot"><i style="${rimOf().col&&C[rimOf().col]?swatchBg(C[rimOf().col]):'background:'+rimOf().hex}"></i>${rimOf().name} 테두리</span>`:''}</dd></div><div class="row"><dt>로고</dt><dd>${S.logo?chip(S.logo,C[S.logo].name):'본체와 같은 색'}</dd></div>${S.nomag?'<div class="row"><dt>자석</dt><dd><b>자석 없음</b> (자석 기능 빼기)</dd></div>':''}
   <div class="row"><dt>버튼 모양</dt><dd>${SHAPES.filter(x=>sm[x.k]).map(x=>`${x.name} ${sm[x.k]}`).join(' · ')}</dd></div>
   <div class="row"><dt>버튼 색상</dt><dd>${colorChips(S.btn)}</dd></div>`;
   if(ac.length)h+=`<div class="row"><dt>테두리·하트·별</dt><dd>${['1','2'].map(t=>[t,ac.filter(i=>S.tone[i]===t).length]).filter(x=>x[1]).map(([t,n])=>(t==='1'?'원톤 ':'투톤 ')+n).join(' · ')}</dd></div>`;
@@ -799,9 +800,9 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
       <div class="best-row">${BEST.map(([id,p],k)=>{const c=C[id],sz=k===0?88:70,dark=lum(c.hex)<120;return`<button type="button" class="best-item" data-color="${id}" data-scope="body"><i style="width:${sz}px;height:${sz}px;${swatchBg(c)};color:${dark?'#fff':'#1B1512'}"><b>${p}<small>%</small></b></i>${c.name}</button>`}).join('')}</div>
       <small>최근 3개월 내 주문 기준</small></div></div>
     <div class="sec"><div class="sec-head"><h3>본체 색상</h3><span class="sel">${C[S.body].name}</span></div>${swatchGrid('body')}</div>
-    <div class="sec"><div class="sec-head"><h3>튜닝 옵션 · 본체 테두리</h3><span class="sel">${S.rim?rimOf().name+' 테두리':'테두리 없음'}</span></div>
-    <div class="tones rim-cards"><button type="button" class="tone" data-rim="0" aria-pressed="${!S.rim}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i></span><span><b>기본 <small class="tp">추가금 없음</small></b><span>본체와 같은 색 테두리</span></span></button>
-    ${Object.entries(RIMS).map(([k,r])=>`<button type="button" class="tone" data-rim="${k}" aria-pressed="${S.rim===k}"><span class="dots"><i style="${swatchBg(C[S.body])}"></i><i style="background:${r.hex}"></i></span><span><b>${r.name} 테두리 <small class="tp">+${won(PRICE.RIM)}원</small></b><span>본체 가장자리에 ${r.name}색 테두리를 덧댐</span></span></button>`).join('')}</div></div>
+    <div class="sec"><div class="sec-head"><h3>튜닝 옵션 · 본체 테두리</h3><span class="sel">${S.rim?rimOf().name+' 테두리 · +'+won(PRICE.RIM)+'원':'기본 · 추가금 없음'}</span></div>
+    <p class="help">본체 가장자리에 다른 색 테두리를 덧댑니다. 색상 선택 시 <b>+${won(PRICE.RIM)}원</b>.</p>
+    <div class="logo-row rim-row"><button type="button" class="logo-sw" data-rim="0" aria-pressed="${!S.rim}" title="본체와 같은 색"><i style="${swatchBg(C[S.body])}"></i><span>기본</span></button>${Object.entries(RIMS).map(([k,r])=>`<button type="button" class="logo-sw" data-rim="${k}" aria-pressed="${S.rim===k}" title="${r.name} 테두리 +${won(PRICE.RIM)}원"><i style="${r.col&&C[r.col]?swatchBg(C[r.col]):'background:'+r.hex}"></i><span>${r.name}</span></button>`).join('')}</div></div>
     <div class="sec"><div class="sec-head"><h3>로고(SE:DAL) 색상</h3><span class="sel">${S.logo?C[S.logo].name:'본체와 같은 색'}</span></div>
     <p class="help">본체 옆면의 SE:DAL 로고 색입니다. 추가금 없음.</p>
     <div class="logo-row"><button type="button" class="logo-sw" data-logo="0" aria-pressed="${!S.logo}" title="본체와 같은 색"><i style="${swatchBg(C[S.body])}"></i><span>본체색</span></button>${COLORS.filter(c=>!c.only&&!c.nobody).map(c=>`<button type="button" class="logo-sw" data-logo="${c.id}" aria-pressed="${S.logo===c.id}" title="${c.name}"><i style="${swatchBg(c)}"></i><span>${c.name}</span></button>`).join('')}</div></div>`;
