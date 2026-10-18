@@ -385,8 +385,8 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
     <button class="close" id="drawer-close" type="button" aria-label="닫기">×</button>
     <h2>선택 요약</h2>
     <dl class="summary" id="drawer-summary"></dl>
-    <div class="codebox"><span class="code" id="drawer-code"></span><button class="btn primary" id="drawer-copy" type="button">요청사항 복사</button></div>
-    <p class="help">조합 코드를 주문 요청사항에 붙여 넣으면 됩니다.</p>
+    <div class="codebox"><span class="code" id="drawer-code"></span><button class="btn primary" id="drawer-copy" type="button">주문코드 복사</button></div>
+    <p class="help">주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.</p>
   </div>
 </div>
 
@@ -395,13 +395,13 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
     <h3 id="notice-t">주문 전 안내</h3>
     <p id="notice-heart" class="heart-alert" hidden></p>
     <p>커스텀 클리커는 주문 후 제작까지 일정 시간이 소요됩니다.<br>기본 클리커 주문 시보다 <span class="em">3일 정도 더 소요</span>될 수 있는 점 양해 바라며, <span class="em">(최대 5~7일)</span> 주문 시 이 점 유념해 주세요.</p>
-    <div class="row2"><button class="btn" id="notice-cancel" type="button">다시 보기</button><button class="btn primary" id="notice-ok" type="button">확인했어요 · 요청사항 복사</button></div>
+    <div class="row2"><button class="btn" id="notice-cancel" type="button">다시 보기</button><button class="btn primary" id="notice-ok" type="button">확인했어요 · 주문코드 복사</button></div>
   </div>
 </div>
 <div class="modal" id="verify" hidden>
   <div class="modal-card notice-card verify-card" role="dialog" aria-modal="true" aria-labelledby="verify-t">
     <h3 id="verify-t">주문코드 확인</h3>
-    <p>주문 요청사항에 적은 코드를 넣으면 실제로 제작될 모습과 결제 금액을 확인할 수 있습니다.</p>
+    <p>주문서 [커스텀 주문코드]란에 넣은 코드를 넣으면 실제로 제작될 모습과 결제 금액을 확인할 수 있습니다.</p>
     <div class="load"><input id="v-in" placeholder="SD-1A2B-3C4D" maxlength="200" aria-label="주문 코드" autocomplete="off" autocapitalize="characters"><button class="btn primary" id="v-run" type="button">확인</button></div>
     <div id="v-out" aria-live="polite"></div>
     <div class="row2"><button class="btn" id="v-close" type="button">닫기</button></div>
@@ -658,9 +658,9 @@ function altPrice(){return PRICE.SET+soloSum()+(S.rim?PRICE.RIM:0)}
 function altCheaper(){return isSet()&&altPrice()<customPrice()}
 // 단색 세트: 본체·버튼 8개·로고가 모두 같은 색 + 스위치 축 8개 통일 + 버튼 모양 통일(기본형 또는 무지형) + 유료 옵션(테두리·하트·별) 없음 → 기본 판매 제품과 같아 기본가 할인
 function isSet(){const b=S.body,free=S.shp.filter(k=>!SH[k].acc);return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&free.every(x=>x===free[0])}
-function nomagNote(){return S.nomag?`<br><b>자석 기능 빼기</b>는 추가금 없이 주문 요청사항에 <b>"자석 없이 제작"</b>이라고 적어 주시면 됩니다.`:''}
+function nomagNote(){return S.nomag?`<br><b>자석 기능 빼기</b>는 추가금 없이 <b>판매자 요청사항</b>란에 <b>"자석 없이 제작"</b>이라고 적어 주시면 됩니다.`:''}
 function optList(){const p=[];if(S.rim)p.push(`${rimOf().name} 테두리 1개`);if(heartN())p.push(`하트 버튼 ${heartN()}개`);if(starN())p.push(`별 버튼 ${starN()}개`);if(ringN())p.push(`링 버튼 ${ringN()}개`);return p}
-// 단색 할인은 마지막 [요청사항 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
+// 단색 할인은 마지막 [주문코드 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
 const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
 let setRevealed=false;function setOn(){return altCheaper()&&(setRevealed||!!window.SEDAL_VIEW)}
 function basePrice(){return setOn()?PRICE.SET:PRICE.base}
@@ -842,17 +842,17 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
       ${Object.keys(SND).length?'<p class="help">축 카드의 스피커 버튼을 누르면 실제 녹음한 타건 소리를 들을 수 있습니다.</p>':''}<p class="help">축 색은 제조사 스템 색을 참고한 근사치입니다. 클리키는 딸깍 소리, 택타일은 걸림 있는 타건감, 리니어는 걸림 없는 부드러운 타건감입니다.</p></div>
     <div class="sec"><div class="sec-head"><h3>추가 옵션</h3></div><label class="opt-check"><input type="checkbox" id="nomag" ${S.nomag?'checked':''}><span><b>자석 기능 빼기</b><small>바닥 자석 없이 제작합니다.</small></span></label></div>`;
   }else{
-    h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문 요청사항에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
+    h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문서 [커스텀 주문코드]란에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
     <dl class="summary">${summaryRows()}</dl>
-    <div class="order-guide"><b>📋 주문 방법</b><ol><li><b>요청사항 복사</b> 버튼을 눌러 조합 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>커스텀 클리커 상품</b>을 주문하면서 <b>요청사항(판매자에게 전하는 말) 란에 붙여넣기</b> 해 주세요.</li><li>테두리·하트·별·링 등 <b>추가 옵션이 있으면 주문 시 함께 선택</b>해 주세요.</li></ol></div>
-    <div class="codebox"><span class="code" id="code">${code()}</span><button type="button" class="btn primary" id="copy">요청사항 복사</button></div>
+    <div class="order-guide"><b>📋 주문 방법</b><ol><li><b>주문코드 복사</b> 버튼을 눌러 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>커스텀 클리커 상품</b>을 주문하면서 주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여넣기 해 주세요.</li><li>그 외 요청사항은 <b>판매자 요청사항</b>란에 따로 적어 주세요.</li><li>테두리·하트·별·링 등 <b>추가 옵션이 있으면 주문 시 함께 선택</b>해 주세요.</li></ol></div>
+    <div class="codebox"><span class="code" id="code">${code()}</span><button type="button" class="btn primary" id="copy">주문코드 복사</button></div>
     <p class="status" id="status" role="status"></p>
     <p class="help">주문 코드는 선택한 본체·테두리·로고·버튼·축 정보를 짧게 묶은 값입니다. 코드를 넣으면 어떤 조합인지 그대로 확인됩니다.</p>
     <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="SD-1A2B-3C4D" aria-label="주문 코드 입력" maxlength="200" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
     <div class="sec"><div class="sec-head"><h3>더 보기</h3></div><div class="load"><button type="button" class="btn" id="img">이미지로 저장</button><button type="button" class="btn" id="random">랜덤 조합</button><button type="button" class="btn ghost" id="example">초기 상태로</button></div></div>`;
   }
   $('#panel-body').innerHTML=h;
-  $('#prev').disabled=i===0;const nx=$('#next');nx.textContent=i===STEPS.length-1?'요청사항 복사':'다음';
+  $('#prev').disabled=i===0;const nx=$('#next');nx.textContent=i===STEPS.length-1?'주문코드 복사':'다음';
 }
 function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():setOn()?`단색 세트 할인 (기본 ${won(PRICE.base)}원 → ${won(PRICE.SET)}원)`:'기본가 · 옵션 추가금 없음'}
 function renderChip(){const id=S.step==='shape'?'iv':curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
@@ -864,7 +864,7 @@ function render(){normTone();syncPart();{const sg=$('#stage');if(sg)sg.classList
 let toastT=null;function status(t){let el=$('#status');if(el)el.textContent=t;let ts=$('#toast');if(!ts){ts=document.createElement('div');ts.id='toast';ts.setAttribute('role','status');ts.style.cssText='position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:50;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(ts)}
   ts.textContent=t;ts.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>ts.style.opacity='0',2200)}
 
-async function copyOrder(){try{await navigator.clipboard.writeText(code());status('코드를 복사했습니다. 주문 요청사항에 붙여 넣으세요')}catch(e){const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요')}}
+async function copyOrder(){try{await navigator.clipboard.writeText(code());status('코드가 복사되었습니다. 주문서 [커스텀 주문코드]란에 붙여넣어 주세요.')}catch(e){const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요')}}
 function go(k){S.step=k;syncPart();lastPick=null;render();window.scrollTo({top:0,behavior:'smooth'})}
 
 let lastPick=null;
