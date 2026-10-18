@@ -316,6 +316,20 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
   .stage-head .price em{display:none}
   .ptitle{font-size:19px!important;margin-bottom:10px!important}
 }
+/* ── mobile compact top (v53): 상단바 축소 · 입체도 10% 축소 ── */
+@media (max-width:560px){
+  :root{--bar-h:46px}
+  .topbar{height:46px;padding-left:12px;padding-right:12px}
+  .steps{top:calc(env(safe-area-inset-top,0px) + 46px)}
+  .wordmark{font-size:15px}
+  .topbar-actions{gap:4px}
+  .topbar-actions .btn{font-size:12px;padding:6px 8px;gap:5px}
+  .topbar-actions .btn svg{width:10px;height:10px}
+  html:not(.view-mode) .stage-col{padding-top:6px;padding-bottom:6px;gap:6px}
+  html:not(.view-mode) .stage{height:min(27vh,234px)}
+  .stage-head h1{font-size:14px}
+  .price strong{font-size:16px}
+}
 
 </style>
 
