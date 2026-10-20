@@ -196,6 +196,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .cdot i{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
 .cdot em{font-style:normal;color:var(--ink-3);font-size:11px;margin-right:-2px}
 .codebox{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.btn.order-go{display:flex;width:100%;justify-content:center;margin-top:8px;padding:13px 16px;font-size:15px;font-weight:700;background:#03C75A;border-color:#03C75A;color:#fff}
 .code{flex:1 1 200px;min-width:0;font-family:var(--mono);font-size:16px;letter-spacing:.04em;background:var(--sunken);border-radius:3px;padding:12px 14px;user-select:all;word-break:break-all;display:flex;align-items:center}
 .load{display:flex;gap:8px;flex-wrap:wrap}
 .load input{flex:1 1 200px;min-width:0;font:500 14px var(--mono);padding:10px 12px;border-radius:3px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);text-transform:uppercase}
@@ -386,6 +387,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
     <h2>선택 요약</h2>
     <dl class="summary" id="drawer-summary"></dl>
     <div class="codebox"><span class="code" id="drawer-code"></span><button class="btn primary" id="drawer-copy" type="button">주문코드 복사</button></div>
+    <button type="button" class="btn order-go" data-order>스마트스토어에서 주문하기</button>
     <p class="help">주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.</p>
   </div>
 </div>
@@ -663,6 +665,8 @@ function nomagNote(){return S.nomag?`<br><b>자석 기능 빼기</b>는 추가�
 function optList(){const p=[];if(S.rim)p.push(`${rimOf().name} 테두리 1개`);if(heartN())p.push(`하트 버튼 ${heartN()}개`);if(starN())p.push(`별 버튼 ${starN()}개`);if(ringN())p.push(`링 버튼 ${ringN()}개`);return p}
 // 단색 할인은 마지막 [주문코드 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
 const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
+// 커스텀 클리커 상품 주소: 상품 등록 후 아래 따옴표 안에 넣으면 [주문하기] 버튼이 연결됩니다.
+const ORDER_URL='';
 let setRevealed=false;function setOn(){return altCheaper()&&(setRevealed||!!window.SEDAL_VIEW)}
 function basePrice(){return setOn()?PRICE.SET:PRICE.base}
 function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
@@ -847,6 +851,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     <dl class="summary">${summaryRows()}</dl>
     <div class="order-guide"><b>📋 주문 방법</b><ol><li><b>주문코드 복사</b> 버튼을 눌러 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>커스텀 클리커 상품</b>을 주문하면서 주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여넣기 해 주세요.</li><li>그 외 요청사항은 <b>판매자 요청사항</b>란에 따로 적어 주세요.</li><li>테두리·하트·별·링 등 <b>추가 옵션이 있으면 주문 시 함께 선택</b>해 주세요.</li></ol></div>
     <div class="codebox"><span class="code" id="code">${code()}</span><button type="button" class="btn primary" id="copy">주문코드 복사</button></div>
+    <button type="button" class="btn order-go" data-order>스마트스토어에서 주문하기</button>
     <p class="status" id="status" role="status"></p>
     <p class="help">주문 코드는 선택한 본체·테두리·로고·버튼·축 정보를 짧게 묶은 값입니다. 코드를 넣으면 어떤 조합인지 그대로 확인됩니다.</p>
     <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="SD-1A2B-3C4D" aria-label="주문 코드 입력" maxlength="200" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
@@ -894,6 +899,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.color){const id=t.dataset.color;lastPick=id;const scope=t.dataset.scope||(S.step==='body'?'body':'btn');
     if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;if(!hasAcc())S.sel=(S.sel+1)%8}render();return}
   if(t.dataset.acc){const id=t.dataset.acc;S.acc[S.sel]=id===PAIR[S.btn[S.sel]]?null:id;lastPick=null;S.sel=(S.sel+1)%8;render();return}
+  if(t.closest&&t.closest('[data-order]')){if(ORDER_URL)window.open(ORDER_URL,'_blank','noopener');else status('주문 페이지를 준비 중입니다. 잠시 후 다시 시도해 주세요.');return}
   if(t.id==='copy'||t.id==='drawer-copy'){openNotice();return}
   if(t.id==='notice-ok'){$('#notice').hidden=true;copyOrder();return}
   if(t.id==='notice-cancel'){$('#notice').hidden=true;return}
