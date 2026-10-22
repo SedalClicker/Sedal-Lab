@@ -430,7 +430,7 @@ const COLORS=[
   {id:'iv',name:'화이트',hex:'#F5F2EA',fin:'매트'},
   {id:'ch',name:'블랙',hex:'#3A3B3E',fin:'매트',nobody:1},
   {id:'be',name:'베이지',hex:'#F1E7CF',fin:'매트',only:'btn'},
-  {id:'sk',name:'핫핑크',hex:'#EAA6C8',fin:'매트',only:'btn'}
+  {id:'sk',name:'핑크',hex:'#EAA6C8',fin:'매트',only:'btn'}
 ];
 const PARTS=[
   {k:'body',name:'본체',desc:'받침, 테두리, 버튼 사이 채움 면과 고리까지 한 색'},
@@ -458,7 +458,7 @@ const SW=[
   {id:'wm',name:'화이트마블',type:'리니어',hex:'#F3F1EC',house:'#FAF9F6',d:'몽돌보다 한 톤 높게 \'탁탁\' 돌이 부딪히는 경쾌한 소리의 리니어축',t:['경쾌한 소리','높은 피치','단단한 타건감']}];
 function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
 const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2';
-const RIMS={ch:{name:'초코',hex:'#6E5A48',col:'wd'},pk:{name:'핫핑크',hex:'#EAA6C8',col:'sk'},iv:{name:'화이트',hex:'#F5F2EA',col:'iv'}};const RIMKEYS=Object.keys(RIMS);
+const RIMS={ch:{name:'초코',hex:'#6E5A48',col:'wd'},pk:{name:'핑크',hex:'#EAA6C8',col:'sk'},iv:{name:'화이트',hex:'#F5F2EA',col:'iv'}};const RIMKEYS=Object.keys(RIMS);
 function rimOf(){return S.rim?RIMS[S.rim]||RIMS.ch:null}
 const EXAMPLE={rim:false,nomag:false,logo:null,body:'iv',btn:Array(8).fill('iv'),shp:Array(8).fill('B'),tone:Array(8).fill('2'),acc:Array(8).fill(null),sw:Array(8).fill(SW_DEF),part:'body',sel:0,step:'body',view:'iso'};
 let S=load()||structuredClone(EXAMPLE);
