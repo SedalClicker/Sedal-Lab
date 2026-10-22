@@ -84,6 +84,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .stage .view{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);width:min(84%,700px);height:78%;z-index:1;cursor:grab}
 .stage.grabbing .view{cursor:grabbing}
 .stage .view.v-top{width:min(40%,300px);height:86%;top:50%}
+@media (max-width:960px){html:not(.view-mode) .stage .view.v-top{top:calc(50% + 14px);height:calc(100% - 80px)}}
 .stage .view svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 14px 14px rgba(58,31,20,.16))}
 .stage .view svg [data-i]{cursor:pointer}
 .turn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:88px;height:88px;border-radius:50%;background:rgba(27,21,18,.72);color:#fff;display:grid;place-items:center;font-family:var(--wordmark);font-weight:700;font-size:15px;letter-spacing:.02em;pointer-events:none;z-index:2;opacity:0;transition:opacity .25s}
@@ -157,6 +158,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .mini-side p{margin:0;font-size:13px;color:var(--ink-2)}
 .mini-side p b{color:var(--ink)}
 .link{appearance:none;border:0;background:none;padding:0;font-size:13px;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;justify-self:start}
+.all-btn{appearance:none;border:1px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 12px;font:600 12px/1 var(--body);cursor:pointer;white-space:nowrap;align-self:center}.all-btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .sw-cards{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
 .sw-group+.sw-group{margin-top:14px}
@@ -444,16 +446,16 @@ const PAIR={ww:'wd',wd:'ww',ml:'sd',st:'lv',lv:'st',cc:'ch',sy:'sk',sd:'iv',iv:'
 const SW=[
   {id:'bl',name:'청축',type:'클리키',hex:'#4D8BDC',d:'경쾌하고 선명한 클릭감의 클래식한 클릭축',t:['경쾌한 클릭감','시원한 소리','클래식한 타건감']},
   {id:'nv',name:'네이비',type:'클리키',hex:'#22386B',d:'제이드축보다 무거운 클릭압, 강한 촉각 피드백',t:['묵직한 클릭감','강한 구분감','헤비한 타건감']},
-  {id:'sl',name:'딸기라떼',type:'택타일',hex:'#F6BFD0',d:'가볍고 부드러운 택타일, 산뜻한 구분감',t:['가벼운 키감','부드러운 구분감','산뜻한 타건감']},
+  {id:'sl',name:'딸기라떼',type:'택타일',hex:'#F6BFD0',d:'도각도각의 정석, 산뜻한 택타일축',t:['가벼운 키감','부드러운 구분감','산뜻한 타건감']},
   {id:'bs',name:'흑당라떼',type:'리니어',hex:'#7A4B32',d:'부드럽게 \'도각도각\' 울리는 리니어축',t:['부드러운 키감','도각도각 소리','경쾌한 리듬']},
   {id:'cr',name:'크림치즈',type:'택타일',hex:'#F5E9CF',d:'적당한 구분감이 느껴지는 부드러운 택타일축',t:['부드러운 키감','적당한 구분감','편안한 타건감']},
   {id:'md',name:'몽돌',type:'리니어',hex:'#2E2E30',d:'매끄럽게 눌리고 몽돌이 부딪히는 듯한 소리의 리니어축',t:['매끄러운 키감','몽글한 소리','차분한 타건감']},
   {id:'ps',name:'핑크솔트',type:'택타일',tag:'저소음',hex:'#E8A2B6',d:'부드럽고 편안한 저소음 택타일축',t:['저소음','은은한 키감','편안한 타건감']},
   {id:'lm',name:'라임',type:'택타일',tag:'저소음',hex:'#A9D15B',d:'가볍고 산뜻한 저소음 택타일축',t:['조용한 키감','산뜻한 구분감','가벼운 타건감']},
-  {id:'ss',name:'바다소금',type:'리니어',tag:'저소음',hex:'#BFDDEB',d:'걸림 없이 매끄럽고 조용하게 눌리는 저소음 리니어축',t:['저소음','부드러운 키감','편안한 타건감']},
+  {id:'ss',name:'바다소금',type:'리니어',tag:'저소음',hex:'#BFDDEB',d:'소복소복 조용한 저소음 리니어축',t:['저소음','부드러운 키감','편안한 타건감']},
   {id:'y2',name:'Y2',type:'리니어',hex:'#D8363C',d:'물속에서 누르는 듯 포근한 소리의 리니어축',t:['포근한 소리','부드러운 키감','먹먹한 타건감']},
   {id:'lp',name:'리퍼',type:'리니어',hex:'#CFE59A',house:'#E3D3B4',d:'가볍게 톡 눌리고 딸깍 소리가 경쾌한 리니어축',t:['가벼운 키감','경쾌한 소리','리듬감 있는 연타']},
-  {id:'jd',name:'제이드',type:'클리키',hex:'#2FA585',d:'두꺼운 클릭바로 강한 구분감과 깊고 묵직한 클릭음',t:['강한 클릭감','뚜렷한 구분감','묵직한 타건감']},
+  {id:'jd',name:'제이드',type:'클리키',hex:'#2FA585',d:'두꺼운 클릭바로 강한 구분감과 경쾌한 클릭음',t:['강한 클릭감','뚜렷한 구분감','묵직한 타건감']},
   {id:'wm',name:'화이트마블',type:'리니어',hex:'#F3F1EC',house:'#FAF9F6',d:'몽돌보다 한 톤 높게 \'탁탁\' 돌이 부딪히는 경쾌한 소리의 리니어축',t:['경쾌한 소리','높은 피치','단단한 타건감']}];
 function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
 const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2';
@@ -828,7 +830,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     const k=S.shp[S.sel];
     h+=`<h2 class="ptitle">버튼 모양</h2><p class="lead">버튼마다 다른 모양을 고를 수 있습니다. 번호를 누르거나 미리보기의 버튼을 눌러 선택하세요.</p>
     <div class="mini-wrap">${miniGrid()}<div class="mini-side"><p><b>${S.sel+1}번 버튼</b>을 고르는 중입니다.<br>${SH[k].name}</p><p>색상은 다음 단계에서 고릅니다.</p><button type="button" class="link" id="shape-all">이 모양을 8개 모두에 적용</button></div></div>
-    <div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 모양</h3><span class="sel">${SH[k].name}</span></div>
+    <div class="sec"><div class="sec-head"><h3>${S.sel+1}번 버튼 모양</h3><button type="button" class="all-btn" id="shape-mode" aria-pressed="${shapeAll}">${shapeAll?'✓ ':''}8개 모두 선택한 모양으로</button><span class="sel">${SH[k].name}</span></div>
       <div class="cards shape-cards">${SHAPES.map(x=>`<button type="button" class="card" data-shape="${x.k}" aria-pressed="${k===x.k}">${shapeIcon(x.k)}<b>${x.name}</b><span>${x.desc}</span><em>${optPrice(x.k)?'+'+won(optPrice(x.k))+'원 / 버튼':'추가금 없음'}</em></button>`).join('')}</div></div>`;
     if(SH[k].acc)h+=heartNote();
   }else if(S.step==='btn'){
@@ -872,7 +874,7 @@ let toastT=null;function status(t){let el=$('#status');if(el)el.textContent=t;le
 async function copyOrder(){try{await navigator.clipboard.writeText(code());status('코드가 복사되었습니다. 주문서 [커스텀 주문코드]란에 붙여넣어 주세요.')}catch(e){const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요')}}
 function go(k){S.step=k;syncPart();lastPick=null;render();window.scrollTo({top:0,behavior:'smooth'})}
 
-let lastPick=null;
+let lastPick=null,shapeAll=false;
 // switch sound preview (recordings in SND, id -> audio data URL)
 let playing=null,audio=null;
 function playSw(id){if(audio){audio.pause();audio=null}if(playing===id){playing=null;markPlay();return}
@@ -888,7 +890,8 @@ document.addEventListener('click',e=>{
   if(t.id==='next'){const i=stepIdx();if(i<STEPS.length-1)go(STEPS[i+1].k);else openNotice();return}
   if(t.id==='apply-all'){const j=lastPick?(S.sel+7)%8:S.sel,c=lastPick||S.btn[S.sel],a=S.acc[j];S.btn=S.btn.map(()=>c);S.acc=S.acc.map(()=>a);render();status('8개 버튼에 같은 색을 적용했습니다');return}
   if(t.id==='shape-all'){const k=S.shp[S.sel],tn=S.tone[S.sel];S.shp=S.shp.map(()=>k);S.tone=S.tone.map(()=>tn);render();status('8개 버튼을 '+SH[k].name+'으로 바꿨습니다');return}
-  if(t.dataset.shape){S.shp[S.sel]=t.dataset.shape;S.sel=(S.sel+1)%8;render();return}
+  if(t.id==='shape-mode'){shapeAll=!shapeAll;render();status(shapeAll?'이제 모양을 고르면 8개 버튼 모두에 적용됩니다':'버튼별로 모양을 고릅니다');return}
+  if(t.dataset.shape){if(shapeAll){const k=t.dataset.shape;S.shp=S.shp.map(()=>k);render();status('8개 버튼을 '+SH[k].name+'으로 바꿨습니다');return}S.shp[S.sel]=t.dataset.shape;S.sel=(S.sel+1)%8;render();return}
   if(t.id==='sw-all'){const k=S.sw[S.sel];S.sw=S.sw.map(()=>k);render();status('8개 버튼에 '+swName(k)+'을 적용했습니다');return}
   if(t.dataset.sw){S.sw[S.sel]=t.dataset.sw;if(t.classList.contains('sw')&&S.sel<7)S.sel++;render();return}
   if(t.dataset.rim){S.rim=t.dataset.rim==='0'?false:t.dataset.rim;render();status(S.rim?rimOf().name+' 테두리를 선택했습니다':'테두리를 뺐습니다');return}
