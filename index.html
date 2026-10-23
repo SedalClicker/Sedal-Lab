@@ -668,7 +668,7 @@ function optList(){const p=[];if(S.rim)p.push(`${rimOf().name} 테두리 1개`);
 // 단색 할인은 마지막 [주문코드 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
 const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
 // 커스텀 클리커 상품 주소: 상품 등록 후 아래 따옴표 안에 넣으면 [주문하기] 버튼이 연결됩니다.
-const ORDER_URL='';
+const ORDER_URL='https://smartstore.naver.com/se_dal/products/13826634945';
 let setRevealed=false;function setOn(){return altCheaper()&&(setRevealed||!!window.SEDAL_VIEW)}
 function basePrice(){return setOn()?PRICE.SET:PRICE.base}
 function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
