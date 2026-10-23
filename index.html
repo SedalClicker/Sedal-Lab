@@ -407,7 +407,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
   <div class="modal-card notice-card verify-card" role="dialog" aria-modal="true" aria-labelledby="verify-t">
     <h3 id="verify-t">주문코드 확인</h3>
     <p>주문서 [커스텀 주문코드]란에 넣은 코드를 넣으면 실제로 제작될 모습과 결제 금액을 확인할 수 있습니다.</p>
-    <div class="load"><input id="v-in" placeholder="SD-1A2B-3C4D" maxlength="200" aria-label="주문 코드" autocomplete="off" autocapitalize="characters"><button class="btn primary" id="v-run" type="button">확인</button></div>
+    <div class="load"><input id="v-in" placeholder="SD가나다라…" maxlength="200" aria-label="주문 코드" autocomplete="off" autocapitalize="characters"><button class="btn primary" id="v-run" type="button">확인</button></div>
     <div id="v-out" aria-live="polite"></div>
     <div class="row2"><button class="btn" id="v-close" type="button">닫기</button></div>
   </div>
@@ -757,7 +757,13 @@ function squeeze(s){return /^(.)\1{7}$/.test(s)?s[0]:s}
 // 압축 코드: v1(체크 1글자, 색12·축12) / v2(체크 2글자, 색16·축16 여유). 새 코드는 v2. 색·축은 목록 뒤에만 추가할 것.
 const B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ',CK1={c:12,w:12,h:'BPHS',k:1,salt:0},CK2={c:16,w:16,h:'BPHS',hr:4,k:2,salt:577},CK3={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:911},CK4={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:1301,a:1},CK5={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:1777,a:1,r:1};
 function ckOf(d,K){let x=K.salt;for(let i=0;i<d.length;i++)x=(x+B32.indexOf(d[i])*(i+1)*(K.k>1?(i%7)+3:1))%(32**K.k);let o='';for(let j=0;j<K.k;j++){o=B32[x%32]+o;x=Math.floor(x/32)}return o}
-function code(){const K=CK5,ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.findIndex(x=>x.id===id),hi=k=>K.h.indexOf(k==='T'?'H':k);
+// 한글 주문코드(CK6): CK5 수를 받침 없는 한글 399자로 표기 + 확인 1글자, 접두 'SD'. 스마트스토어 20칸 제한 대응
+const HG0=0xAC00;function hgc(i){return String.fromCharCode(HG0+i*28)}function hgi(ch){const d=ch.charCodeAt(0)-HG0;return d>=0&&d<11172&&d%28===0?d/28:-1}
+function ckH(a){let x=7;a.forEach((v,i)=>x=(x+v*((i%7)+3)*(i+1))%399);return x}
+function code(){const sd=codeSD().replace(/^SD-/,'').replace(/-U$/,'').replace(/-/g,'');const d=sd.slice(0,-CK5.k);let n=0n;for(const c of d)n=n*32n+BigInt(B32.indexOf(c));n=n*2n+(S.nomag?1n:0n);const a=[];do{a.unshift(Number(n%399n));n/=399n}while(n>0n);a.push(ckH(a));return 'SD'+a.map(hgc).join('')}
+function decodeHangul(v){const a=[...v.replace(/^SD/,'')].map(hgi);if(a.length<2)return null;if(a.some(x=>x<0))return{err:'코드에 쓰이지 않는 글자가 있습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};const ck=a.pop();if(ckH(a)!==ck)return{err:'코드가 맞지 않습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};
+  let n=0n;for(const x of a)n=n*399n+BigInt(x);const nm=n%2n===1n;n/=2n;let s='';do{s=B32[Number(n%32n)]+s;n/=32n}while(n>0n);const r=decodeShort(s+ckOf(s,CK5),CK5);if(r&&r.st)r.st.nomag=nm;return r||{err:'코드가 맞지 않습니다'}}
+function codeSD(){const K=CK5,ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.findIndex(x=>x.id===id),hi=k=>K.h.indexOf(k==='T'?'H':k);
   const f=[[ci(S.body),K.c],[S.rim?(K.r?RIMKEYS.indexOf(S.rim)+1:(S.rim==='pk'?2:1)):0,K.r?RIMKEYS.length+1:3],[S.logo?ci(S.logo)+1:0,K.c+1]],uni=a=>a.every(x=>x===a[0]);
   const acc=S.shp.map((k,i)=>SH[k].acc&&S.acc[i]?ci(S.acc[i])+1:0);const u=[uni(S.btn),uni(S.shp),uni(S.sw)];if(K.a)u.push(uni(acc));
   [[S.btn,ci,K.c,u[0]],[S.shp,hi,K.hr||4,u[1]],[S.sw,si,K.w,u[2]]].concat(K.a?[[acc,x=>x,K.c+1,u[3]]]:[]).forEach(([a,g,r,one])=>(one?[a[0]]:a).forEach(x=>f.push([g(x),r])));
@@ -775,7 +781,7 @@ function decodeShort(s,K){if(s.length<=K.k)return null;const d=s.slice(0,-K.k);i
   const shp=sh.map(i=>K.h[i]);
   if(K.r&&rm>RIMKEYS.length)return{err:'없는 테두리 번호가 있습니다'};
   return{st:{rim:rm?(K.r?RIMKEYS[rm-1]:(rm===2?'pk':'ch')):false,logo:lg?COLORS[lg-1].id:null,body:COLORS[bd].id,btn:bt.map(i=>COLORS[i].id),shp,tone:shp.map(k=>SH[k].acc?'2':'1'),acc:ac.map((i,j)=>i&&SH[shp[j]].acc?COLORS[i-1].id:null),sw:sw.map(i=>SW[i].id)}}}
-function parseShort(v){const s=v.replace(/^SD-/,'').replace(/-/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');
+function parseShort(v){if(/^SD[가-힣]/.test(v))return decodeHangul(v);const s=v.replace(/^SD-/,'').replace(/-/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');
   if(s.length<3||[...s].some(c=>B32.indexOf(c)<0))return null;
   const r5=decodeShort(s,CK5);if(r5&&!r5.err)return r5;const r4=decodeShort(s,CK4);if(r4&&!r4.err)return r4;const r3=decodeShort(s,CK3);if(r3&&!r3.err)return r3;const r2=decodeShort(s,CK2);if(r2&&!r2.err)return r2;const r1=decodeShort(s,CK1);if(r1&&!r1.err)return r1;
   return r5||r4||r3||r2||r1||{err:'코드가 맞지 않습니다. 한 글자씩 다시 확인해 주세요'}}
@@ -803,13 +809,13 @@ function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 �
 function renderSubsteps(){const i=stepIdx();$('#substeps').innerHTML=STEPS.map((s,k)=>`<li><button type="button" data-step="${s.k}" class="${k<i?'done':''}" ${k===i?'aria-current="step"':''}><span class="sn">${k+1}</span><span class="st">${s.name}</span></button></li>`).join('')}
 function renderViewPanel(){const n=twoCount();
   let h=`<h2 class="ptitle">내가 선택한 커스텀 확인</h2><p class="lead">주문할 때 받은 코드를 넣으면 제작될 모습과 금액이 나타납니다. 미리보기는 드래그해서 돌려 볼 수 있습니다.</p>
-  <div class="load"><input id="vw-code" placeholder="SD-1A2B-3C4D" aria-label="주문 코드" maxlength="200" autocomplete="off" value="${vwInput.replace(/"/g,'')}"><button type="button" class="btn primary" id="vw-go">확인</button></div><p class="status" id="status" role="status"></p>`;
+  <div class="load"><input id="vw-code" placeholder="SD가나다라…" aria-label="주문 코드" maxlength="200" autocomplete="off" value="${vwInput.replace(/"/g,'')}"><button type="button" class="btn primary" id="vw-go">확인</button></div><p class="status" id="status" role="status"></p>`;
   if(vwLoaded){h+=`<div class="v-ok">✓ 확인된 코드 <b>${code()}</b></div><div class="v-img vw-mobile"><img id="vw-img" alt="이 코드로 제작될 클리커 미리보기"${vwImg?` src="${vwImg}"`:''}></div>
   <dl class="summary">${summaryRows().replace(/<div class="row"><dt>금액<\/dt>[\s\S]*$/,'')}</dl>
   <div class="v-price"><span>결제 금액</span><b>${won(total())}원</b><em>${breakdown()}</em></div>${optN()?`<p class="heart-alert">${heartMsg()}</p>`:''}
   <details class="v-sheet"><summary>제작 시트 (버튼별 상세)</summary><table><thead><tr><th>#</th><th>모양</th><th>버튼 색</th><th>테두리·하트</th><th>축</th></tr></thead><tbody>${makerRows()}</tbody></table></details>
   <div class="load"><button type="button" class="btn" id="img">이미지로 저장</button></div>`}
-  else h+=`<p class="help">예: SD-1A2B-3C4D · 코드는 커스텀 페이지의 마지막 단계(주문 코드)에서 확인할 수 있습니다.</p>`;
+  else h+=`<p class="help">예: SD가나다라… · 코드는 커스텀 페이지의 마지막 단계(주문 코드)에서 확인할 수 있습니다.</p>`;
   $('#panel-body').innerHTML=h}
 function viewLoad(useInput=true){const el=$('#vw-code');if(useInput&&el)vwInput=el.value.trim();const r=parseCode(vwInput);if(r.err){status(r.err);return}Object.assign(S,structuredClone(r.st));S.step='code';vwLoaded=true;vwInput=code();vwImg='';render();snapImage(code(),url=>{vwImg=url;const im=$('#vw-img');if(im)im.src=url});draw(false);status('코드대로 불러왔습니다')}
 function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepIdx();
@@ -856,7 +862,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     <button type="button" class="btn order-go" data-order>스마트스토어에서 주문하기</button>
     <p class="status" id="status" role="status"></p>
     <p class="help">주문 코드는 선택한 본체·테두리·로고·버튼·축 정보를 짧게 묶은 값입니다. 코드를 넣으면 어떤 조합인지 그대로 확인됩니다.</p>
-    <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="SD-1A2B-3C4D" aria-label="주문 코드 입력" maxlength="200" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
+    <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="SD가나다라…" aria-label="주문 코드 입력" maxlength="200" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
     <div class="sec"><div class="sec-head"><h3>더 보기</h3></div><div class="load"><button type="button" class="btn" id="img">이미지로 저장</button><button type="button" class="btn" id="random">랜덤 조합</button><button type="button" class="btn ghost" id="example">초기 상태로</button></div></div>`;
   }
   $('#panel-body').innerHTML=h;
@@ -930,10 +936,10 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id
 
 // keep switch tooltips inside the window
 document.addEventListener('mouseover',e=>{const it=e.target.closest&&e.target.closest('.sw-item');if(!it)return;const t=it.querySelector('.sw-tip');if(!t)return;t.style.marginLeft='0px';t.style.setProperty('--dx','0px');const r=t.getBoundingClientRect(),vw=document.documentElement.clientWidth;let dx=0;if(r.right>vw-8)dx=vw-8-r.right;if(r.left+dx<8)dx=8-r.left;t.style.marginLeft=dx+'px';t.style.setProperty('--dx',dx+'px')});
-function extractCode(raw){const m=String(raw||'').toUpperCase().match(/SD-[0-9A-Z]+(?:-[0-9A-Z]+)*/);return m?m[0]:String(raw||'').trim()}
-document.addEventListener('paste',e=>{const t=e.target;if(!t||!['code-in','v-in','vw-code'].includes(t.id))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/SD-/i.test(txt))return;e.preventDefault();t.value=extractCode(txt);t.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>{if(t.id==='v-in')runVerify();else if(t.id==='vw-code')viewLoad();else if(t.id==='code-in')openVerify(t.value)},0)});
+function extractCode(raw){const h=String(raw||'').match(/SD[가-힣]{3,}/);if(h)return h[0];const m=String(raw||'').toUpperCase().match(/SD-[0-9A-Z]+(?:-[0-9A-Z]+)*/);return m?m[0]:String(raw||'').trim()}
+document.addEventListener('paste',e=>{const t=e.target;if(!t||!['code-in','v-in','vw-code'].includes(t.id))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/SD-|SD[가-힣]/i.test(txt))return;e.preventDefault();t.value=extractCode(txt);t.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>{if(t.id==='v-in')runVerify();else if(t.id==='vw-code')viewLoad();else if(t.id==='code-in')openVerify(t.value)},0)});
 // 자석 빼기는 코드 끝 '-U'(Base32에 없는 글자)로 표시
-function parseCode(raw){let v=extractCode(raw).toUpperCase().replace(/\s+/g,'');const nm=/-?U$/.test(v);if(nm)v=v.replace(/-?U$/,'');const r=parseCode0(v);if(r&&r.st)r.st.nomag=nm;return r}
+function parseCode(raw){let v=extractCode(raw).toUpperCase().replace(/\s+/g,'');const nm=/-?U$/.test(v);if(nm)v=v.replace(/-?U$/,'');const r=parseCode0(v);if(r&&r.st)r.st.nomag=nm||r.st.nomag===true;return r}
 function parseCode0(raw){
   let v=extractCode(raw).toUpperCase().replace(/\s+/g,'');
   const x8=s=>s.length===1?s.repeat(8):s;let m,btn,shp,tone,sw=null;
@@ -943,7 +949,7 @@ function parseCode0(raw){
   // legacy formats
   else if(m=v.match(/^SD-([0-9A-Z])-([0-9A-Z]{8})-([BRPH]{8})(?:-([0-9A-Z]{8}))?$/)){btn=m[2];shp=[...m[3]].map(k=>k==='R'?'B':k);const acc=m[4];tone=shp.map((k,i)=>!acc?'1':/^[012]{8}$/.test(acc)?(acc[i]==='1'?'1':'2'):'2')}
   else if(m=v.match(/^SD-([0-9A-Z])-([0-9A-Z]{8})-([BRPH])([0-9A-Z]{8})?$/)){btn=m[2];shp=Array(8).fill(m[3]==='R'?'B':m[3]);tone=Array(8).fill(m[4]&&/^[012]{8}$/.test(m[4])&&m[4][0]==='1'?'1':'2')}
-  if(!m){const r=v?parseShort(v):null;if(r)return r;return{err:v?'코드 형식이 다릅니다. 예: SD-1A2B-3C4D':'코드를 입력해 주세요'}}
+  if(!m){const r=v?parseShort(v):null;if(r)return r;return{err:v?'코드 형식이 다릅니다. 예: SD가나다라…':'코드를 입력해 주세요'}}
   const g=d=>COLORS[parseInt(d,36)];if([m[1],...btn].some(d=>!g(d))||g(m[1]).only)return{err:'없는 색상 번호가 있습니다'};
   tone=shp.map(k=>SH[k].acc?'2':'1');
   return{st:{rim,logo,body:g(m[1]).id,btn:[...btn].map(d=>g(d).id),shp,tone,sw:sw||Array(8).fill(SW_DEF)}};
