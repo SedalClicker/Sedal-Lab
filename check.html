@@ -955,7 +955,7 @@ document.addEventListener('mouseover',e=>{const it=e.target.closest&&e.target.cl
 function extractCode(raw){const t=String(raw||'').trim();if(t&&!/^SD-/i.test(t)&&is7(t))return t;if(!/SD-/i.test(t)){const tk=t.split(/\s+/).filter(x=>x.length>=4&&is7(x)).sort((a,b)=>b.length-a.length)[0];if(tk)return tk}const m=String(raw||'').toUpperCase().match(/SD-[0-9A-Z]+(?:-[0-9A-Z]+)*/);return m?m[0]:String(raw||'').trim()}
 document.addEventListener('paste',e=>{const t=e.target;if(!t||!['code-in','v-in','vw-code'].includes(t.id))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/SD-/i.test(txt)&&!is7(txt.trim()))return;e.preventDefault();t.value=extractCode(txt);t.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>{if(t.id==='v-in')runVerify();else if(t.id==='vw-code')viewLoad();else if(t.id==='code-in')openVerify(t.value)},0)});
 // 자석 빼기는 코드 끝 '-U'(Base32에 없는 글자)로 표시
-function parseCode(raw){let v=extractCode(raw).replace(/\s+/g,'');if(v&&!/^SD-/i.test(v)&&is7(v))return decode7(v);v=v.toUpperCase();const nm=/-?U$/.test(v);if(nm)v=v.replace(/-?U$/,'');const r=parseCode0(v);if(r&&r.st)r.st.nomag=nm;return r}
+function parseCode(raw){let v=extractCode(raw).replace(/\s+/g,'');if(v&&!/^SD/i.test(v)&&is7(v))return decode7(v);v=v.toUpperCase().replace(/^SD(?!-)/,'SD-');const nm=/-?U$/.test(v);if(nm)v=v.replace(/-?U$/,'');const r=parseCode0(v);if(r&&r.st)r.st.nomag=nm;return r}
 function parseCode0(raw){
   let v=extractCode(raw).toUpperCase().replace(/\s+/g,'');
   const x8=s=>s.length===1?s.repeat(8):s;let m,btn,shp,tone,sw=null;
