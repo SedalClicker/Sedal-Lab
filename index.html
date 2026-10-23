@@ -655,8 +655,8 @@ function optSum(){return S.shp.reduce((a,k,i)=>a+(S.tone[i]==='2'?optPrice(k):0)
 function optN(){return heartN()+starN()+ringN()+(S.rim?1:0)}
 function heartMsg(){const n=heartN(),p=[];if(n)p.push(`<b>하트버튼 옵션 ${n}개</b>`);if(starN())p.push(`<b>별버튼 옵션 ${starN()}개</b>`);if(ringN())p.push(`<b>링버튼 옵션 ${ringN()}개</b>`);if(S.rim)p.push(`<b>${rimOf().name} 테두리 옵션 1개</b>`);return `네이버 스마트스토어 주문 시 ${p.join(', ')}를 추가해 주셔야 합니다.`}
 const STEPS=[{k:'body',name:'본체 색상'},{k:'shape',name:'버튼 모양'},{k:'btn',name:'버튼 색상'},{k:'sw',name:'스위치 축'},{k:'code',name:'주문 코드'}];
-const PRICE={base:18900,SET:16900,T:500,RIM:2000,SOLO:{B:800,H:1300,S:1300,R:1100}};
-// 개별판매가: 기본버튼 800, 링 투톤 1,100, 하트·별 투톤 1,300. 단색 세트(기본 상품)+개별 옵션 합이 커스텀가보다 싸면 기본 주문으로 안내.
+const PRICE={base:18900,SET:16900,T:500,RIM:2000,SOLO:{B:500,P:500,H:1000,S:1000,R:800}};
+// 개별판매가: 기본·무지 버튼 500, 링 투톤 800, 하트·별 투톤 1,000. 단색 세트(기본 상품)+개별 옵션 합이 커스텀가보다 싸면 기본 주문으로 안내.
 function soloSum(){return S.shp.reduce((a,k,i)=>a+(SH[k].acc&&S.tone[i]==='2'?PRICE.SOLO[k]:0),0)}
 function customPrice(){return PRICE.base+optSum()+(S.rim?PRICE.RIM:0)}
 function altPrice(){return PRICE.SET+soloSum()+(S.rim?PRICE.RIM:0)}
