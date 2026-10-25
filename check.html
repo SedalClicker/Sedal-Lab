@@ -814,10 +814,10 @@ function summaryRows(){const sm={};S.shp.forEach(k=>sm[k]=(sm[k]||0)+1);const ac
   let h=`<div class="row"><dt>본체</dt><dd>${chip(S.body,C[S.body].name)}${S.rim?`<span class="cdot"><i style="${rimOf().col&&C[rimOf().col]?swatchBg(C[rimOf().col]):'background:'+rimOf().hex}"></i>${rimOf().name} 테두리</span>`:''}</dd></div><div class="row"><dt>로고</dt><dd>${S.logo?chip(S.logo,C[S.logo].name):'본체와 같은 색'}</dd></div>${S.nomag?'<div class="row"><dt>자석</dt><dd><b>자석 없음</b> (자석 기능 빼기)</dd></div>':''}
   <div class="row"><dt>버튼 모양</dt><dd>${SHAPES.filter(x=>sm[x.k]).map(x=>`${x.name} ${sm[x.k]}`).join(' · ')}</dd></div>
   <div class="row"><dt>버튼 색상</dt><dd>${colorChips(S.btn)}</dd></div>`;
-  if(ac.length)h+=`<div class="row"><dt>테두리·하트·별</dt><dd>${['1','2'].map(t=>[t,ac.filter(i=>S.tone[i]===t).length]).filter(x=>x[1]).map(([t,n])=>(t==='1'?'원톤 ':'투톤 ')+n).join(' · ')}</dd></div>`;
+  if(ac.length)h+=`<div class="row"><dt>테두리·하트·별</dt><dd>${['1','2'].map(t=>[t,ac.filter(i=>S.tone[i]===t).length]).filter(x=>x[1]).map(([t,n])=>(t==='1'?'원톤 ':'투톤 ')+n).join(' · ')}${(()=>{const m={};ac.filter(i=>S.tone[i]==='2').forEach(i=>{const a=(S.acc&&S.acc[i])||accOf(i);m[a]=(m[a]||0)+1});const e=Object.entries(m);return e.length?'<br>'+e.map(([id,k])=>chip(id,'투톤 색 '+C[id].name+' '+k)).join(''):''})()}</dd></div>`;
   const swm={};S.sw.forEach(k=>swm[k]=(swm[k]||0)+1);
   h+=`<div class="row"><dt>스위치 축</dt><dd>${SW.filter(x=>swm[x.id]).map(x=>chipSw(x.id,`${swName(x.id)} (${x.type}) ${swm[x.id]}`)).join('')}</dd></div>`;
-  h+=`<div class="row"><dt>버튼별</dt><dd>${S.btn.map((id,i)=>chip(id,`${SH[S.shp[i]].name}${hasAcc(i)?(S.tone[i]==='2'?' · 투톤':' · 원톤'):''} · ${swName(S.sw[i])}`,i+1)).join('')}</dd></div>`;
+  h+=`<div class="row"><dt>버튼별</dt><dd>${S.btn.map((id,i)=>chip(id,`${SH[S.shp[i]].name}${hasAcc(i)?(S.tone[i]==='2'?' · 투톤('+C[(S.acc&&S.acc[i])||accOf(i)].name+')':' · 원톤'):''} · ${swName(S.sw[i])}`,i+1)).join('')}</dd></div>`;
   const n=twoCount();h+=`<div class="row"><dt>금액</dt><dd>${breakdown()} = <b>${won(total())}원</b></dd></div>`;
   return h}
 function orderText(){const n=twoCount();return `[새달랩 초콜릿 클리커 커스텀]\n조합 코드: ${code()} (커스텀 페이지 상단 [코드 확인]에서 확인 가능)\n금액: ${won(total())}원 (${breakdown()})${heartN()?`\n하트버튼 옵션: ${heartN()}개 (스마트스토어 옵션 추가 필요)`:''}${starN()?`\n별버튼 옵션: ${starN()}개 (스마트스토어 옵션 추가 필요)`:''}${ringN()?`\n링버튼 옵션: ${ringN()}개 (스마트스토어 옵션 추가 필요)`:''}${S.rim?`\n${rimOf().name} 테두리 옵션: 1개 (스마트스토어 옵션 추가 필요)`:''}\n본체: ${C[S.body].name}${S.rim?' + '+rimOf().name+' 테두리':''}\n로고: ${S.logo?C[S.logo].name:'본체와 같은 색'}${S.nomag?'\n자석: 없음 (자석 기능 빼기)':''}\n버튼(모양 · 색 · 테두리·하트 · 축):\n${S.btn.map((id,i)=>`${i+1}번 ${SH[S.shp[i]].name} · ${C[id].name}${hasAcc(i)?(S.tone[i]==='2'?` (투톤: ${C[accOf(i)].name})`:' (원톤)'):''} · ${swName(S.sw[i])} (${SWM[S.sw[i]].type})`).join('\n')}`}
@@ -982,7 +982,7 @@ function snapImage(label,cb){
 function exportImage(){snapImage(code(),url=>{$('#modal-img').src=url;$('#modal').hidden=false});draw(false)}
 // ── 주문코드 확인 (고객 최종 확인 · 판매자 제작 확인) ──
 let vState=null;
-function makerRows(){return `<tr><th>본체</th><td colspan="4">${C[S.body].name}${S.rim?' + <b>'+rimOf().name+' 테두리</b>':''} · 로고 ${S.logo?'<b>'+C[S.logo].name+'</b>':'본체색'}${S.nomag?' · <b>자석 없음</b>':''}</td></tr>`+S.btn.map((id,i)=>`<tr><th>${i+1}</th><td>${SH[S.shp[i]].name}</td><td>${C[id].name}</td><td>${hasAcc(i)?(S.tone[i]==='2'?'투톤 · '+C[accOf(i)].name:'원톤'):'—'}</td><td>${swName(S.sw[i])}<small> ${SWM[S.sw[i]].type}</small></td></tr>`).join('')}
+function makerRows(){return `<tr><th>본체</th><td colspan="4">${C[S.body].name}${S.rim?' + <b>'+rimOf().name+' 테두리</b>':''} · 로고 ${S.logo?'<b>'+C[S.logo].name+'</b>':'본체색'}${S.nomag?' · <b>자석 없음</b>':''}</td></tr>`+S.btn.map((id,i)=>`<tr><th>${i+1}</th><td>${SH[S.shp[i]].name}</td><td>${C[id].name}</td><td>${hasAcc(i)?(S.tone[i]==='2'?'투톤 · <b>'+C[(S.acc&&S.acc[i])||accOf(i)].name+'</b>':'원톤'):'—'}</td><td>${swName(S.sw[i])}<small> ${SWM[S.sw[i]].type}</small></td></tr>`).join('')}
 function openVerify(pre){$('#verify').hidden=false;if(pre){$('#v-in').value=pre;runVerify()}else{$('#v-out').innerHTML='';$('#v-in').focus()}}
 function runVerify(){
   const r=parseCode($('#v-in').value),out=$('#v-out');
