@@ -122,6 +122,16 @@ td.low input{border-color:#e0a03a}
   </nav>
 </header>
 <main>
+  <div id="lock" hidden>
+    <section class="inv" style="max-width:420px;margin:40px auto">
+      <h2>잠겨 있어요</h2>
+      <p class="hint">주문 정보를 보려면 Supabase 계정으로 로그인해 주세요. 로그아웃하면 이 기기에 저장된 주문 데이터는 지워져요.</p>
+      <div class="form"><input id="lk-email" type="email" placeholder="이메일" autocomplete="username"></div>
+      <div class="form"><input id="lk-pw" type="password" placeholder="비밀번호" autocomplete="current-password"><button class="btn primary" id="lk-login">로그인</button></div>
+      <p class="msg" id="lk-msg"></p>
+      <p><button class="btn" id="lk-reset" style="font-size:12px">연결 정보 다시 입력</button></p>
+    </section>
+  </div>
   <div id="tab-orders" class="split">
    <aside id="sidecol"><div id="side"></div><div id="fin"></div></aside>
    <div class="maincol">
@@ -314,13 +324,32 @@ function subscribe() {
     .subscribe();
 }
 
+// ---- 잠금: 동기화(Supabase)를 연결한 브라우저는 로그인해야 주문 화면이 열려요 ----
+let LOCKED = !!readJSON(CLOUD_CFG, null);
+function setLocked(v) {
+  LOCKED = v;
+  $('#lock').hidden = !v;
+  document.querySelector('nav').hidden = v;
+  const on = (document.querySelector('nav button.on') || {}).dataset?.tab || 'orders';
+  for (const t of ['orders', 'inv', 'settings']) $('#tab-' + t).hidden = v || t !== on;
+  if (!v) render();
+}
+function wipeLocal() {
+  localStorage.removeItem(STORE_KEY); localStorage.removeItem(CLOUD_DIRTY);
+  DB = emptyDB(); dirty = new Set(); snap = {};
+  for (const k in decCache) delete decCache[k];
+  for (const k in pvCache) delete pvCache[k];
+  ['#list', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
+}
+
 async function cloudStart() {
   cloudReady = false;
   const cfg = readJSON(CLOUD_CFG, null);
-  if (!cfg || !window.supabase) { cloud = null; setSync(''); renderCloud(); return; }
+  if (!cfg) { cloud = null; setSync(''); setLocked(false); renderCloud(); return; }
+  if (!window.supabase) { setLocked(true); $('#lk-msg').textContent = 'Supabase 라이브러리를 불러오지 못했어요. 새로고침해 주세요.'; return; }
   cloud = cloud || supabase.createClient(cfg.url, cfg.key);
   const {data} = await cloud.auth.getSession();
-  if (!data.session) { setSync('클라우드 로그인 필요', 'warn'); renderCloud(); return; }
+  if (!data.session) { setSync('잠김', 'warn'); setLocked(true); renderCloud(); return; }
   setSync('동기화 중…');
   try {
     await pull();
@@ -333,7 +362,27 @@ async function cloudStart() {
     setSync('클라우드 연결 실패', 'warn');
     $('#cl-msg').textContent = '연결 실패: ' + (e.message || e) + ' (URL·키·kv 표를 확인해 주세요)';
   }
+  setLocked(false);
   renderCloud();
+}
+async function login(email, pw, msgEl) {
+  if (!cloud) { msgEl.textContent = 'Supabase 라이브러리를 불러오지 못했어요. 새로고침해 주세요.'; return; }
+  msgEl.textContent = '로그인 중…';
+  const {error} = await cloud.auth.signInWithPassword({email: email.trim(), password: pw});
+  if (error) { msgEl.textContent = '로그인 실패: ' + error.message; return; }
+  msgEl.textContent = '';
+  cloudStart();
+}
+// 연결 정보와 이 기기의 주문 데이터를 함께 지워요 (클라우드 데이터는 그대로)
+async function resetCloud() {
+  if (cloud && cloudReady) await push();
+  if (dirty.size && !confirm(`아직 클라우드에 못 올린 변경 ${dirty.size}건이 있어요. 계속하면 사라져요. 계속할까요?`)) return false;
+  if (cloud) { if (channel) cloud.removeChannel(channel); await cloud.auth.signOut(); }
+  wipeLocal();
+  [CLOUD_CFG, CLOUD_DIRTY, CLOUD_LINKED].forEach(k => localStorage.removeItem(k));
+  cloud = null; channel = null; cloudReady = false;
+  setSync(''); setLocked(false); renderCloud();
+  return true;
 }
 
 async function renderCloud() {
@@ -353,30 +402,22 @@ $('#cl-save').onclick = () => {
   cloud = null; $('#cl-msg').textContent = '저장했어요. 이제 로그인해 주세요.';
   cloudStart();
 };
-$('#cl-login').onclick = async () => {
-  if (!cloud) { $('#cl-msg').textContent = 'Supabase 라이브러리를 불러오지 못했어요. 새로고침해 주세요.'; return; }
-  $('#cl-msg').textContent = '로그인 중…';
-  const {error} = await cloud.auth.signInWithPassword({email: $('#cl-email').value.trim(), password: $('#cl-pw').value});
-  $('#cl-pw').value = '';
-  if (error) { $('#cl-msg').textContent = '로그인 실패: ' + error.message; return; }
-  $('#cl-msg').textContent = '';
-  cloudStart();
-};
+$('#cl-login').onclick = () => { const pw = $('#cl-pw').value; $('#cl-pw').value = ''; login($('#cl-email').value, pw, $('#cl-msg')); };
+$('#lk-login').onclick = () => { const pw = $('#lk-pw').value; $('#lk-pw').value = ''; login($('#lk-email').value, pw, $('#lk-msg')); };
+$('#lk-pw').onkeydown = e => { if (e.key === 'Enter') $('#lk-login').click(); };
+// 로그아웃: 못 올린 변경을 먼저 올리고, 이 기기에 저장된 주문 데이터를 지운 뒤 잠가요
 $('#cl-logout').onclick = async () => {
   await push();
+  if (dirty.size && !confirm(`아직 클라우드에 못 올린 변경 ${dirty.size}건이 있어요. 지금 로그아웃하면 사라져요. 계속할까요?`)) return;
   if (channel) cloud.removeChannel(channel);
   channel = null; cloudReady = false;
   await cloud.auth.signOut();
-  setSync('클라우드 로그인 필요', 'warn'); renderCloud();
+  wipeLocal();
+  setSync('잠김', 'warn'); setLocked(true); renderCloud();
 };
 $('#cl-sync').onclick = () => cloudStart();
-$('#cl-reset').onclick = async () => {
-  if (!confirm('이 브라우저의 Supabase 연결 정보를 지울까요? (데이터는 지워지지 않아요)')) return;
-  if (cloud) { if (channel) cloud.removeChannel(channel); await cloud.auth.signOut(); }
-  [CLOUD_CFG, CLOUD_DIRTY, CLOUD_LINKED].forEach(k => localStorage.removeItem(k));
-  cloud = null; channel = null; cloudReady = false; dirty = new Set(); snap = {};
-  setSync(''); renderCloud();
-};
+$('#cl-reset').onclick = () => { if (confirm('연결 정보와 이 기기에 저장된 주문 데이터를 지울까요? (클라우드 데이터는 그대로예요)')) resetCloud(); };
+$('#lk-reset').onclick = () => { if (confirm('연결 정보와 이 기기에 저장된 주문 데이터를 지우고 처음부터 다시 연결할까요? (클라우드 데이터는 그대로예요)')) resetCloud().then(ok => ok && $('nav button[data-tab="settings"]').click()); };
 // 다른 기기에서 바꾼 내용을 화면으로 돌아올 때 다시 받아요 (실시간 연결이 끊겼을 때 대비)
 document.addEventListener('visibilitychange', () => { if (!document.hidden && cloudReady) pull().catch(console.error); });
 
@@ -645,6 +686,7 @@ function issuesOf(o) {
 let filter = 'make';
 const FILTERS = [['make', '생산 대기'], ['ship', '발송 대기'], ['issue', '확인 필요'], ['done', '완료'], ['all', '전체']];
 function render() {
+  if (LOCKED) return;
   useCost();
   if (!$('#tab-inv').hidden) return renderInv();
   const gs = groups(), showCancel = $('#show-cancel').checked;
