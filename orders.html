@@ -354,6 +354,7 @@ async function cloudStart() {
   try {
     await pull();
     cloudReady = true;
+    $('#cl-msg').textContent = '';
     subscribe();
     cloudTouch();
     if (!dirty.size) setSync('동기화됨', 'ok');
