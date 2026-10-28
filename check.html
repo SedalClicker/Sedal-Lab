@@ -535,9 +535,9 @@ function drawView(v,forExport){
   if(v.taper){const R=BR[0],vis=nearSeg(R),N=R.length;let st=vis.findIndex(x=>!x);if(st<0)st=0;let seg=[];const segs=[];
     for(let k=1;k<=N;k++){const i=(st+k)%N;if(vis[i]||vis[(i-1+N)%N])seg.push(R[i]);else if(seg.length){segs.push(seg);seg=[]}}if(seg.length)segs.push(seg);
     for(const s of segs)if(s.length>1)o+=`<polyline points="${pts(v,s)}" fill="none" stroke="${bs}" stroke-width="${LW*0.6}" opacity=".45"/>`}
-  // SE:DAL logo plate on the long side wall (x = +bw/2), drawn only when that wall faces the camera
-  {const xw=M.bw/2,yc=-20,zc=10.9,Lw=17,Lh=4.6;const facing=v.cam.dp([xw+1,yc,zc])<v.cam.dp([xw,yc,zc]);
-    if(facing&&v.taper){const lcol=S.logo?C[S.logo].hex:bs,P=(u,w)=>[xw+0.02,yc+u,zc+w];
+  // SE:DAL logo plate on the long side wall away from the loop (x = -bw/2), at the loop end; drawn only when that wall faces the camera
+  {const xw=-M.bw/2,yc=20,zc=10.9,Lw=17,Lh=4.6;const facing=v.cam.dp([xw-1,yc,zc])<v.cam.dp([xw,yc,zc]);
+    if(facing&&v.taper){const lcol=S.logo?C[S.logo].hex:bs,P=(u,w)=>[xw-0.02,yc-u,zc+w];
       const o0=v.cam.pr(P(0,0)),ou=v.cam.pr(P(1,0)),ow=v.cam.pr(P(0,1));const a=ou[0]-o0[0],b=ou[1]-o0[1],cc=-(ow[0]-o0[0]),d=-(ow[1]-o0[1]);
       const rect=[P(-Lw/2,-Lh/2),P(Lw/2,-Lh/2),P(Lw/2,Lh/2),P(-Lw/2,Lh/2)];
       const lum=(()=>{const[r,g,b]=rgb(lcol);return(0.299*r+0.587*g+0.114*b)/255})(),tcol=S.logo?mix(lcol,lum>0.55?-0.32:0.32):lcol,ecol=S.logo?mix(lcol,lum>0.55?-0.4:0.4):lcol;
