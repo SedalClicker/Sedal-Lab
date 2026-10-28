@@ -773,8 +773,9 @@ function recipe(l) {
     add('body:' + d.body, 1);
     if (d.rim) add('rim:' + d.rim, 1);
     d.btn.forEach(b => {
-      add(`btn:${b.shp}:${b.color}`, 1);
-      if (b.acc) add(`acc:${b.shp}:${b.acc}`, 1);
+      // 투톤(하트·별·링)은 버튼색 + 상단색 조합이 한 부품이에요
+      if (shape(b.shp).acc) add(`two:${b.shp}:${b.color}:${b.acc || b.color}`, 1);
+      else add(`btn:${b.shp}:${b.color}`, 1);
       add('sw:' + b.sw, 1);
     });
     if (!d.nomag && DB.settings.magnet > 0) add('etc:magnet', DB.settings.magnet);
@@ -796,8 +797,9 @@ function recipe(l) {
 }
 
 function partName(key) {
-  const [t, a, b] = key.split(':');
+  const [t, a, b, c] = key.split(':');
   if (t === 'body') return `본체 ${color(a).name}`;
+  if (t === 'two') return `${shape(a).name} ${color(b).name}(버튼)+${color(c).name}(상단)`;
   if (t === 'btn') return `${shape(a).name} 버튼 ${color(b).name}`;
   if (t === 'acc') return `${shape(a).name} 장식 ${color(b).name}`;
   if (t === 'rim') return `테두리 ${rimOf(a).name}`;
@@ -1276,10 +1278,23 @@ function renderInv() {
   if (!CAT) { el.innerHTML = '<div class="empty">커스텀 코드 해석기를 불러온 뒤에 재고 목록이 나타나요</div>'; return; }
   const need = needs();
   const short = Object.entries(need).filter(([k, n]) => invQty(k) < n);
-  const accShapes = CAT.shapes.filter(s => s.acc);
+  const accShapes = CAT.shapes.filter(s => s.acc), plainShapes = CAT.shapes.filter(s => !s.acc);
   const btnColors = CAT.colors, bodyColors = CAT.colors.filter(c => !c.only && !c.nobody);
   const row = (k, label, hex) => `<tr><td>${hex ? `<span class="sw" style="background:${hex}"></span>` : ''}${esc(label)}</td>${invCell(k, need)}${minCell(k)}</tr>`;
   const extra = Object.keys(DB.inv).filter(k => k.startsWith('etc:') && k !== 'etc:magnet');
+  // 투톤 조합은 모양 3 × 버튼색 × 상단색이라 너무 많아서, 주문에 필요하거나 재고에 올린 조합만 보여줘요
+  const used = usedParts(), ci = id => CAT.colors.findIndex(c => c.id === id), si = k => CAT.shapes.findIndex(s => s.k === k);
+  const twoKeys = [...new Set([...Object.keys(need), ...Object.keys(DB.inv), ...Object.keys(used)].filter(k => k.startsWith('two:')))]
+    .sort((a, b) => { const [, s1, b1, a1] = a.split(':'), [, s2, b2, a2] = b.split(':'); return si(s1) - si(s2) || ci(b1) - ci(b2) || ci(a1) - ci(a2); });
+  const colorTag = id => `<span class="sw" style="background:${color(id).hex}"></span>${esc(color(id).name)}`;
+  const twoRow = k => {
+    const [, s, b, a] = k.split(':');
+    const removable = !need[k] && !used[k] && !(DB.inv[k] && Number(DB.inv[k].qty));
+    return `<tr><td>${esc(shape(s).name)}</td><td>${colorTag(b)}<small>(버튼)</small> + ${colorTag(a)}<small>(상단)</small>${removable && DB.inv[k] ? ` <button class="btn" style="padding:0 7px;font-size:12px" data-deltwo="${esc(k)}" title="목록에서 빼기">×</button>` : ''}</td>${invCell(k, need)}${minCell(k)}</tr>`;
+  };
+  const colorOpts = CAT.colors.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  // 예전에는 투톤을 버튼(btn:H·S·R)과 장식(acc:)으로 따로 셌어요. 남은 수량이 있을 때만 보여서 옮겨 적을 수 있게 해요
+  const legacy = Object.keys({...DB.inv, ...used}).filter(k => (/^btn:[HSR]:/.test(k) || k.startsWith('acc:')) && invQty(k) !== 0).sort();
   el.innerHTML = `
     <div class="bar">
       ${short.length ? `<span class="badge warn">미생산 주문 기준 부족 ${short.length}종</span> <span class="msg">${short.slice(0, 8).map(([k, n]) => `${esc(partName(k))} ${n - invQty(k)}개`).join(', ')}${short.length > 8 ? ' …' : ''}</span>`
@@ -1287,13 +1302,21 @@ function renderInv() {
     </div>
     <p class="hint">숫자 칸은 현재 재고예요. 직접 센 수량을 입력하면 그 시점 기준으로 맞춰지고, 그 뒤에 <b>조립</b>을 체크한 주문만큼 자동으로 빠져요 (체크를 풀면 돌아와요). "필요"는 아직 조립하지 않은 주문에 드는 수량이고, 모자라면 빨간색이에요. 작은 회색 칸은 최소 보유량이에요 (밑으로 떨어지면 주황색).</p>
     <section class="inv"><h2>버튼 (모양 × 색)</h2>
-      <table><tr><th>색</th>${CAT.shapes.map(s => `<th>${esc(s.name)}</th>`).join('')}</tr>
-      ${btnColors.map(c => `<tr><td><span class="sw" style="background:${c.hex}"></span>${esc(c.name)}</td>${CAT.shapes.map(s => invCell(`btn:${s.k}:${c.id}`, need)).join('')}</tr>`).join('')}</table>
+      <table><tr><th>색</th>${plainShapes.map(s => `<th>${esc(s.name)}</th>`).join('')}</tr>
+      ${btnColors.map(c => `<tr><td><span class="sw" style="background:${c.hex}"></span>${esc(c.name)}</td>${plainShapes.map(s => invCell(`btn:${s.k}:${c.id}`, need)).join('')}</tr>`).join('')}</table>
     </section>
-    <section class="inv"><h2>투톤 장식 (하트·별·링)</h2>
-      <table><tr><th>색</th>${accShapes.map(s => `<th>${esc(s.name)}</th>`).join('')}</tr>
-      ${CAT.colors.map(c => `<tr><td><span class="sw" style="background:${c.hex}"></span>${esc(c.name)}</td>${accShapes.map(s => invCell(`acc:${s.k}:${c.id}`, need)).join('')}</tr>`).join('')}</table>
+    <section class="inv"><h2>투톤 버튼 (버튼색 + 상단색 조합)</h2>
+      <p class="hint">주문에 필요하거나 재고를 넣은 조합만 보여요. 새 조합은 아래에서 추가하세요.</p>
+      ${twoKeys.length ? `<table><tr><th>모양</th><th>조합</th><th>재고</th><th>최소</th></tr>${twoKeys.map(twoRow).join('')}</table>` : '<p class="msg">아직 조합이 없어요</p>'}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">
+        <select id="two-s">${accShapes.map(s => `<option value="${s.k}">${esc(s.name)}</option>`).join('')}</select>
+        <select id="two-b" title="버튼색">${colorOpts}</select> + <select id="two-a" title="상단색">${colorOpts}</select>
+        <button class="btn" id="two-add">조합 추가</button>
+      </div>
     </section>
+    ${legacy.length ? `<section class="inv"><h2>이전 방식 투톤 재고 (옮겨 적은 뒤 0으로)</h2>
+      <p class="hint">예전에는 투톤 버튼과 상단 장식을 따로 셌어요. 이 수량을 위 조합 표에 옮겨 적고 0으로 바꾸면 이 표는 사라져요.</p>
+      <table><tr><th>부품</th><th>재고</th><th>최소</th></tr>${legacy.map(k => row(k, partName(k))).join('')}</table></section>` : ''}
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
       <section class="inv"><h2>본체</h2><table><tr><th>색</th><th>재고</th><th>최소</th></tr>${bodyColors.map(c => row('body:' + c.id, c.name, c.hex)).join('')}</table></section>
       <section class="inv"><h2>스위치 축</h2><table><tr><th>축</th><th>재고</th><th>최소</th></tr>${CAT.sw.map(s => row('sw:' + s.id, `${s.name} (${s.type})`, s.hex)).join('')}</table></section>
@@ -1310,6 +1333,12 @@ function renderInv() {
     DB.inv['etc:' + Date.now()] = {name: name.trim(), qty: 0};
     save(); renderInv();
   };
+  $('#two-add').onclick = () => {
+    const k = `two:${$('#two-s').value}:${$('#two-b').value}:${$('#two-a').value}`;
+    DB.inv[k] = DB.inv[k] || {qty: 0};
+    save(); renderInv();
+  };
+  el.querySelectorAll('[data-deltwo]').forEach(b => b.onclick = () => { delete DB.inv[b.dataset.deltwo]; save(); renderInv(); });
 }
 
 // ---- 탭 / 설정 ----
