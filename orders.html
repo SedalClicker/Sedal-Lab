@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>SE:DAL 주문 관리</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx-populate/1.21.0/xlsx-populate.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<!-- 외부로는 Supabase 와 이 사이트만 통신할 수 있게 막아요 (주문 정보가 다른 곳으로 새지 않도록) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://sedalclicker.github.io https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self' https://sedalclicker.github.io; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<!-- integrity: CDN 파일이 바꿔치기되면 브라우저가 실행을 막아요 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx-populate/1.21.0/xlsx-populate.min.js" integrity="sha384-YnsK3VaaV54M5EcU58Pt9SdJqzL0iZpQzQAcav+18Kgn5tbwk16y/3g6FpT2d83h" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 <style>
 :root{--bg:#f6f3ee;--card:#fff;--ink:#2b2621;--sub:#7a7066;--line:#e4ddd3;--accent:#1f5c3c;--warn:#b0202a;--warnbg:#fbeaea;--okbg:#e8f2ea;--chip:#efe9e0}
 *{box-sizing:border-box}
@@ -179,7 +183,16 @@ td.low input{border-color:#e0a03a}
         <p><span id="cl-who"></span> <button class="btn" id="cl-sync">지금 동기화</button> <button class="btn" id="cl-logout">로그아웃</button></p>
       </div>
       <p class="msg" id="cl-msg"></p>
+      <div class="form" id="autolock-row" hidden><label>자동 잠금: 사용하지 않으면
+        <select id="autolock"><option value="0">끄기</option><option value="10">10분</option><option value="30">30분</option><option value="60">1시간</option><option value="240">4시간</option></select>
+        뒤 로그아웃 (이 기기에만 적용)</label></div>
       <p><button class="btn" id="cl-reset" style="font-size:12px">연결 정보 지우기</button></p>
+    </section>
+    <section class="inv">
+      <h2>개인정보 정리</h2>
+      <p class="hint">발송까지 끝난 주문에도 고객 이름이 남아 있어요. 오래된 완료·취소 주문은 정리해 두면 안전해요. 지우면 그 주문의 매출 기록도 함께 사라지니, 필요하면 먼저 백업하세요. 동기화 중이면 클라우드와 다른 기기에서도 지워져요.</p>
+      <div class="form"><label>발송 완료(또는 취소) 후 <select id="purge-days"><option>30</option><option selected>90</option><option>180</option><option>365</option></select>일 지난 주문</label><button class="btn" id="purge">정리하기</button></div>
+      <p class="msg" id="purge-msg"></p>
     </section>
     <section class="inv">
       <h2>백업</h2>
@@ -332,7 +345,9 @@ function setLocked(v) {
   document.querySelector('nav').hidden = v;
   const on = (document.querySelector('nav button.on') || {}).dataset?.tab || 'orders';
   for (const t of ['orders', 'inv', 'settings']) $('#tab-' + t).hidden = v || t !== on;
-  if (!v) render();
+  // 잠글 때는 숨기기만 하지 않고 화면에 그려 둔 주문 내용도 지워요
+  if (v) ['#list', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
+  else { lastActive = Date.now(); render(); }
 }
 function wipeLocal() {
   localStorage.removeItem(STORE_KEY); localStorage.removeItem(CLOUD_DIRTY);
@@ -347,7 +362,18 @@ async function cloudStart() {
   const cfg = readJSON(CLOUD_CFG, null);
   if (!cfg) { cloud = null; setSync(''); setLocked(false); renderCloud(); return; }
   if (!window.supabase) { setLocked(true); $('#lk-msg').textContent = 'Supabase 라이브러리를 불러오지 못했어요. 새로고침해 주세요.'; return; }
-  cloud = cloud || supabase.createClient(cfg.url, cfg.key);
+  if (!cloud) {
+    cloud = supabase.createClient(cfg.url, cfg.key);
+    // 다른 탭에서 로그아웃하면 이 탭도 바로 잠가요
+    cloud.auth.onAuthStateChange?.(ev => {
+      if (ev === 'SIGNED_OUT' && !LOCKED) {
+        if (channel) cloud.removeChannel(channel);
+        channel = null; cloudReady = false;
+        if (!dirty.size) wipeLocal();
+        setSync('잠김', 'warn'); setLocked(true); renderCloud();
+      }
+    });
+  }
   const {data} = await cloud.auth.getSession();
   if (!data.session) { setSync('잠김', 'warn'); setLocked(true); renderCloud(); return; }
   setSync('동기화 중…');
@@ -392,6 +418,8 @@ async function renderCloud() {
   $('#cloud-cfg').hidden = !!cfg;
   $('#cloud-login').hidden = !cfg || !!session;
   $('#cloud-on').hidden = !session;
+  $('#autolock-row').hidden = !session;
+  $('#autolock').value = String(autoLockMin());
   $('#cl-reset').hidden = !cfg;
   if (session) $('#cl-who').textContent = `${session.user.email} 로 로그인됨`;
 }
@@ -406,15 +434,52 @@ $('#cl-save').onclick = () => {
 $('#cl-login').onclick = () => { const pw = $('#cl-pw').value; $('#cl-pw').value = ''; login($('#cl-email').value, pw, $('#cl-msg')); };
 $('#lk-login').onclick = () => { const pw = $('#lk-pw').value; $('#lk-pw').value = ''; login($('#lk-email').value, pw, $('#lk-msg')); };
 $('#lk-pw').onkeydown = e => { if (e.key === 'Enter') $('#lk-login').click(); };
-// 로그아웃: 못 올린 변경을 먼저 올리고, 이 기기에 저장된 주문 데이터를 지운 뒤 잠가요
-$('#cl-logout').onclick = async () => {
+// 로그아웃: 못 올린 변경을 먼저 올리고, 이 기기에 저장된 주문 데이터를 지운 뒤 잠가요.
+// 자동 잠금으로 로그아웃할 때 못 올린 변경이 남아 있으면 지우지 않고 잠그기만 해요 (다시 로그인하면 이어서 올라가요)
+async function logout(auto = false) {
+  if (!cloud) return;
   await push();
-  if (dirty.size && !confirm(`아직 클라우드에 못 올린 변경 ${dirty.size}건이 있어요. 지금 로그아웃하면 사라져요. 계속할까요?`)) return;
+  let keep = false;
+  if (dirty.size) {
+    if (auto) keep = true;
+    else if (!confirm(`아직 클라우드에 못 올린 변경 ${dirty.size}건이 있어요. 지금 로그아웃하면 사라져요. 계속할까요?`)) return;
+  }
   if (channel) cloud.removeChannel(channel);
   channel = null; cloudReady = false;
   await cloud.auth.signOut();
-  wipeLocal();
-  setSync('잠김', 'warn'); setLocked(true); renderCloud();
+  if (!keep) wipeLocal();
+  setSync(keep ? '잠김 · 못 올린 변경 보관 중' : '잠김', 'warn');
+  $('#lk-msg').textContent = auto ? '한동안 사용하지 않아 자동으로 잠갔어요.' : '';
+  setLocked(true); renderCloud();
+}
+$('#cl-logout').onclick = () => logout(false);
+
+// 자동 잠금: 마지막 조작 뒤 정한 시간이 지나면 로그아웃해요
+const AUTOLOCK_KEY = 'sedal-orders-autolock';
+let lastActive = Date.now();
+['pointerdown', 'keydown', 'wheel', 'touchstart', 'mousemove'].forEach(ev => document.addEventListener(ev, () => { lastActive = Date.now(); }, {passive: true}));
+const autoLockMin = () => Number(localStorage.getItem(AUTOLOCK_KEY) ?? 30);
+function checkIdle() {
+  const m = autoLockMin();
+  if (m && cloudReady && !LOCKED && Date.now() - lastActive > m * 60000) logout(true);
+}
+setInterval(checkIdle, 20000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkIdle(); });
+$('#autolock').onchange = e => { localStorage.setItem(AUTOLOCK_KEY, e.target.value); lastActive = Date.now(); };
+
+// 오래된 완료·취소 주문 정리 (확인 필요한 주문은 남겨요)
+$('#purge').onclick = () => {
+  const days = Number($('#purge-days').value), cutoff = Date.now() - days * 864e5, msg = $('#purge-msg');
+  const targets = groups().filter(o => (o.shipped || o.cancelled) && !o.issues.length && (() => {
+    const ts = Math.max(...o.lines.map(l => Date.parse(l.shippedAt || l.at) || 0));
+    return ts > 0 && ts < cutoff;
+  })());
+  const lines = targets.flatMap(o => o.lines);
+  if (!lines.length) { msg.textContent = `${days}일 지난 완료·취소 주문이 없어요`; return; }
+  if (!confirm(`${days}일 지난 완료·취소 주문 ${targets.length}건(${lines.length}줄)을 지울까요? 매출 기록도 함께 사라져요.`)) return;
+  lines.forEach(l => { delete DB.orders[l.id]; delete DB.fixes[l.id]; });
+  save(); render();
+  msg.textContent = `${targets.length}건 정리했어요`;
 };
 $('#cl-sync').onclick = () => cloudStart();
 $('#cl-reset').onclick = () => { if (confirm('연결 정보와 이 기기에 저장된 주문 데이터를 지울까요? (클라우드 데이터는 그대로예요)')) resetCloud(); };
@@ -653,6 +718,9 @@ function groups() {
 // 코드 오류, 그리고 결제한 추가 옵션(하트·별·링·테두리)과 코드 내용이 다른 경우
 function issuesOf(o) {
   const out = [];
+  // 조립 체크(재고 차감) 뒤에 스마트스토어에서 취소된 줄: 부품을 재고로 돌릴지 확인해야 해요
+  const cancelledMade = o.lines.filter(l => isCancel(l) && l.deducted).length;
+  if (cancelledMade) out.push(`취소됐는데 조립 체크된 품목 ${cancelledMade}개 (재고 확인)`);
   const customs = o.live.filter(l => kindOf(l) === 'custom');
   if (!customs.length || !DEC) return out;
   const cnt = {H: 0, S: 0, R: 0, rim: 0}, rims = new Set();
@@ -692,7 +760,7 @@ function render() {
   if (!$('#tab-inv').hidden) return renderInv();
   const gs = groups(), showCancel = $('#show-cancel').checked;
   const q = $('#q').value.trim().toLowerCase();
-  const visible = gs.filter(o => showCancel || !o.cancelled);
+  const visible = gs.filter(o => showCancel || !o.cancelled || o.issues.length);
   const count = f => visible.filter(o => match(o, f)).length;
   $('#filters').innerHTML = FILTERS.map(([k, n]) => `<button data-f="${k}" class="${filter === k ? 'on' : ''}">${n}<b>${count(k)}</b></button>`).join('');
   const list = visible.filter(o => match(o, filter)).filter(o => !q || JSON.stringify(o.lines).toLowerCase().includes(q));
@@ -834,10 +902,18 @@ function renderFin(gs) {
     $('#fin').innerHTML = live.length ? `<h2>매출 · 원가 · 순이익</h2><div class="note" style="padding:10px 12px">설정 탭에서 <b>원가율 엑셀</b>을 불러오면 여기에 매출과 순이익이 나와요.</div>` : '';
     return;
   }
+  // 기간: 주문일 기준 월별 또는 전체
+  const monthOf = o => { const d = new Date(o.at); return isNaN(d) ? '' : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+  const months = [...new Set(live.map(monthOf).filter(Boolean))].sort().reverse();
+  if (finPeriod !== 'all' && !months.includes(finPeriod)) finPeriod = 'all';
+  const inPeriod = live.filter(o => finPeriod === 'all' || monthOf(o) === finPeriod);
   const t = {rev: 0, cost: 0, unknown: 0, custShip: 0, ship: 0, profit: 0};
-  for (const o of live) { const e = econOrder(o); for (const k in t) t[k] += e[k]; }
+  for (const o of inPeriod) { const e = econOrder(o); for (const k in t) t[k] += e[k]; }
   const sales = t.rev + t.custShip;
-  $('#fin').innerHTML = live.length ? `<h2>매출 · 원가 · 순이익 <small>주문 ${live.length}건 · 취소 제외</small></h2>
+  $('#fin').innerHTML = live.length ? `<h2>매출 · 원가 · 순이익 <small>
+      <select id="fin-period" style="font-size:12px;border:1px solid var(--line);border-radius:5px;padding:1px 2px">
+        <option value="all">전체</option>${months.map(m => `<option value="${m}" ${m === finPeriod ? 'selected' : ''}>${m.replace('-', '년 ')}월</option>`).join('')}
+      </select> · ${inPeriod.length}건</small></h2>
     <table>
       <tr><td>상품 매출</td><td>${won(t.rev)}원</td></tr>
       <tr><td>고객 배송비</td><td>${won(t.custShip)}원</td></tr>
@@ -847,8 +923,9 @@ function renderFin(gs) {
       <tr class="sum"><td>순이익</td><td>${won(t.profit)}원</td></tr>
       <tr><td>순이익률</td><td>${sales ? (t.profit / sales * 100).toFixed(1) : 0}%</td></tr>
     </table>
-    <div class="note">총원가 = 재료·축·포장·고정비·반품손실·수수료 5.8%·세금 12% (인건비 제외)${t.unknown ? ` · 가격 모르는 상품 ${t.unknown}줄 제외` : ''}</div>` : '';
+    <div class="note">취소 제외 · 총원가 = 재료·축·포장·고정비·반품손실·수수료 ${(COST.fee * 100).toFixed(1)}%·세금 ${(COST.tax * 100).toFixed(0)}% (인건비 제외)${t.unknown ? ` · 가격 모르는 상품 ${t.unknown}줄 제외` : ''}</div>` : '';
 }
+let finPeriod = 'all';
 
 $('#side').onclick = e => {
   const tr = e.target.closest('tr[data-goto]');
@@ -862,7 +939,7 @@ $('#side').onclick = e => {
 };
 function match(o, f) {
   if (f === 'all') return true;
-  if (f === 'issue') return o.issues.length > 0 && !o.cancelled;
+  if (f === 'issue') return o.issues.length > 0;
   return o.stage === f;
 }
 const fmtAt = s => { if (!s) return ''; const d = new Date(s); return isNaN(d) ? s : `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
@@ -873,7 +950,7 @@ function orderHTML(o) {
   return `<div class="order ${o.cancelled ? 'cancel' : ''}" id="o-${esc(o.no)}" style="scroll-margin-top:62px">
     <div class="ohead">
       <span class="who">${who}</span>
-      <span class="meta">${fmtAt(o.at)} · 주문 ${esc(o.no)}</span> ${st}
+      <span class="meta">${esc(fmtAt(o.at))} · 주문 ${esc(o.no)}</span> ${st}
       ${o.cancelled || !COST ? '' : (e => `<span class="money" title="상품 ${won(e.rev)} + 배송비 ${won(e.custShip)} − 원가 ${won(e.cost)} − 택배 ${won(e.ship)}">매출 ${won(e.rev + e.custShip)} · 순이익 ${won(e.profit)}</span>`)(econOrder(o))}
       ${o.issues.map(i => `<span class="badge warn">${esc(i)}</span>`).join(' ')}
       ${o.cancelled ? '' : `<label class="check ${o.shipped ? 'done' : ''}"><input type="checkbox" data-ship="${esc(o.no)}" ${o.shipped ? 'checked' : ''}> 발송 완료</label>`}
@@ -898,7 +975,7 @@ function lineHTML(l) {
       <div><span class="pname">${esc(l.product)}</span> × ${l.qty} ${cancel ? '<span class="badge warn">취소</span>' : ''} ${note} ${l.imported ? '<span class="badge">불러올 때 이미 발송됨</span>' : ''}</div>
       ${body}
     </div>
-    ${cancel ? '' : `<div class="stages">${stagesOf(l).map(([k, n]) => `<label class="check ${st(l)[k] ? 'done' : ''}"><input type="checkbox" data-line="${esc(l.id)}" data-stage="${k}" ${st(l)[k] ? 'checked' : ''}> ${n}</label>`).join('')}</div>`}
+    ${cancel ? (l.deducted ? `<button class="btn" data-restore="${esc(l.id)}">재고 되돌리기</button>` : '') : `<div class="stages">${stagesOf(l).map(([k, n]) => `<label class="check ${st(l)[k] ? 'done' : ''}"><input type="checkbox" data-line="${esc(l.id)}" data-stage="${k}" ${st(l)[k] ? 'checked' : ''}> ${n}</label>`).join('')}</div>`}
   </div>`;
 }
 
@@ -999,10 +1076,15 @@ document.addEventListener('change', e => {
     DB.inv[k][t.dataset.field] = t.value === '' ? (t.dataset.field === 'qty' ? 0 : null) : Number(t.value);
     save(); renderInv();
   } else if (t.id === 'show-cancel') render();
+  else if (t.id === 'fin-period') { finPeriod = t.value; render(); }
 });
 document.addEventListener('click', e => {
   const t = e.target;
   if (t.classList.contains('pv')) t.classList.toggle('big');
+  else if (t.dataset.restore) {
+    const l = DB.orders[t.dataset.restore];
+    if (l && l.deducted) { applyParts(l.deducted, +1); l.deducted = null; st(l).asm = false; save(); render(); }
+  }
   else if (t.dataset.fix) {
     const v = document.querySelector(`[data-fixin="${t.dataset.fix}"]`).value.trim();
     if (!v) return;
