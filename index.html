@@ -19,7 +19,7 @@
 :root{
   color-scheme:light;
   --bg:#FFFFFF; --bar:#F0EBE3; --sunken:#F6F3EF; --stage:#FFFFFF;
-  --ink:#1B1512; --ink-2:#6E655F; --ink-3:#A39A93; --line:#E6DFD8; --line-2:#D4CBC2;
+  --ink:#1B1512; --ink-2:#6E655F; --ink-3:#7D746D; --line:#E6DFD8; --line-2:#D4CBC2;
   --accent:#4E2F23; --accent-ink:#FFFFFF; --check:#4E2F23; --best:#D6432F; --focus:#9A6B55;
   --shadow:0 22px 44px -30px rgba(50,30,20,.45);
   --body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
@@ -199,7 +199,10 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .cdot em{font-style:normal;color:var(--ink-3);font-size:11px;margin-right:-2px}
 .codebox{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
 .btn.order-go{display:flex;width:100%;justify-content:center;margin-top:8px;padding:13px 16px;font-size:15px;font-weight:700;background:#03C75A;border-color:#03C75A;color:#fff}
-.code{flex:1 1 200px;min-width:0;font-family:var(--mono);font-size:16px;letter-spacing:.04em;background:var(--sunken);border-radius:3px;padding:12px 14px;user-select:all;word-break:break-all;display:flex;align-items:center}
+.code{flex:1 1 200px;min-width:0;font-family:var(--mono);font-size:16px;letter-spacing:.04em;background:var(--sunken);border-radius:3px;padding:12px 14px;-webkit-user-select:all;user-select:all;white-space:nowrap;overflow-x:auto;display:flex;align-items:center}
+@media (max-width:400px){.code{font-size:14px;letter-spacing:0}}
+.addon-guide{border:1.5px solid #03C75A;background:#F0FBF4;border-radius:6px;padding:12px 14px;margin:10px 0}.addon-guide>b{display:block;font-size:14px;margin-bottom:6px}.addon-guide ul{list-style:none;margin:0;padding:0}.addon-guide li{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed var(--line-2);font-size:14px}.addon-guide li:first-child{border-top:0}.addon-guide li span{flex:1}.addon-guide li em{font-style:normal;color:var(--ink-2)}.addon-guide p{margin:4px 0 0;font-size:13px;color:var(--ink-2)}.addon-guide .ag-total{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);color:var(--ink)}.addon-guide.none{border-color:var(--line-2);background:var(--sunken)}
+.v-new{margin:10px 0;padding:10px 12px;border-radius:6px;background:#FFF6E5;font-size:13px}.v-new .codebox{margin-top:8px}
 .load{display:flex;gap:8px;flex-wrap:wrap}
 .load input{flex:1 1 200px;min-width:0;font:500 14px var(--mono);padding:10px 12px;border-radius:3px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);text-transform:uppercase}
 .status{font-size:13px;color:var(--ink-2);min-height:1.2em;margin:0}
@@ -390,7 +393,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
     <h2>선택 요약</h2>
     <dl class="summary" id="drawer-summary"></dl>
     <div class="codebox"><span class="code" id="drawer-code"></span><button class="btn primary" id="drawer-copy" type="button">주문코드 복사</button></div>
-    <button type="button" class="btn order-go" data-order>스마트스토어에서 주문하기</button>
+    <button type="button" class="btn order-go" data-order>코드 복사하고 스마트스토어에서 주문하기</button>
     <p class="help">주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.</p>
   </div>
 </div>
@@ -664,6 +667,12 @@ function altCheaper(){return isSet()&&altPrice()<customPrice()}
 // 단색 세트: 본체·버튼 8개·로고가 모두 같은 색 + 스위치 축 8개 통일 + 버튼 모양 통일(기본형 또는 무지형) + 유료 옵션(테두리·하트·별) 없음 → 기본 판매 제품과 같아 기본가 할인
 function isSet(){const b=S.body,free=S.shp.filter(k=>!SH[k].acc);return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&free.every(x=>x===free[0])}
 function nomagNote(){return S.nomag?`<br><b>자석 기능 빼기</b>는 추가금 없이 <b>판매자 요청사항</b>란에 <b>"자석 없이 제작"</b>이라고 적어 주시면 됩니다.`:''}
+// 마지막 단계에 항상 보이는 추가상품 목록 (스마트스토어 추가상품 이름 그대로)
+const RIM_STORE={ch:'초콜릿',pk:'핑크',iv:'화이트'};
+function addonGuide(){
+  if(altCheaper())return`<div class="addon-guide"><b>💡 이 조합은 기본 상품으로 더 저렴하게 주문할 수 있어요</b><p>본체·버튼·로고 색과 스위치 축이 모두 같아요. 아래 <b>[주문코드 복사]</b>를 누르면 주문 방법과 금액을 안내해 드려요.</p></div>`;
+  const ol=[];if(heartN())ol.push(['버튼 변경: 하트',heartN(),SH.H.price]);if(starN())ol.push(['버튼 변경: 별',starN(),SH.S.price]);if(ringN())ol.push(['버튼 변경: 링',ringN(),SH.R.price]);if(S.rim)ol.push(['테두리 추가: '+(RIM_STORE[S.rim]||rimOf().name),1,PRICE.RIM]);
+  return`<div class="addon-guide${ol.length?'':' none'}"><b>🛒 스마트스토어에서 함께 담아 주세요</b>${ol.length?`<ul>${ol.map(([n,q,p])=>`<li><span>${n}</span><b>${q}개</b><em>+${won(q*p)}원</em></li>`).join('')}</ul>`:'<p>추가로 담을 옵션이 없어요. 커스텀 클리커 상품만 주문하시면 됩니다.</p>'}<p class="ag-total">상품 금액 합계 <b>${won(customPrice())}원</b><small> · 배송비 별도</small></p></div>`}
 function optList(){const p=[];if(S.rim)p.push(`${rimOf().name} 테두리 1개`);if(heartN())p.push(`하트 버튼 ${heartN()}개`);if(starN())p.push(`별 버튼 ${starN()}개`);if(ringN())p.push(`링 버튼 ${ringN()}개`);return p}
 // 단색 할인은 마지막 [주문코드 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
 const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
@@ -680,7 +689,7 @@ function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1');if(!S.acc||S.acc.leng
 function heartD(cx,cy,w){return'M'+heart(0,0,w,0,48).map(p=>(cx+p[0]).toFixed(2)+' '+(cy-p[1]).toFixed(2)).join(' L')+' Z'}
 // 추천 디자인: 사장님이 고른 주문 코드 + 이름 + 한 줄 설명. 비어 있으면 표시 안 함. tag는 'NEW'·'BEST' 등(선택)
 const PRESETS=[
-  {code:'SD-D1B6-ANK5-APAM-94R',name:'달마시안',desc:'달마시안 강아지처럼 귀여운 클리커',tag:'추천'},
+  {code:'SD-1PEM-F26T-401T-PS0V-B2CG-S2DS',name:'소다 하트',desc:'시원한 소다 블루에 하트 포인트',tag:'추천'},
   {code:'SD-K048-0242-2R4H-4P',name:'믹스초콜릿',desc:'과자 같은 귀여운 클리커',tag:'추천'},
   {code:'SD-VX25-A6EX-PBFP',name:'핑크그라데이션',desc:'공주 같은 핑크 클리커',tag:'추천'},
 ];
@@ -700,10 +709,10 @@ function syncPart(){S.part=S.step==='body'?'body':'btn'}
 // camera (drag to rotate)
 const CAM0={th:-58*Math.PI/180,ph:38*Math.PI/180};let camS={...CAM0};
 function setCam(){VIEWS[1].cam=cam(camS.th,camS.ph)}
-const stage=$('#stage');let drag=null,hinted=false;
+const stage=$('#stage');let drag=null,hinted=false,rotRAF=0;
 stage.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,th:camS.th,ph:camS.ph,moved:false,target:e.target};try{stage.setPointerCapture(e.pointerId)}catch(_){}});
 stage.addEventListener('pointermove',e=>{if(!drag||S.view!=='iso')return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.moved&&Math.abs(dx)+Math.abs(dy)<5)return;drag.moved=true;stage.classList.add('grabbing');stage.classList.remove('hint');
-  camS.th=drag.th+dx*0.008;camS.ph=Math.min(72*Math.PI/180,Math.max(16*Math.PI/180,drag.ph-dy*0.006));setCam();drawView(VIEWS[1],false)});
+  camS.th=drag.th+dx*0.008;camS.ph=Math.min(72*Math.PI/180,Math.max(16*Math.PI/180,drag.ph-dy*0.006));setCam();if(!rotRAF)rotRAF=requestAnimationFrame(()=>{rotRAF=0;drawView(VIEWS[1],false)})});
 function endDrag(e){if(!drag)return;const d=drag;drag=null;stage.classList.remove('grabbing');if(d.moved||VIEW)return;
   const g=d.target.closest&&d.target.closest('[data-i]');if(g){S.sel=+g.dataset.i;if(S.step==='body'||S.step==='code')S.step='btn';syncPart();lastPick=null;render();return}
   if(d.target.closest&&d.target.closest('[data-part="body"]')){S.step='body';syncPart();lastPick=null;render()}}
@@ -875,9 +884,10 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
   }else{
     h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문서 [커스텀 주문코드]란에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
     <dl class="summary">${summaryRows()}</dl>
-    <div class="order-guide"><b>📋 주문 방법</b><ol><li><b>주문코드 복사</b> 버튼을 눌러 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>커스텀 클리커 상품</b>을 주문하면서 주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여넣기 해 주세요.</li><li>그 외 요청사항은 <b>판매자 요청사항</b>란에 따로 적어 주세요.</li><li>테두리·하트·별·링 등 <b>추가 옵션이 있으면 주문 시 함께 선택</b>해 주세요.</li></ol></div>
+    <div class="order-guide"><b>📋 주문 방법</b><ol><li><b>주문코드 복사</b> 버튼을 눌러 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>커스텀 클리커 상품</b>을 주문하면서 주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여넣기 해 주세요.</li><li>그 외 요청사항은 <b>판매자 요청사항</b>란에 따로 적어 주세요.</li><li>아래 <b>[함께 담아 주세요]</b>에 있는 추가 옵션을 주문할 때 <b>꼭 같이 선택</b>해 주세요. 빠지면 추가 결제를 다시 요청드려야 해요.</li></ol></div>
+    ${addonGuide()}
     <div class="codebox"><span class="code" id="code">${escH(code())}</span><button type="button" class="btn primary" id="copy">주문코드 복사</button></div>
-    <button type="button" class="btn order-go" data-order>스마트스토어에서 주문하기</button>
+    <button type="button" class="btn order-go" data-order>코드 복사하고 스마트스토어에서 주문하기</button>
     <p class="status" id="status" role="status"></p>
     <p class="help">주문 코드는 선택한 본체·테두리·로고·버튼·축 정보를 짧게 묶은 값입니다. 코드를 넣으면 어떤 조합인지 그대로 확인됩니다.</p>
     <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="8F9Y:MK]U*!%XBB" aria-label="주문 코드 입력" maxlength="200" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
@@ -893,10 +903,12 @@ function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-
 function render(){normTone();syncPart();{const sg=$('#stage');if(sg)sg.classList.toggle('btn-step',S.part==='btn'&&!VIEW)}draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
 
 // toast
-let toastT=null;function status(t){let el=$('#status');if(el)el.textContent=t;let ts=$('#toast');if(!ts){ts=document.createElement('div');ts.id='toast';ts.setAttribute('role','status');ts.style.cssText='position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:50;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(ts)}
-  ts.textContent=t;ts.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>ts.style.opacity='0',2200)}
+let toastT=null;function status(t,ms=2200){let el=$('#status');if(el)el.textContent=t;let ts=$('#toast');if(!ts){ts=document.createElement('div');ts.id='toast';ts.setAttribute('role','status');ts.style.cssText='position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:50;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(ts)}
+  ts.textContent=t;ts.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>ts.style.opacity='0',ms)}
 
-async function copyOrder(){try{await navigator.clipboard.writeText(code());status('코드가 복사되었습니다. 주문서 [커스텀 주문코드]란에 붙여넣어 주세요.')}catch(e){const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요')}}
+async function copyText(txt){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  if(ok)status('복사됨: '+txt+' — 주문서 [커스텀 주문코드]란에 붙여넣고, 앞·뒤 글자가 같은지 확인해 주세요',5000);else{const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요',5000)}return ok}
+async function copyOrder(){return copyText(code())}
 function go(k){S.step=k;syncPart();lastPick=null;render();window.scrollTo({top:0,behavior:'smooth'})}
 
 let lastPick=null,shapeAll=false;
@@ -926,14 +938,15 @@ document.addEventListener('click',e=>{
   if(t.dataset.color){const id=t.dataset.color;lastPick=id;const scope=t.dataset.scope||(S.step==='body'?'body':'btn');
     if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;if(!hasAcc())S.sel=(S.sel+1)%8}render();return}
   if(t.dataset.acc){const id=t.dataset.acc;S.acc[S.sel]=id===PAIR[S.btn[S.sel]]?null:id;lastPick=null;S.sel=(S.sel+1)%8;render();return}
-  if(t.closest&&t.closest('[data-order]')){if(ORDER_URL)window.open(ORDER_URL,'_blank','noopener');else status('주문 페이지를 준비 중입니다. 잠시 후 다시 시도해 주세요.');return}
+  if(t.closest&&t.closest('[data-order]')){if(ORDER_URL){copyOrder();window.open(ORDER_URL,'_blank','noopener')}else status('주문 페이지를 준비 중입니다. 잠시 후 다시 시도해 주세요.');return}
   if(t.id==='copy'||t.id==='drawer-copy'){openNotice();return}
   if(t.id==='notice-ok'){$('#notice').hidden=true;copyOrder();return}
+  if(t.dataset.copycode){copyText(t.dataset.copycode);return}
   if(t.id==='notice-cancel'){$('#notice').hidden=true;return}
   if(t.dataset.play){playSw(t.dataset.play);return}
-  if(t.id==='random'){const pick=(bodyOnly)=>{const L=COLORS.filter(c=>!bodyOnly||(!c.only&&!c.nobody));return L[Math.floor(Math.random()*L.length)].id};const a=pick(),b2=pick();S.body=pick(true);S.btn=S.btn.map((_,i)=>Math.random()<.2?pick():((i+Math.floor(i/2))%2?a:b2));S.acc=Array(8).fill(null);render();status('랜덤 조합을 만들었습니다');return}
-  if(t.id==='example'){const st=S.step,vw=S.view;S=structuredClone(EXAMPLE);S.step=st;S.view=vw;render();status('초기 상태(화이트)로 돌아왔습니다');return}
-  if(t.id==='reset'){const vw=S.view;S=structuredClone(EXAMPLE);S.step='body';S.view=vw;camS={...CAM0};setCam();render();status('처음부터 다시 시작합니다');return}
+  if(t.id==='random'){if(!confirm('지금 만든 디자인 대신 랜덤 조합을 만들까요?'))return;const pick=(bodyOnly)=>{const L=COLORS.filter(c=>!bodyOnly||(!c.only&&!c.nobody));return L[Math.floor(Math.random()*L.length)].id};const a=pick(),b2=pick();S.body=pick(true);S.btn=S.btn.map((_,i)=>Math.random()<.2?pick():((i+Math.floor(i/2))%2?a:b2));S.acc=Array(8).fill(null);render();status('랜덤 조합을 만들었습니다');return}
+  if(t.id==='example'){if(!confirm('지금 만든 디자인을 지우고 초기 상태(화이트)로 돌아갈까요?'))return;const st=S.step,vw=S.view;S=structuredClone(EXAMPLE);S.step=st;S.view=vw;render();status('초기 상태(화이트)로 돌아왔습니다');return}
+  if(t.id==='reset'){if(!confirm('지금 만든 디자인을 지우고 처음부터 다시 시작할까요?'))return;const vw=S.view;S=structuredClone(EXAMPLE);S.step='body';S.view=vw;camS={...CAM0};setCam();render();status('처음부터 다시 시작합니다');return}
   if(t.id==='sum-toggle'){const d=$('#drawer');d.hidden=!d.hidden;t.setAttribute('aria-expanded',String(!d.hidden));if(!d.hidden)renderDrawer();return}
   if(t.id==='drawer-close'){$('#drawer').hidden=true;$('#sum-toggle').setAttribute('aria-expanded','false');return}
   if(t.id==='load'){loadCode();return}
@@ -957,7 +970,9 @@ document.addEventListener('mouseover',e=>{const it=e.target.closest&&e.target.cl
 function extractCode(raw){const t=String(raw||'').trim();if(t&&!/^SD-/i.test(t)&&is7(t))return t;if(!/SD-/i.test(t)){const tk=t.split(/\s+/).filter(x=>x.length>=4&&is7(x)).sort((a,b)=>b.length-a.length)[0];if(tk)return tk}const m=String(raw||'').toUpperCase().match(/SD-[0-9A-Z]+(?:-[0-9A-Z]+)*/);return m?m[0]:String(raw||'').trim()}
 document.addEventListener('paste',e=>{const t=e.target;if(!t||!['code-in','v-in','vw-code'].includes(t.id))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/SD-/i.test(txt)&&!is7(txt.trim()))return;e.preventDefault();t.value=extractCode(txt);t.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>{if(t.id==='v-in')runVerify();else if(t.id==='vw-code')viewLoad();else if(t.id==='code-in')openVerify(t.value)},0)});
 // 자석 빼기는 코드 끝 '-U'(Base32에 없는 글자)로 표시
-function parseCode(raw){let v=extractCode(raw).replace(/\s+/g,'');if(v&&!/^SD/i.test(v)&&is7(v))return decode7(v);v=v.toUpperCase().replace(/^SD(?!-)/,'SD-');const nm=/-?U$/.test(v);if(nm)v=v.replace(/-?U$/,'');const r=parseCode0(v);if(r&&r.st)r.st.nomag=nm;return r}
+// 고객이 손으로 친 코드도 받아 줘요: 소문자 → 대문자, 전각 문자(＃ ￦ 등) → 일반 문자, 한글 키보드의 \ → ₩
+function normCode(raw){return String(raw||'').normalize('NFKC').replace(/\\/g,'₩').toUpperCase()}
+function parseCode(raw){raw=normCode(raw);let v=extractCode(raw).replace(/\s+/g,'');if(v&&!/^SD/i.test(v)&&is7(v))return decode7(v);v=v.toUpperCase().replace(/^SD(?!-)/,'SD-');const nm=/-?U$/.test(v);if(nm)v=v.replace(/-?U$/,'');const r=parseCode0(v);if(r&&r.st)r.st.nomag=nm;return r}
 function parseCode0(raw){
   let v=extractCode(raw).toUpperCase().replace(/\s+/g,'');
   const x8=s=>s.length===1?s.repeat(8):s;let m,btn,shp,tone,sw=null;
@@ -992,7 +1007,8 @@ function runVerify(){
   const keep=S;S={...structuredClone(S),...structuredClone(r.st)};
   let html;
   try{const cd=code(),n=twoCount();
-    html=`<div class="v-ok">✓ 확인된 코드 <b>${escH(extractCode($('#v-in').value))}</b></div><div class="v-img"><img id="v-img" alt="이 코드로 제작될 클리커 미리보기"></div>
+    const typed=extractCode(normCode($('#v-in').value));
+    html=`<div class="v-ok">✓ 확인된 코드 <b>${escH(typed)}</b></div>${typed!==cd?`<div class="v-new">주문할 때는 아래 <b>새 코드</b>를 붙여 넣어 주세요. 예전 코드는 길어서 스마트스토어 입력란(20자)에서 잘릴 수 있어요.<div class="codebox"><span class="code">${escH(cd)}</span><button type="button" class="btn primary" data-copycode="${escH(cd)}">새 코드 복사</button></div></div>`:''}<div class="v-img"><img id="v-img" alt="이 코드로 제작될 클리커 미리보기"></div>
     <dl class="summary">${summaryRows().replace(/<div class="row"><dt>금액<\/dt>[\s\S]*$/,'')}</dl>
     <div class="v-price"><span>결제 금액</span><b>${won(total())}원</b><em>${breakdown()}</em></div>${optN()?`<p class="heart-alert">${heartMsg()}</p>`:''}
     <details class="v-sheet"><summary>제작 시트 (버튼별 상세)</summary><table><thead><tr><th>#</th><th>모양</th><th>버튼 색</th><th>테두리·하트</th><th>축</th></tr></thead><tbody>${makerRows()}</tbody></table></details>
