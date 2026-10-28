@@ -375,7 +375,8 @@ async function loadDecoder() {
 window.__cat=()=>({colors:COLORS.map(c=>({id:c.id,name:c.name,hex:c.hex,only:c.only||null,nobody:!!c.nobody})),shapes:SHAPES.map(s=>({k:s.k,name:s.name,acc:!!s.acc})),sw:SW.map(s=>({id:s.id,name:swName(s.id),type:s.type,hex:s.hex})),rims:Object.entries(RIMS).map(([k,r])=>({k,name:r.name,hex:r.hex}))});
 window.__dec=raw=>{const r=parseCode(raw);const code=extractCode(raw);if(r.err)return{err:r.err,code};const keep=S;try{S={...structuredClone(S),...structuredClone(r.st),acc:Array(8).fill(null),step:'done',sel:0};
 return{code,body:S.body,rim:S.rim||null,logo:S.logo||null,nomag:!!S.nomag,btn:S.btn.map((id,i)=>({shp:S.shp[i],color:id,acc:SH[S.shp[i]].acc?accOf(i):null,sw:S.sw[i]})),price:total(),breakdown:breakdown().replace(/<[^>]+>/g,'')}}finally{S=keep}};
-window.__img=(raw,cb)=>{const r=parseCode(raw);if(r.err)return cb(null);const keep=S;try{S={...structuredClone(S),...structuredClone(r.st)};snapImage(code(),cb)}finally{S=keep;draw(false)}};
+window.__img=(raw,cb)=>{if(raw.startsWith('st:')){const v=JSON.parse(raw.slice(3));const keep=S;try{S={...structuredClone(S),rim:false,logo:null,nomag:false,body:v.body,btn:Array(8).fill(v.btn),shp:Array(8).fill(v.shp),tone:Array(8).fill('1'),acc:Array(8).fill(null),sw:Array(8).fill(v.sw||SW_DEF)};snapImage(v.label,cb)}finally{S=keep;draw(false)}return}
+const r=parseCode(raw);if(r.err)return cb(null);const keep=S;try{S={...structuredClone(S),...structuredClone(r.st)};snapImage(code(),cb)}finally{S=keep;draw(false)}};
 <\/script></body>`);
     const fr = document.createElement('iframe');
     fr.style.cssText = 'position:absolute;width:400px;height:400px;left:-9999px;top:0;border:0';
@@ -511,7 +512,7 @@ function opts(o) {
   String(o || '').split(' / ').forEach(p => { const i = p.indexOf(':'); if (i > 0) m[p.slice(0, i).trim()] = p.slice(i + 1).trim(); });
   return m;
 }
-const ALIAS = {'검정': '블랙', '검은색': '블랙', '흰색': '화이트', '하양': '화이트', '초콜릿': '초코', '딸기': '스트로베리', '민트': '메론'};
+const ALIAS = {'검정': '블랙', '검은색': '블랙', '흰색': '화이트', '하양': '화이트', '초콜릿': '초코', '화이트초콜릿': '화이트초코', '딸기': '스트로베리', '민트': '메론'};
 function colorByName(n) {
   if (!CAT || !n) return null;
   n = String(n).replace(/\s/g, '');
@@ -691,6 +692,7 @@ function lineHTML(l) {
   }
   let body = '';
   if (k === 'custom') body = customHTML(l);
+  else if (k === 'other' && /키링/.test(l.product) && keyringOf(l)) body = keyringHTML(l);
   else body = `<div class="opt">${esc(l.option)}</div>`;
   const rc = recipe(l);
   const note = rc.err ? `<span class="badge warn">재고 차감 불가: ${esc(rc.err)}</span>` : rc.none ? '<span class="badge">재고 차감 없음</span>' : '';
@@ -731,6 +733,30 @@ function customHTML(l) {
         <div class="msg">${esc(d.breakdown)}</div>
         <details style="margin-top:6px"><summary class="msg" style="cursor:pointer">버튼별 상세 (모양·색·축)</summary>
           <div class="grid" style="background:${body.hex};margin-top:4px">${cells}</div></details>
+      </div>
+    </div>`;
+}
+
+// 기본 초콜릿 클리커 키링: 옵션의 색 하나로 본체와 버튼 8개를 같은 색으로 그려요
+const swByName = n => { n = String(n || '').replace(/\s|축/g, ''); return CAT && (CAT.sw.find(s => s.name.replace('축', '') === n) || {}).id || null; };
+function keyringOf(l) {
+  if (!CAT) return null;
+  const o = opts(l.option);
+  const c = colorByName(o['색상'] || o['컬러']);
+  if (!c) return null;
+  const shapeOpt = Object.entries(o).find(([k]) => /버튼모양/.test(k));
+  return {color: c, shp: shapeOpt && /무지/.test(shapeOpt[1]) ? 'P' : 'B', sw: swByName(Object.entries(o).find(([k]) => /스위치|축/.test(k))?.[1])};
+}
+function keyringHTML(l) {
+  const v = keyringOf(l), c = color(v.color);
+  const key = 'st:' + JSON.stringify({body: v.color, btn: v.color, shp: v.shp, sw: v.sw, label: `키링 ${c.name}`});
+  return `<div class="opt">${esc(l.option)}</div>
+    <div class="sheet">
+      <img class="pv" data-pv="${esc(key)}" alt="키링 미리보기" title="누르면 크게 보기">
+      <div class="spec">
+        <div><span class="sw" style="background:${c.hex}"></span>색상 <b>${esc(c.name)}</b></div>
+        <div>버튼 <b>${esc(shape(v.shp).name)}</b></div>
+        <div>축 ${v.sw ? `<span class="sw" style="background:${swOf(v.sw).hex}"></span><b>${esc(swOf(v.sw).name)}</b>` : '<span class="badge warn">축 이름 확인 필요</span>'}</div>
       </div>
     </div>`;
 }
