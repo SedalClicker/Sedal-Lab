@@ -58,6 +58,9 @@ main{max-width:1100px;margin:0 auto;padding:16px}
 .cell{border-radius:7px;height:46px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;line-height:1.2;border:1px solid rgba(0,0,0,.12);text-align:center}
 .cell .acc{position:absolute;top:3px;right:3px;width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.25)}
 .cell .no{position:absolute;top:2px;left:4px;font-size:9px;opacity:.6}
+.pv{width:min(380px,100%);aspect-ratio:20/11;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:8px;cursor:zoom-in}
+.pv:not([src]){background:#fff linear-gradient(90deg,#fff,#f1ece4,#fff) 0 0/200% 100%}
+.pv.big{width:100%;cursor:zoom-out}
 .spec{font-size:13px}
 .spec div{margin-bottom:2px}
 .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1px solid rgba(0,0,0,.2)}
@@ -350,6 +353,7 @@ async function loadDecoder() {
 window.__cat=()=>({colors:COLORS.map(c=>({id:c.id,name:c.name,hex:c.hex,only:c.only||null,nobody:!!c.nobody})),shapes:SHAPES.map(s=>({k:s.k,name:s.name,acc:!!s.acc})),sw:SW.map(s=>({id:s.id,name:swName(s.id),type:s.type,hex:s.hex})),rims:Object.entries(RIMS).map(([k,r])=>({k,name:r.name,hex:r.hex}))});
 window.__dec=raw=>{const r=parseCode(raw);const code=extractCode(raw);if(r.err)return{err:r.err,code};const keep=S;try{S={...structuredClone(S),...structuredClone(r.st),acc:Array(8).fill(null),step:'done',sel:0};
 return{code,body:S.body,rim:S.rim||null,logo:S.logo||null,nomag:!!S.nomag,btn:S.btn.map((id,i)=>({shp:S.shp[i],color:id,acc:SH[S.shp[i]].acc?accOf(i):null,sw:S.sw[i]})),price:total(),breakdown:breakdown().replace(/<[^>]+>/g,'')}}finally{S=keep}};
+window.__img=(raw,cb)=>{const r=parseCode(raw);if(r.err)return cb(null);const keep=S;try{S={...structuredClone(S),...structuredClone(r.st)};snapImage(code(),cb)}finally{S=keep;draw(false)}};
 <\/script></body>`);
     const fr = document.createElement('iframe');
     fr.style.cssText = 'position:absolute;width:400px;height:400px;left:-9999px;top:0;border:0';
@@ -358,6 +362,7 @@ return{code,body:S.body,rim:S.rim||null,logo:S.logo||null,nomag:!!S.nomag,btn:S.
     await new Promise((ok, bad) => { fr.onload = ok; fr.onerror = bad; fr.srcdoc = html; });
     DEC = fr.contentWindow.__dec;
     CAT = fr.contentWindow.__cat();
+    window.__imgFn = fr.contentWindow.__img;
     if (!DEC || !CAT) throw new Error('해석 함수를 찾지 못했어요');
     $('#dec-msg').textContent = '';
   } catch (e) {
@@ -608,6 +613,7 @@ function render() {
   const list = visible.filter(o => match(o, filter)).filter(o => !q || JSON.stringify(o.lines).toLowerCase().includes(q));
   $('#list').innerHTML = list.length ? list.map(orderHTML).join('')
     : `<div class="empty">${Object.keys(DB.orders).length ? '해당하는 주문이 없어요' : '스마트스토어에서 내려받은 주문 엑셀을 불러와 주세요'}</div>`;
+  fillPreviews();
 }
 function match(o, f) {
   if (f === 'all') return true;
@@ -667,7 +673,7 @@ function customHTML(l) {
   d.btn.forEach(b => tally[b.sw] = (tally[b.sw] || 0) + 1);
   return `${fixed}<div class="opt">코드 <b>${esc(d.code)}</b> · ${Number(d.price).toLocaleString()}원</div>
     <div class="sheet">
-      <div class="grid" style="background:${body.hex}">${cells}</div>
+      <img class="pv" data-pv="${esc(raw)}" alt="제작될 클리커 미리보기" title="누르면 크게 보기">
       <div class="spec">
         <div><span class="sw" style="background:${body.hex}"></span>본체 <b>${esc(body.name)}</b></div>
         ${d.rim ? `<div><span class="sw" style="background:${rimOf(d.rim).hex}"></span>테두리 <b>${esc(rimOf(d.rim).name)}</b></div>` : ''}
@@ -675,8 +681,26 @@ function customHTML(l) {
         ${d.nomag ? '<div><b>자석 없음</b></div>' : ''}
         <div>축 ${Object.entries(tally).map(([id, n]) => `<span class="sw" style="background:${swOf(id).hex}"></span>${esc(swOf(id).name)} ${n}`).join(' · ')}</div>
         <div class="msg">${esc(d.breakdown)}</div>
+        <details style="margin-top:6px"><summary class="msg" style="cursor:pointer">버튼별 상세 (모양·색·축)</summary>
+          <div class="grid" style="background:${body.hex};margin-top:4px">${cells}</div></details>
       </div>
     </div>`;
+}
+
+// check.html 확인창과 같은 미리보기 이미지를 화면에 보이는 주문부터 차례로 그려요
+const pvCache = {};
+let pvBusy = false;
+function fillPreviews() {
+  const imgs = [...document.querySelectorAll('img.pv:not([src]):not([data-fail])')];
+  for (const im of imgs) if (im.dataset.pv in pvCache) pvCache[im.dataset.pv] ? im.src = pvCache[im.dataset.pv] : im.dataset.fail = '1';
+  if (pvBusy || !window.__imgFn) return;
+  const next = imgs.find(im => !im.src && !im.dataset.fail);
+  if (!next) return;
+  pvBusy = true;
+  const raw = next.dataset.pv;
+  try {
+    window.__imgFn(raw, url => { pvCache[raw] = url || ''; pvBusy = false; fillPreviews(); });
+  } catch (e) { pvCache[raw] = ''; pvBusy = false; console.error(e); }
 }
 
 document.addEventListener('change', e => {
@@ -707,7 +731,8 @@ document.addEventListener('change', e => {
 });
 document.addEventListener('click', e => {
   const t = e.target;
-  if (t.dataset.fix) {
+  if (t.classList.contains('pv')) t.classList.toggle('big');
+  else if (t.dataset.fix) {
     const v = document.querySelector(`[data-fixin="${t.dataset.fix}"]`).value.trim();
     if (!v) return;
     const d = DEC && DEC(v);
