@@ -22,7 +22,24 @@ header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.5px}
 nav{display:flex;gap:4px;margin-left:auto}
 nav button{background:transparent;color:#cfc6bb;border:0;padding:6px 12px;border-radius:6px;font-size:14px;cursor:pointer}
 nav button.on{background:#fff;color:var(--ink)}
-main{max-width:1100px;margin:0 auto;padding:16px}
+main{max-width:1440px;margin:0 auto;padding:16px}
+[hidden]{display:none!important}
+.split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
+#side{position:sticky;top:62px;max-height:calc(100vh - 78px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+#side h2{font-size:14px;margin:0;padding:10px 12px;background:#e3eee6;border-bottom:1px solid #c5d8c9;position:sticky;top:0;display:flex;justify-content:space-between;align-items:baseline}
+#side h2 small{font-weight:400;color:var(--sub);font-size:12px}
+#side table{width:100%;font-size:13px}
+#side th{position:sticky;top:39px;background:#f4f8f5;font-weight:600;font-size:12px;color:var(--sub);z-index:1}
+#side td,#side th{padding:5px 6px}
+#side tr[data-goto]{cursor:pointer}
+#side tr[data-goto]:hover td{background:#f6f1e9}
+#side tr.fin td{color:#a59b90}
+#side .nm{max-width:110px;overflow:hidden;text-overflow:ellipsis}
+#side .y{color:var(--accent);font-weight:700}
+#side .part{color:#c07a12;font-weight:600}
+#side .no{color:#cfc6bb}
+.order.flash{box-shadow:0 0 0 3px #7fb08f}
+@media (max-width:900px){.split{grid-template-columns:1fr}#side{position:static;max-height:320px}}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
 .bar input[type=password],.bar input[type=search],.bar input[type=number]{border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:14px}
 .btn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:14px}
@@ -94,7 +111,9 @@ td.low input{border-color:#e0a03a}
   </nav>
 </header>
 <main>
-  <div id="tab-orders">
+  <div id="tab-orders" class="split">
+   <aside id="side"></aside>
+   <div class="maincol">
     <div class="bar">
       <input type="file" id="file" accept=".xlsx">
       <input type="password" id="pw" placeholder="엑셀 비밀번호" autocomplete="off" size="12">
@@ -108,6 +127,7 @@ td.low input{border-color:#e0a03a}
     </div>
     <div class="msg" id="dec-msg" style="margin:0 0 8px 4px"></div>
     <div id="list"></div>
+   </div>
   </div>
   <div id="tab-inv" hidden></div>
   <div id="tab-settings" hidden>
@@ -615,8 +635,34 @@ function render() {
   const list = visible.filter(o => match(o, filter)).filter(o => !q || JSON.stringify(o.lines).toLowerCase().includes(q));
   $('#list').innerHTML = list.length ? list.map(orderHTML).join('')
     : `<div class="empty">${Object.keys(DB.orders).length ? '해당하는 주문이 없어요' : '스마트스토어에서 내려받은 주문 엑셀을 불러와 주세요'}</div>`;
+  renderSide(visible);
   fillPreviews();
 }
+
+// 왼쪽 진행표: 주문자별로 조립·포장·발송이 어디까지 됐는지 (품목이 여러 개면 완료 수/전체 수)
+function renderSide(gs) {
+  const live = gs.filter(o => !o.cancelled);
+  const mark = (n, m) => n === m ? '<span class="y">✓</span>' : n ? `<span class="part">${n}/${m}</span>` : '<span class="no">–</span>';
+  const rows = live.map(o => {
+    const m = o.mains.length, asm = o.mains.filter(l => st(l).asm).length, pack = o.mains.filter(l => st(l).pack).length;
+    return `<tr data-goto="${esc(o.no)}" class="${o.shipped ? 'fin' : ''}" title="${esc(fmtAt(o.at))} · 주문 ${esc(o.no)}${o.receiver && o.receiver !== o.buyer ? ' · 받는 분 ' + esc(o.receiver) : ''}">
+      <td class="nm">${esc(o.buyer || o.receiver)}</td><td>${m}</td>
+      <td>${mark(asm, m)}</td><td>${mark(pack, m)}</td><td>${o.shipped ? '<span class="y">✓</span>' : '<span class="no">–</span>'}</td></tr>`;
+  }).join('');
+  const shipped = live.filter(o => o.shipped).length;
+  $('#side').innerHTML = `<h2>주문자별 진행 <small>발송 ${shipped} / ${live.length}</small></h2>
+    ${live.length ? `<table><tr><th>주문자</th><th>품목</th><th>조립</th><th>포장</th><th>발송</th></tr>${rows}</table>` : '<p class="msg" style="padding:12px">주문을 불러오면 여기에 정리돼요</p>'}`;
+}
+$('#side').onclick = e => {
+  const tr = e.target.closest('tr[data-goto]');
+  if (!tr) return;
+  const no = tr.dataset.goto;
+  let el = document.getElementById('o-' + no);
+  if (!el) { filter = 'all'; $('#q').value = ''; render(); el = document.getElementById('o-' + no); }
+  if (!el) return;
+  el.scrollIntoView({behavior: 'smooth', block: 'start'});
+  el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1500);
+};
 function match(o, f) {
   if (f === 'all') return true;
   if (f === 'issue') return o.issues.length > 0 && !o.cancelled;
@@ -626,8 +672,8 @@ const fmtAt = s => { if (!s) return ''; const d = new Date(s); return isNaN(d) ?
 
 function orderHTML(o) {
   const st = [...new Set(o.lines.map(l => l.status))].map(s => `<span class="badge ${SHIPPED_STATES.includes(s) ? 'ok' : s === '취소' ? 'warn' : ''}">${esc(s)}</span>`).join(' ');
-  const who = o.receiver && o.receiver !== o.buyer ? `${esc(o.receiver)} <span class="meta">(구매 ${esc(o.buyer)})</span>` : esc(o.buyer || o.receiver);
-  return `<div class="order ${o.cancelled ? 'cancel' : ''}">
+  const who = o.receiver && o.receiver !== o.buyer ? `${esc(o.buyer)} <span class="meta">(받는 분 ${esc(o.receiver)})</span>` : esc(o.buyer || o.receiver);
+  return `<div class="order ${o.cancelled ? 'cancel' : ''}" id="o-${esc(o.no)}" style="scroll-margin-top:62px">
     <div class="ohead">
       <span class="who">${who}</span>
       <span class="meta">${fmtAt(o.at)} · 주문 ${esc(o.no)}</span> ${st}
