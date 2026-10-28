@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>SE:DAL 주문 관리</title>
+<!-- 바탕화면·홈 화면에 추가할 때 쓰는 앱 이름과 아이콘 (쇼핑 페이지 앱과 구분돼요) -->
+<link rel="manifest" href="orders.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/orders-favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/orders-192.png">
+<link rel="apple-touch-icon" href="icons/orders-apple-touch-icon.png">
+<meta name="theme-color" content="#1d1a16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SE:DAL 주문">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="application-name" content="SE:DAL 주문 관리">
 <!-- 외부로는 Supabase 와 이 사이트만 통신할 수 있게 막아요 (주문 정보가 다른 곳으로 새지 않도록) -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https://sedalclicker.github.io data: blob:; connect-src 'self' https://sedalclicker.github.io https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self' https://sedalclicker.github.io; form-action 'none'">
 <meta name="referrer" content="no-referrer">
