@@ -173,6 +173,16 @@ td .need{display:block;font-size:11.5px;color:var(--sub);margin-top:2px}
 td.short input{border-color:var(--warn);background:var(--warnbg);color:var(--warn);font-weight:600}
 td.short .need{color:var(--warn);font-weight:700}
 td.low input{border-color:#e3a33b;background:var(--amberbg)}
+/* 투톤 조합: 버튼색별 묶음을 3단으로 */
+.twogrid{column-count:3;column-gap:14px;margin-top:8px}
+.twogrid .grp{break-inside:avoid;display:inline-block;width:100%;margin-bottom:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.twogrid h3{margin:0;padding:7px 10px;font-size:14px;font-weight:700;background:#f8f6f1;border-bottom:1px solid var(--line)}
+.twogrid h3 small{font-weight:500;color:var(--sub);font-size:12px}
+.twogrid table{width:100%}
+.twogrid th,.twogrid td{padding:5px 6px}
+.twogrid tr:last-child td{border-bottom:0}
+@media (max-width:1100px){.twogrid{column-count:2}}
+@media (max-width:700px){.twogrid{column-count:1}}
 
 @media (max-width:900px){.split{grid-template-columns:1fr}#sidecol{position:static;max-height:none}#side{max-height:340px}}
 @media (max-width:600px){
@@ -1285,13 +1295,19 @@ function renderInv() {
   // 투톤 조합은 모양 3 × 버튼색 × 상단색이라 너무 많아서, 주문에 필요하거나 재고에 올린 조합만 보여줘요
   const used = usedParts(), ci = id => CAT.colors.findIndex(c => c.id === id), si = k => CAT.shapes.findIndex(s => s.k === k);
   const twoKeys = [...new Set([...Object.keys(need), ...Object.keys(DB.inv), ...Object.keys(used)].filter(k => k.startsWith('two:')))]
-    .sort((a, b) => { const [, s1, b1, a1] = a.split(':'), [, s2, b2, a2] = b.split(':'); return si(s1) - si(s2) || ci(b1) - ci(b2) || ci(a1) - ci(a2); });
+    .sort((a, b) => { const [, s1, b1, a1] = a.split(':'), [, s2, b2, a2] = b.split(':'); return ci(b1) - ci(b2) || si(s1) - si(s2) || ci(a1) - ci(a2); });
   const colorTag = id => `<span class="sw" style="background:${color(id).hex}"></span>${esc(color(id).name)}`;
   const twoRow = k => {
-    const [, s, b, a] = k.split(':');
+    const [, s, , a] = k.split(':');
     const removable = !need[k] && !used[k] && !(DB.inv[k] && Number(DB.inv[k].qty));
-    return `<tr><td>${esc(shape(s).name)}</td><td>${colorTag(b)}<small>(버튼)</small> + ${colorTag(a)}<small>(상단)</small>${removable && DB.inv[k] ? ` <button class="btn" style="padding:0 7px;font-size:12px" data-deltwo="${esc(k)}" title="목록에서 빼기">×</button>` : ''}</td>${invCell(k, need)}${minCell(k)}</tr>`;
+    return `<tr><td>${esc(shape(s).name)}</td><td>${colorTag(a)}${removable && DB.inv[k] ? ` <button class="btn" style="padding:0 7px;font-size:12px" data-deltwo="${esc(k)}" title="목록에서 빼기">×</button>` : ''}</td>${invCell(k, need)}${minCell(k)}</tr>`;
   };
+  // 버튼(몸통)색별로 묶어서 보여줘요
+  const twoGroups = [];
+  for (const k of twoKeys) {
+    const b = k.split(':')[2], g = twoGroups[twoGroups.length - 1];
+    if (g && g.b === b) g.keys.push(k); else twoGroups.push({b, keys: [k]});
+  }
   const colorOpts = CAT.colors.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
   // 예전에는 투톤을 버튼(btn:H·S·R)과 장식(acc:)으로 따로 셌어요. 남은 수량이 있을 때만 보여서 옮겨 적을 수 있게 해요
   const legacy = Object.keys({...DB.inv, ...used}).filter(k => (/^btn:[HSR]:/.test(k) || k.startsWith('acc:')) && invQty(k) !== 0).sort();
@@ -1307,7 +1323,8 @@ function renderInv() {
     </section>
     <section class="inv"><h2>투톤 버튼 (버튼색 + 상단색 조합)</h2>
       <p class="hint">주문에 필요하거나 재고를 넣은 조합만 보여요. 새 조합은 아래에서 추가하세요.</p>
-      ${twoKeys.length ? `<table><tr><th>모양</th><th>조합</th><th>재고</th><th>최소</th></tr>${twoKeys.map(twoRow).join('')}</table>` : '<p class="msg">아직 조합이 없어요</p>'}
+      ${twoGroups.length ? `<div class="twogrid">${twoGroups.map(g => `<div class="grp"><h3>${colorTag(g.b)} 버튼 <small>${g.keys.length}종</small></h3>
+        <table><tr><th>모양</th><th>상단색</th><th>재고</th><th>최소</th></tr>${g.keys.map(twoRow).join('')}</table></div>`).join('')}</div>` : '<p class="msg">아직 조합이 없어요</p>'}
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px">
         <select id="two-s">${accShapes.map(s => `<option value="${s.k}">${esc(s.name)}</option>`).join('')}</select>
         <select id="two-b" title="버튼색">${colorOpts}</select> + <select id="two-a" title="상단색">${colorOpts}</select>
