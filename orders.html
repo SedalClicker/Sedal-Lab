@@ -535,7 +535,7 @@ async function loadDecoder() {
   $('#dec-msg').textContent = '커스텀 코드 해석기를 불러오는 중…';
   try {
     let html = await (await fetch(CHECK_URL, {cache: 'no-cache'})).text();
-    html = html.replace(/<script[^>]*gc\.zgo\.at[^>]*><\/script>/gi, '')
+    html = html.replace(/<script[^>]*data-goatcounter[^>]*><\/script>/gi, '')   // 방문자 통계는 주문 페이지에서 보내지 않아요
       .replace(/<head>/i, `<head><base href="${CHECK_URL}">`)
       .replace(/<\/body>/i, `<script>
 window.__cat=()=>({colors:COLORS.map(c=>({id:c.id,name:c.name,hex:c.hex,only:c.only||null,nobody:!!c.nobody})),shapes:SHAPES.map(s=>({k:s.k,name:s.name,acc:!!s.acc})),sw:SW.map(s=>({id:s.id,name:swName(s.id),type:s.type,hex:s.hex})),rims:Object.entries(RIMS).map(([k,r])=>({k,name:r.name,hex:r.hex}))});
