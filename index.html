@@ -201,7 +201,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .btn.order-go{display:flex;width:100%;justify-content:center;margin-top:8px;padding:13px 16px;font-size:15px;font-weight:700;background:#03C75A;border-color:#03C75A;color:#fff}
 .code{flex:1 1 200px;min-width:0;font-family:var(--mono);font-size:16px;letter-spacing:.04em;background:var(--sunken);border-radius:3px;padding:12px 14px;-webkit-user-select:all;user-select:all;white-space:nowrap;overflow-x:auto;display:flex;align-items:center}
 @media (max-width:400px){.code{font-size:14px;letter-spacing:0}}
-.addon-guide{border:1.5px solid #03C75A;background:#F0FBF4;border-radius:6px;padding:12px 14px;margin:10px 0}.addon-guide>b{display:block;font-size:14px;margin-bottom:6px}.addon-guide ul{list-style:none;margin:0;padding:0}.addon-guide li{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed var(--line-2);font-size:14px}.addon-guide li:first-child{border-top:0}.addon-guide li span{flex:1}.addon-guide li em{font-style:normal;color:var(--ink-2)}.addon-guide p{margin:4px 0 0;font-size:13px;color:var(--ink-2)}.addon-guide .ag-total{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);color:var(--ink)}.addon-guide.none{border-color:var(--line-2);background:var(--sunken)}
+.addon-guide{border:1.5px solid #03C75A;background:#F0FBF4;border-radius:6px;padding:12px 14px;margin:10px 0}.addon-guide>b{display:block;font-size:14px;margin-bottom:6px}.addon-guide ul{list-style:none;margin:0;padding:0}.addon-guide li{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed var(--line-2);font-size:14px}.addon-guide li:first-child{border-top:0}.addon-guide li span{flex:1}.addon-guide li em{font-style:normal;color:var(--ink-2)}.addon-guide p{margin:4px 0 0;font-size:13px;color:var(--ink-2)}.addon-guide .ag-total{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);color:var(--ink)}.addon-guide s{margin-left:6px;color:var(--ink-3)}.addon-guide.none{border-color:var(--line-2);background:var(--sunken)}
 .v-new{margin:10px 0;padding:10px 12px;border-radius:6px;background:#FFF6E5;font-size:13px}.v-new .codebox{margin-top:8px}
 .load{display:flex;gap:8px;flex-wrap:wrap}
 .load input{flex:1 1 200px;min-width:0;font:500 14px var(--mono);padding:10px 12px;border-radius:3px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);text-transform:uppercase}
@@ -394,7 +394,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
     <dl class="summary" id="drawer-summary"></dl>
     <div class="codebox"><span class="code" id="drawer-code"></span><button class="btn primary" id="drawer-copy" type="button">주문코드 복사</button></div>
     <button type="button" class="btn order-go" data-order>코드 복사하고 스마트스토어에서 주문하기</button>
-    <p class="help">주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.</p>
+    <p class="help" id="drawer-card-help">주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.</p>
   </div>
 </div>
 
@@ -561,7 +561,7 @@ function drawView(v,forExport){
   let RF=null;
   if(S.rim){const RM=rimOf(),rf=RM.col&&C[RM.col]&&C[RM.col].dots?fillOf(RM.col):RM.hex,rs=strokeOf2(RM.hex),zb=top-0.3,zt=top+1.3,zi=top-0.5;
     const FoB=rr(0,0,M.bw-0.9,M.bl-0.9,M.br-0.45,zb),FoT=rr(0,0,M.bw-1.3,M.bl-1.3,M.br-0.65,zt),FiT=rr(0,0,M.bw-2*M.rim+0.2,M.bl-2*M.rim+0.2,M.br-M.rim+0.1,zt),FiB=rr(0,0,M.bw-2*M.rim,M.bl-2*M.rim,M.br-M.rim,zi);
-    RF={rf,rs,FoB,FoT,FiT,FiB,side:mix(rf,-0.14),inner:mix(rf,-0.3)};
+    RF={rf,rs,FoB,FoT,FiT,FiB,side:mix(RM.hex,-0.14),inner:mix(RM.hex,-0.3)};
     let f=`<g data-part="body">`;
     if(v.taper){const vis=nearSeg(FiT),N=FiT.length;for(let i=0;i<N;i++){if(vis[i])continue;const j=(i+1)%N;f+=poly(v,[FiB[i],FiB[j],FiT[j],FiT[i]],RF.inner,RF.inner,LW*0.4)}}
     f+=band(v,FoT,FiT,rf,rs,LW)+`</g>`;o+=f}
@@ -665,18 +665,21 @@ function customPrice(){return PRICE.base+optSum()+(S.rim?PRICE.RIM:0)}
 function altPrice(){return PRICE.SET+soloSum()+(S.rim?PRICE.RIM:0)}
 function altCheaper(){return isSet()&&altPrice()<customPrice()}
 // 단색 세트: 본체·버튼 8개·로고가 모두 같은 색 + 스위치 축 8개 통일 + 버튼 모양 통일(기본형 또는 무지형) + 유료 옵션(테두리·하트·별) 없음 → 기본 판매 제품과 같아 기본가 할인
-function isSet(){const b=S.body,free=S.shp.filter(k=>!SH[k].acc);return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&free.every(x=>x===free[0])}
+// 투톤 상단색을 추천 색이 아닌 색으로 바꾼 버튼이 있으면 기본 상품 개별 옵션으로 고를 수 없어 커스텀으로 주문해요
+function isSet(){const b=S.body,free=S.shp.filter(k=>!SH[k].acc);return S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&free.every(x=>x===free[0])&&S.shp.every((k,i)=>!SH[k].acc||!(S.acc||[])[i]||S.acc[i]===PAIR[S.btn[i]])}
 function nomagNote(){return S.nomag?`<br><b>자석 기능 빼기</b>는 추가금 없이 <b>판매자 요청사항</b>란에 <b>"자석 없이 제작"</b>이라고 적어 주시면 됩니다.`:''}
 // 마지막 단계에 항상 보이는 추가상품 목록 (스마트스토어 추가상품 이름 그대로)
 const RIM_STORE={ch:'초콜릿',pk:'핑크',iv:'화이트'};
 function addonGuide(){
-  if(altCheaper())return`<div class="addon-guide"><b>💡 이 조합은 기본 상품으로 더 저렴하게 주문할 수 있어요</b><p>본체·버튼·로고 색과 스위치 축이 모두 같아요. 아래 <b>[주문코드 복사]</b>를 누르면 주문 방법과 금액을 안내해 드려요.</p></div>`;
+  if(altCheaper()){const free=S.shp.find(k=>!SH[k].acc),sp=[];if(heartN())sp.push(['하트 버튼',heartN(),PRICE.SOLO.H]);if(starN())sp.push(['별 버튼',starN(),PRICE.SOLO.S]);if(ringN())sp.push(['링 버튼',ringN(),PRICE.SOLO.R]);if(S.rim)sp.push([rimOf().name+' 테두리',1,PRICE.RIM]);
+    return`<div class="addon-guide"><b>💡 기본 상품으로 주문하면 ${won(customPrice()-altPrice())}원 더 저렴해요</b><p>본체·버튼·로고 색과 스위치 축이 모두 같아서 기본 판매 제품과 같은 구성이에요. 기본 상품 페이지에서 이렇게 골라 주세요.</p><ul><li><span>색상</span><b>${C[S.body].name}</b></li>${free?`<li><span>버튼 모양</span><b>${SH[free].name}</b></li>`:''}<li><span>스위치 축</span><b>${swName(S.sw[0])}</b></li>${sp.map(([n,q,p])=>`<li><span>${n} (개별 옵션)</span><b>${q}개</b><em>+${won(q*p)}원</em></li>`).join('')}</ul><p class="ag-total">상품 금액 합계 <b>${won(altPrice())}원</b><s>${won(customPrice())}원</s><small> · 배송비 별도</small></p></div>`}
   const ol=[];if(heartN())ol.push(['버튼 변경: 하트',heartN(),SH.H.price]);if(starN())ol.push(['버튼 변경: 별',starN(),SH.S.price]);if(ringN())ol.push(['버튼 변경: 링',ringN(),SH.R.price]);if(S.rim)ol.push(['테두리 추가: '+(RIM_STORE[S.rim]||rimOf().name),1,PRICE.RIM]);
   return`<div class="addon-guide${ol.length?'':' none'}"><b>🛒 스마트스토어에서 함께 담아 주세요</b>${ol.length?`<ul>${ol.map(([n,q,p])=>`<li><span>${n}</span><b>${q}개</b><em>+${won(q*p)}원</em></li>`).join('')}</ul>`:'<p>추가로 담을 옵션이 없어요. 커스텀 클리커 상품만 주문하시면 됩니다.</p>'}<p class="ag-total">상품 금액 합계 <b>${won(customPrice())}원</b><small> · 배송비 별도</small></p></div>`}
 function optList(){const p=[];if(S.rim)p.push(`${rimOf().name} 테두리 1개`);if(heartN())p.push(`하트 버튼 ${heartN()}개`);if(starN())p.push(`별 버튼 ${starN()}개`);if(ringN())p.push(`링 버튼 ${ringN()}개`);return p}
 // 단색 할인은 마지막 [주문코드 복사] 안내창에서 공개(setRevealed). 확인 페이지(VIEW)는 항상 실제 금액.
 const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
 // 커스텀 클리커 상품 주소: 상품 등록 후 아래 따옴표 안에 넣으면 [주문하기] 버튼이 연결됩니다.
+function orderLabel(){return altCheaper()?`기본 상품으로 주문하기 · ${won(altPrice())}원`:'코드 복사하고 스마트스토어에서 주문하기'}
 const ORDER_URL='https://smartstore.naver.com/se_dal/products/13826634945';
 let setRevealed=false;function setOn(){return altCheaper()&&(setRevealed||!!window.SEDAL_VIEW)}
 function basePrice(){return setOn()?PRICE.SET:PRICE.base}
@@ -708,16 +711,22 @@ function syncPart(){S.part=S.step==='body'?'body':'btn'}
 
 // camera (drag to rotate)
 const CAM0={th:-58*Math.PI/180,ph:38*Math.PI/180};let camS={...CAM0};
+// 로고 색을 고르면 로고가 있는 긴 옆면(고리 반대편)이 앞으로 오도록 입체 화면을 부드럽게 돌려요
+const CAM_LOGO={th:42*Math.PI/180,ph:36*Math.PI/180};let camAnim=0;
+function turnCam(to,ms=700){cancelAnimationFrame(camAnim);const from={...camS},T=2*Math.PI,d=(((to.th-from.th)%T)+1.5*T)%T-T/2,t0=performance.now();
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)ms=0;
+  const step=now=>{const k=ms?Math.min(1,(now-t0)/ms):1,e=k<.5?2*k*k:1-(-2*k+2)**2/2;camS={th:from.th+d*e,ph:from.ph+(to.ph-from.ph)*e};setCam();drawView(VIEWS[1],false);camAnim=k<1?requestAnimationFrame(step):0};
+  camAnim=requestAnimationFrame(step)}
 function setCam(){VIEWS[1].cam=cam(camS.th,camS.ph)}
 const stage=$('#stage');let drag=null,hinted=false,rotRAF=0;
-stage.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,th:camS.th,ph:camS.ph,moved:false,target:e.target};try{stage.setPointerCapture(e.pointerId)}catch(_){}});
+stage.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;cancelAnimationFrame(camAnim);drag={id:e.pointerId,x:e.clientX,y:e.clientY,th:camS.th,ph:camS.ph,moved:false,target:e.target};try{stage.setPointerCapture(e.pointerId)}catch(_){}});
 stage.addEventListener('pointermove',e=>{if(!drag||S.view!=='iso')return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.moved&&Math.abs(dx)+Math.abs(dy)<5)return;drag.moved=true;stage.classList.add('grabbing');stage.classList.remove('hint');
   camS.th=drag.th+dx*0.008;camS.ph=Math.min(72*Math.PI/180,Math.max(16*Math.PI/180,drag.ph-dy*0.006));setCam();if(!rotRAF)rotRAF=requestAnimationFrame(()=>{rotRAF=0;drawView(VIEWS[1],false)})});
 function endDrag(e){if(!drag)return;const d=drag;drag=null;stage.classList.remove('grabbing');if(d.moved||VIEW)return;
   const g=d.target.closest&&d.target.closest('[data-i]');if(g){S.sel=+g.dataset.i;if(S.step==='body'||S.step==='code')S.step='btn';syncPart();lastPick=null;render();return}
   if(d.target.closest&&d.target.closest('[data-part="body"]')){S.step='body';syncPart();lastPick=null;render()}}
 stage.addEventListener('pointerup',endDrag);stage.addEventListener('pointercancel',()=>{drag=null;stage.classList.remove('grabbing')});
-$('#cam-reset').onclick=()=>{camS={...CAM0};setCam();drawView(VIEWS[1],false)};
+$('#cam-reset').onclick=()=>{cancelAnimationFrame(camAnim);camS={...CAM0};setCam();drawView(VIEWS[1],false)};
 $('#view-seg').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(!b)return;S.view=b.dataset.view;applyView();save()});
 function applyView(){const iso=S.view==='iso';$('#vw-iso').hidden=!iso;$('#vw-top').hidden=iso;$('.floor').hidden=!iso;$('#cam-reset').hidden=!iso;document.querySelectorAll('#view-seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===S.view))}
 
@@ -889,12 +898,13 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
       ${Object.keys(SND).length?'<p class="help">축 카드의 스피커 버튼을 누르면 실제 녹음한 타건 소리를 들을 수 있습니다.</p>':''}<p class="help">축 색은 제조사 스템 색을 참고한 근사치입니다. 클리키는 딸깍 소리, 택타일은 걸림 있는 타건감, 리니어는 걸림 없는 부드러운 타건감입니다.</p></div>
     <div class="sec"><div class="sec-head"><h3>추가 옵션</h3></div><label class="opt-check"><input type="checkbox" id="nomag" ${S.nomag?'checked':''}><span><b>자석 기능 빼기</b><small>바닥 자석 없이 제작합니다.</small></span></label></div>`;
   }else{
-    h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문서 [커스텀 주문코드]란에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
+    const alt=altCheaper();if(alt)setRevealed=true;
+    h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">${alt?'이 조합은 <b>기본 상품</b>과 같은 구성이라 더 저렴하게 주문할 수 있어요.':'아래 코드를 복사해 주문서 [커스텀 주문코드]란에 붙여 넣으면 이 조합 그대로 제작됩니다.'}</p>
     <dl class="summary">${summaryRows()}</dl>
-    <div class="order-guide"><b>📋 주문 방법</b><ol><li><b>주문코드 복사</b> 버튼을 눌러 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>커스텀 클리커 상품</b>을 주문하면서 주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여넣기 해 주세요.</li><li>그 외 요청사항은 <b>판매자 요청사항</b>란에 따로 적어 주세요.</li><li>아래 <b>[함께 담아 주세요]</b>에 있는 추가 옵션을 주문할 때 <b>꼭 같이 선택</b>해 주세요. 빠지면 추가 결제를 다시 요청드려야 해요.</li></ol></div>
+    ${alt?`<div class="order-guide"><b>📋 주문 방법</b><ol><li>아래 <b>[기본 상품으로 주문하기]</b>를 누르면 코드가 복사되고 <b>기본 상품</b> 페이지가 열려요.</li><li>아래 상자대로 <b>색상·버튼 모양·스위치 축</b>을 고르고${optN()?' <b>개별 옵션</b>도 함께 담아':''} 주세요.</li><li>복사된 코드를 <b>판매자 요청사항</b>란에 붙여 넣어 주시면 ${optN()?'버튼 위치까지 ':''}만든 그대로 제작해 드려요.${S.nomag?' <b>자석 없이 제작</b>도 함께 적어 주세요.':''}</li></ol></div>`:`<div class="order-guide"><b>📋 주문 방법</b><ol><li><b>주문코드 복사</b> 버튼을 눌러 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>커스텀 클리커 상품</b>을 주문하면서 주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여넣기 해 주세요.</li><li>그 외 요청사항은 <b>판매자 요청사항</b>란에 따로 적어 주세요.</li><li>아래 <b>[함께 담아 주세요]</b>에 있는 추가 옵션을 주문할 때 <b>꼭 같이 선택</b>해 주세요. 빠지면 추가 결제를 다시 요청드려야 해요.</li></ol></div>`}
     ${addonGuide()}
     <div class="codebox"><span class="code" id="code">${escH(code())}</span><button type="button" class="btn primary" id="copy">주문코드 복사</button></div>
-    <button type="button" class="btn order-go" data-order>코드 복사하고 스마트스토어에서 주문하기</button>
+    <button type="button" class="btn order-go" data-order>${orderLabel()}</button>
     <p class="status" id="status" role="status"></p>
     <p class="help">주문 코드는 선택한 본체·테두리·로고·버튼·축 정보를 짧게 묶은 값입니다. 코드를 넣으면 어떤 조합인지 그대로 확인됩니다.</p>
     <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="8F9Y:MK]U*!%XBB" aria-label="주문 코드 입력" maxlength="200" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
@@ -906,16 +916,16 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
 function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():setOn()?`단색 세트 할인 (기본 ${won(PRICE.base)}원 → ${won(PRICE.SET)}원)`:'기본가 · 옵션 추가금 없음'}
 function renderChip(){const id=S.step==='shape'?'iv':curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
   pill.querySelector('span').textContent=S.step==='body'?`본체 · ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
-function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code()}
+function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code();$('#drawer [data-order]').textContent=orderLabel();$('#drawer-card-help').innerHTML=altCheaper()?'기본 상품 주문서의 <b>[판매자 요청사항]</b>란에 붙여 넣어 주세요.':'주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.'}
 function render(){normTone();syncPart();{const sg=$('#stage');if(sg)sg.classList.toggle('btn-step',S.part==='btn'&&!VIEW)}draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
 
 // toast
 let toastT=null;function status(t,ms=2200){let el=$('#status');if(el)el.textContent=t;let ts=$('#toast');if(!ts){ts=document.createElement('div');ts.id='toast';ts.setAttribute('role','status');ts.style.cssText='position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:50;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(ts)}
   ts.textContent=t;ts.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>ts.style.opacity='0',ms)}
 
-async function copyText(txt){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
-  if(ok)status('복사됨: '+txt+' — 주문서 [커스텀 주문코드]란에 붙여넣고, 앞·뒤 글자가 같은지 확인해 주세요',5000);else{const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요',5000)}return ok}
-async function copyOrder(){return copyText(code())}
+async function copyText(txt,where='주문서 [커스텀 주문코드]란에'){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  if(ok)status('복사됨: '+txt+' — '+where+' 붙여넣고, 앞·뒤 글자가 같은지 확인해 주세요',5000);else{const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요',5000)}return ok}
+async function copyOrder(){return copyText(code(),altCheaper()?'기본 상품 주문서의 [판매자 요청사항]란에':undefined)}
 function go(k){S.step=k;syncPart();lastPick=null;render();window.scrollTo({top:0,behavior:'smooth'})}
 
 let lastPick=null,shapeAll=false;
@@ -939,13 +949,13 @@ document.addEventListener('click',e=>{
   if(t.id==='sw-all'){const k=S.sw[S.sel];S.sw=S.sw.map(()=>k);render();status('8개 버튼에 '+swName(k)+'을 적용했습니다');return}
   if(t.dataset.sw){S.sw[S.sel]=t.dataset.sw;if(t.classList.contains('sw')&&S.sel<7)S.sel++;render();return}
   if(t.dataset.rim){S.rim=t.dataset.rim==='0'?false:t.dataset.rim;render();status(S.rim?rimOf().name+' 테두리를 선택했습니다':'테두리를 뺐습니다');return}
-  if(t.dataset.logo){S.logo=t.dataset.logo==='0'?null:t.dataset.logo;render();status('로고 색상: '+(S.logo?C[S.logo].name:'본체와 같은 색'));return}
+  if(t.dataset.logo){S.logo=t.dataset.logo==='0'?null:t.dataset.logo;if(!VIEW)S.view='iso';render();if(!VIEW)turnCam(CAM_LOGO);status('로고 색상: '+(S.logo?C[S.logo].name:'본체와 같은 색'));return}
   if(t.dataset.tone){S.tone[S.sel]=t.dataset.tone;render();return}
   if(t.dataset.sel){S.sel=+t.dataset.sel;lastPick=null;render();return}
   if(t.dataset.color){const id=t.dataset.color;lastPick=id;const scope=t.dataset.scope||(S.step==='body'?'body':'btn');
     if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;if(!hasAcc())S.sel=(S.sel+1)%8}render();return}
   if(t.dataset.acc){const id=t.dataset.acc;S.acc[S.sel]=id===PAIR[S.btn[S.sel]]?null:id;lastPick=null;S.sel=(S.sel+1)%8;render();return}
-  if(t.closest&&t.closest('[data-order]')){if(ORDER_URL){copyOrder();window.open(ORDER_URL,'_blank','noopener')}else status('주문 페이지를 준비 중입니다. 잠시 후 다시 시도해 주세요.');return}
+  if(t.closest&&t.closest('[data-order]')){const url=altCheaper()?BASIC_URL:ORDER_URL;if(url){copyOrder();window.open(url,'_blank','noopener')}else status('주문 페이지를 준비 중입니다. 잠시 후 다시 시도해 주세요.');return}
   if(t.id==='copy'||t.id==='drawer-copy'){openNotice();return}
   if(t.id==='notice-ok'){$('#notice').hidden=true;copyOrder();return}
   if(t.dataset.copycode){copyText(t.dataset.copycode);return}
@@ -953,7 +963,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.play){playSw(t.dataset.play);return}
   if(t.id==='random'){if(!confirm('지금 만든 디자인 대신 랜덤 조합을 만들까요?'))return;const pick=(bodyOnly)=>{const L=COLORS.filter(c=>!bodyOnly||(!c.only&&!c.nobody));return L[Math.floor(Math.random()*L.length)].id};const a=pick(),b2=pick();S.body=pick(true);S.btn=S.btn.map((_,i)=>Math.random()<.2?pick():((i+Math.floor(i/2))%2?a:b2));S.acc=Array(8).fill(null);render();status('랜덤 조합을 만들었습니다');return}
   if(t.id==='example'){if(!confirm('지금 만든 디자인을 지우고 초기 상태(화이트)로 돌아갈까요?'))return;const st=S.step,vw=S.view;S=structuredClone(EXAMPLE);S.step=st;S.view=vw;render();status('초기 상태(화이트)로 돌아왔습니다');return}
-  if(t.id==='reset'){if(!confirm('지금 만든 디자인을 지우고 처음부터 다시 시작할까요?'))return;const vw=S.view;S=structuredClone(EXAMPLE);S.step='body';S.view=vw;camS={...CAM0};setCam();render();status('처음부터 다시 시작합니다');return}
+  if(t.id==='reset'){if(!confirm('지금 만든 디자인을 지우고 처음부터 다시 시작할까요?'))return;const vw=S.view;S=structuredClone(EXAMPLE);S.step='body';S.view=vw;cancelAnimationFrame(camAnim);camS={...CAM0};setCam();render();status('처음부터 다시 시작합니다');return}
   if(t.id==='sum-toggle'){const d=$('#drawer');d.hidden=!d.hidden;t.setAttribute('aria-expanded',String(!d.hidden));if(!d.hidden)renderDrawer();return}
   if(t.id==='drawer-close'){$('#drawer').hidden=true;$('#sum-toggle').setAttribute('aria-expanded','false');return}
   if(t.id==='load'){loadCode();return}
