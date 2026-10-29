@@ -84,11 +84,11 @@ input[type=file]::file-selector-button{height:32px;border:1px solid var(--line2)
 /* 두 칸 배치 */
 .split{display:grid;grid-template-columns:310px minmax(0,1fr);gap:16px;align-items:start}
 #sidecol{position:sticky;top:72px;max-height:calc(100vh - 88px);display:flex;flex-direction:column;gap:12px}
-#side,#fin{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+#prod,#side,#fin{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 #side{flex:1 1 auto;min-height:140px;overflow:auto}
-#side h2,#fin h2{font-size:14px;font-weight:700;margin:0;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#prod h2,#side h2,#fin h2{font-size:14px;font-weight:700;margin:0;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 #side h2{background:var(--brand-soft);color:var(--brand-ink);border-bottom:1px solid var(--brand-line);position:sticky;top:0;z-index:2}
-#side h2 small,#fin h2 small{font-weight:500;color:var(--sub);font-size:12px}
+#prod h2 small,#side h2 small,#fin h2 small{font-weight:500;color:var(--sub);font-size:12px}
 #side table{width:100%;font-size:14px}
 #side th{position:sticky;top:43px;background:#f7faf8;font-weight:600;font-size:12px;color:var(--sub);z-index:1;border-bottom:1px solid var(--line)}
 #side td,#side th{padding:7px 8px}
@@ -102,6 +102,10 @@ input[type=file]::file-selector-button{height:32px;border:1px solid var(--line2)
 #side .part{color:var(--amber);background:var(--amberbg);font-weight:700;font-size:12px;padding:1px 6px;border-radius:6px}
 #side .no{color:#cbc3b8}
 #fin{flex:0 0 auto;font-size:14px}
+#prod{flex:0 0 auto;font-size:13px}#prod h2{background:#f4efe6;border-bottom:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0}
+#prod table{width:100%;margin:4px 0 6px}#prod th{font-size:11px;font-weight:600;color:var(--sub);padding:4px;text-align:right;white-space:nowrap}
+#prod td{padding:5px 4px;text-align:right;white-space:nowrap;border:0;background:none;font-variant-numeric:tabular-nums}#prod td:first-child,#prod th:first-child{text-align:left;padding-left:14px}#prod td:last-child,#prod th:last-child{padding-right:14px}
+#prod td.make{font-weight:700;color:var(--brand-ink)}#prod td.zero{color:var(--muted);font-weight:400}
 #fin h2{background:#f4efe6;border-bottom:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0}
 #fin h2 select{height:26px;font-size:12px;padding:0 4px;border-radius:6px}
 #fin table{width:100%;margin:4px 0}
@@ -223,7 +227,7 @@ td.low input{border-color:#e3a33b;background:var(--amberbg)}
     </section>
   </div>
   <div id="tab-orders" class="split">
-   <aside id="sidecol"><div id="side"></div><div id="fin"></div></aside>
+   <aside id="sidecol"><div id="prod"></div><div id="side"></div><div id="fin"></div></aside>
    <div class="maincol">
     <div class="bar">
       <input type="file" id="file" accept=".xlsx">
@@ -463,7 +467,7 @@ function setLocked(v) {
   const on = (document.querySelector('nav button.on') || {}).dataset?.tab || 'orders';
   for (const t of ['orders', 'inv', 'settings']) $('#tab-' + t).hidden = v || t !== on;
   // 잠글 때는 숨기기만 하지 않고 화면에 그려 둔 주문 내용도 지워요
-  if (v) ['#list', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
+  if (v) ['#list', '#prod', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
   else { lastActive = Date.now(); render(); }
 }
 function wipeLocal() {
@@ -471,7 +475,7 @@ function wipeLocal() {
   DB = emptyDB(); dirty = new Set(); snap = {}; tracking = false;
   for (const k in decCache) delete decCache[k];
   for (const k in pvCache) delete pvCache[k];
-  ['#list', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
+  ['#list', '#prod', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
 }
 
 async function cloudStart() {
@@ -930,11 +934,22 @@ function render() {
   const list = visible.filter(o => match(o, filter)).filter(o => !q || JSON.stringify(o.lines).toLowerCase().includes(q));
   $('#list').innerHTML = list.length ? list.map(orderHTML).join('')
     : `<div class="empty">${Object.keys(DB.orders).length ? '해당하는 주문이 없어요' : '스마트스토어에서 내려받은 주문 엑셀을 불러와 주세요'}</div>`;
+  renderProd(visible);
   renderSide(visible);
   renderFin(visible);
   fillPreviews();
 }
 
+// 제품별 수량: 취소 뺀 주문의 수량을 생산 대기(포장 전) · 발송 대기(포장 끝) · 완료(발송)로 나눠 세요
+const PRODUCTS = [['계산기', '계산기 클리커', p => /계산기/.test(p)], ['기본 초콜릿', '기본 초콜릿 클리커', p => /초콜릿 클리커/.test(p) && !/커스텀/.test(p)], ['커스텀 초콜릿', '커스텀 초콜릿 클리커', p => /커스텀/.test(p)]];
+function renderProd(gs) {
+  const rows = PRODUCTS.map(([name, full, test]) => {
+    const c = {all: 0, make: 0, ship: 0, done: 0};
+    for (const o of gs) for (const l of o.mains) if (test(l.product)) { c.all += l.qty; c[l.shipped ? 'done' : st(l).pack ? 'ship' : 'make'] += l.qty; }
+    return `<tr><td title="${full}">${name}</td>${['all', 'make', 'ship', 'done'].map(k => `<td class="${c[k] ? k : 'zero'}">${c[k]}</td>`).join('')}</tr>`;
+  }).join('');
+  $('#prod').innerHTML = gs.some(o => o.mains.length) ? `<h2>제품별 수량 <small>취소 제외</small></h2><table><tr><th>제품</th><th>전체</th><th>생산대기</th><th>발송대기</th><th>완료</th></tr>${rows}</table>` : '';
+}
 // 왼쪽 진행표: 주문자별로 조립·포장·발송이 어디까지 됐는지 (품목이 여러 개면 완료 수/전체 수)
 function renderSide(gs) {
   const live = gs.filter(o => !o.cancelled);
