@@ -769,25 +769,32 @@ function ckOf(d,K){let x=K.salt;for(let i=0;i<d.length;i++)x=(x+B32.indexOf(d[i]
 // 색 최대 13종·축 최대 14종까지 같은 규칙(현재 색 12·축 13 → 각 1종 여유). 목록은 뒤에만 추가할 것. 첫 글자에는 = + - @ 가 오지 않음(엑셀 수식 방지).
 const A7='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%()*,./:;?[]^_{|}~÷₩<>=+-@',A7S=61,K7={C:13,W:14,SK:['B','P','H','S','R']};
 function is7(v){return !!v&&[...v].every(c=>A7.indexOf(c)>=0)}
+// 확인 글자(2026-10-29~): 디자인 값 위(맨 앞자리 쪽)에 1 이상의 확인 값을 얹어요. 한 글자가 바뀌거나 빠지면 확인 값이 안 맞아 오류로 알려 줘요.
+// 확인 값이 0이면 확인 글자가 없던 10-23~10-28 코드라 예전처럼 읽어요. 범위는 20자 안에 들어가는 만큼(보통 4224가지, 버튼 8개가 모두 다른 조합은 7가지).
+const C7LIM=61n*65n**19n,C7MAX=4225n,C7P=2305843009213693951n;
+function room7(P){const m=C7LIM/P;return m>=C7MAX?C7MAX:m<2n?2n:m}
+function chk7(x,M){let h=(x%C7P*1000003n+7919n)%C7P;h=(h*h+104729n)%C7P;return 1n+h%(M-1n)}
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function code7(){const C=K7.C,W=K7.W,RA=2+3*(C+1),N=BigInt(A7.length),ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.findIndex(x=>x.id===id);
   const sa=S.shp.map((k,i)=>{const j=K7.SK.indexOf(k);if(j<2)return j;const a=SH[k].acc&&S.acc[i]?ci(S.acc[i])+1:0;return 2+(j-2)*(C+1)+a});
   const btn=S.btn.map(ci),sw=S.sw.map(si),uni=a=>a.every(x=>x===a[0]),u=[uni(btn),uni(sa),uni(sw)],f=[];
   [[btn,C,u[0]],[sa,RA,u[1]],[sw,W,u[2]]].forEach(([a,r,one])=>(one?[a[0]]:a).forEach(x=>f.push([x,r])));
   f.push([ci(S.body),C],[S.rim?RIMKEYS.indexOf(S.rim)+1:0,4],[S.logo?ci(S.logo)+1:0,C+1],...u.map(x=>[x?1:0,2]),[S.nomag?1:0,2]);
-  let n=0n;for(const[v,r]of f)n=n*BigInt(r)+BigInt(v);
+  let n=0n,P=1n;for(const[v,r]of f){n=n*BigInt(r)+BigInt(v);P*=BigInt(r)}
+  n+=chk7(n,room7(P))*P;
   let s='';do{s=A7[Number(n%N)]+s;n/=N}while(n>0n);
   while(s.length<4||A7.indexOf(s[0])>=A7S||s.startsWith('SD'))s='0'+s;return s}
 function decode7(v){if(!is7(v))return{err:'코드에 쓰이지 않는 글자가 있습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};
-  const C=K7.C,W=K7.W,RA=2+3*(C+1),N=BigInt(A7.length);let n=0n;for(const c of v)n=n*N+BigInt(A7.indexOf(c));
-  const pop=r=>{const x=Number(n%BigInt(r));n/=BigInt(r);return x};
+  const C=K7.C,W=K7.W,RA=2+3*(C+1),N=BigInt(A7.length);let n=0n,P=1n;for(const c of v)n=n*N+BigInt(A7.indexOf(c));
+  const n0=n,pop=r=>{const x=Number(n%BigInt(r));n/=BigInt(r);P*=BigInt(r);return x};
   const nm=pop(2),u2=pop(2),u1=pop(2),u0=pop(2),lg=pop(C+1),rm=pop(4),bd=pop(C);
   const take=(one,r)=>{const a=Array.from({length:one?1:8},()=>pop(r)).reverse();return a.length===1?Array(8).fill(a[0]):a};
   const sw=take(u2,W),sa=take(u1,RA),bt=take(u0,C);
-  if(n!==0n)return{err:'코드가 맞지 않습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};
+  const legacy=n===0n;
+  if(!legacy){const M=room7(P);if(n>=M||n!==chk7(n0%P,M))return{err:'코드 중 글자가 빠졌거나 바뀐 것 같습니다. 디자인 화면의 [주문코드 복사]로 다시 복사해 붙여 넣어 주세요'}}
   const shp=sa.map(x=>x<2?K7.SK[x]:K7.SK[2+Math.floor((x-2)/(C+1))]),ac=sa.map(x=>x<2?0:(x-2)%(C+1));
   if(!COLORS[bd]||COLORS[bd].only||(lg&&(!COLORS[lg-1]||COLORS[lg-1].only))||bt.some(i=>!COLORS[i])||sw.some(i=>!SW[i])||ac.some(i=>i&&!COLORS[i-1])||rm>RIMKEYS.length)return{err:'코드가 맞지 않습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};
-  return{st:{rim:rm?RIMKEYS[rm-1]:false,logo:lg?COLORS[lg-1].id:null,body:COLORS[bd].id,btn:bt.map(i=>COLORS[i].id),shp,tone:shp.map(k=>SH[k].acc?'2':'1'),acc:ac.map((i,j)=>i&&SH[shp[j]].acc?COLORS[i-1].id:null),sw:sw.map(i=>SW[i].id),nomag:nm===1}}}
+  return{st:{rim:rm?RIMKEYS[rm-1]:false,logo:lg?COLORS[lg-1].id:null,body:COLORS[bd].id,btn:bt.map(i=>COLORS[i].id),shp,tone:shp.map(k=>SH[k].acc?'2':'1'),acc:ac.map((i,j)=>i&&SH[shp[j]].acc?COLORS[i-1].id:null),sw:sw.map(i=>SW[i].id),nomag:nm===1},legacy}}
 function code(){return code7()}
 function codeSD(){const K=CK5,ci=id=>COLORS.findIndex(c=>c.id===id),si=id=>SW.findIndex(x=>x.id===id),hi=k=>K.h.indexOf(k==='T'?'H':k);
   const f=[[ci(S.body),K.c],[S.rim?(K.r?RIMKEYS.indexOf(S.rim)+1:(S.rim==='pk'?2:1)):0,K.r?RIMKEYS.length+1:3],[S.logo?ci(S.logo)+1:0,K.c+1]],uni=a=>a.every(x=>x===a[0]);
@@ -1006,7 +1013,7 @@ function runVerify(){
   let html;
   try{const cd=code(),n=twoCount();
     const typed=extractCode(normCode($('#v-in').value));
-    html=`<div class="v-ok">✓ 확인된 코드 <b>${escH(typed)}</b></div>${typed!==cd?`<div class="v-new">주문할 때는 아래 <b>새 코드</b>를 붙여 넣어 주세요. 예전 코드는 길어서 스마트스토어 입력란(20자)에서 잘릴 수 있어요.<div class="codebox"><span class="code">${escH(cd)}</span><button type="button" class="btn primary" data-copycode="${escH(cd)}">새 코드 복사</button></div></div>`:''}<div class="v-img"><img id="v-img" alt="이 코드로 제작될 클리커 미리보기"></div>
+    html=`<div class="v-ok">✓ 확인된 코드 <b>${escH(typed)}</b></div>${typed!==cd?`<div class="v-new">${r.legacy?'<b>확인 글자가 없는 예전 코드</b>(10월 28일까지 발급)로 읽었어요. 그 뒤에 받은 코드라면 글자가 바뀐 것이니 디자인 화면에서 다시 복사해 주세요. 디자인이 맞다면 주문할 때는 아래 <b>새 코드</b>를 붙여 넣어 주세요.':'주문할 때는 아래 <b>새 코드</b>를 붙여 넣어 주세요.'+(/^SD/.test(typed)?' 예전 코드는 길어서 스마트스토어 입력란(20자)에서 잘릴 수 있어요.':'')}<div class="codebox"><span class="code">${escH(cd)}</span><button type="button" class="btn primary" data-copycode="${escH(cd)}">새 코드 복사</button></div></div>`:''}<div class="v-img"><img id="v-img" alt="이 코드로 제작될 클리커 미리보기"></div>
     <dl class="summary">${summaryRows().replace(/<div class="row"><dt>금액<\/dt>[\s\S]*$/,'')}</dl>
     <div class="v-price"><span>결제 금액</span><b>${won(total())}원</b><em>${breakdown()}</em></div>${optN()?`<p class="heart-alert">${heartMsg()}</p>`:''}
     <details class="v-sheet"><summary>제작 시트 (버튼별 상세)</summary><table><thead><tr><th>#</th><th>모양</th><th>버튼 색</th><th>테두리·하트</th><th>축</th></tr></thead><tbody>${makerRows()}</tbody></table></details>

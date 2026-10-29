@@ -624,7 +624,7 @@ async function loadDecoder() {
       .replace(/<\/body>/i, `<script>
 window.__cat=()=>({colors:COLORS.map(c=>({id:c.id,name:c.name,hex:c.hex,only:c.only||null,nobody:!!c.nobody})),shapes:SHAPES.map(s=>({k:s.k,name:s.name,acc:!!s.acc})),sw:SW.map(s=>({id:s.id,name:swName(s.id),type:s.type,hex:s.hex})),rims:Object.entries(RIMS).map(([k,r])=>({k,name:r.name,hex:r.hex}))});
 window.__dec=raw=>{const r=parseCode(raw);const code=extractCode(raw);if(r.err)return{err:r.err,code};const keep=S;try{S={...structuredClone(S),...structuredClone(r.st),acc:r.st.acc?structuredClone(r.st.acc):Array(8).fill(null),step:'done',sel:0};
-return{code,body:S.body,rim:S.rim||null,logo:S.logo||null,nomag:!!S.nomag,btn:S.btn.map((id,i)=>({shp:S.shp[i],color:id,acc:SH[S.shp[i]].acc?accOf(i):null,sw:S.sw[i]})),price:total(),breakdown:breakdown().replace(/<[^>]+>/g,'')}}finally{S=keep}};
+return{code,legacy:!!r.legacy,body:S.body,rim:S.rim||null,logo:S.logo||null,nomag:!!S.nomag,btn:S.btn.map((id,i)=>({shp:S.shp[i],color:id,acc:SH[S.shp[i]].acc?accOf(i):null,sw:S.sw[i]})),price:total(),breakdown:breakdown().replace(/<[^>]+>/g,'')}}finally{S=keep}};
 window.__img=(raw,cb)=>{if(raw.startsWith('st:')){const v=JSON.parse(raw.slice(3));const keep=S;try{S={...structuredClone(S),rim:false,logo:null,nomag:false,body:v.body,btn:Array(8).fill(v.btn),shp:Array(8).fill(v.shp),tone:Array(8).fill('1'),acc:Array(8).fill(null),sw:Array(8).fill(v.sw||SW_DEF)};snapImage(v.label,cb)}finally{S=keep;draw(false)}return}
 const r=parseCode(raw);if(r.err)return cb(null);const keep=S;try{S={...structuredClone(S),...structuredClone(r.st)};snapImage(code(),cb)}finally{S=keep;draw(false)}};
 <\/script></body>`);
@@ -754,6 +754,10 @@ const isAddon = l => ['addShape', 'addRim'].includes(kindOf(l));
 const isCancel = l => l.status === '취소' || /취소/.test(l.claim || '');
 const rawCodeOf = l => { const o = String(l.option); return o.slice(o.indexOf(':') + 1).trim(); };
 const codeOf = l => DB.fixes[l.id] || rawCodeOf(l);
+// 확인 글자가 든 새 코드는 10/29부터 나가요. 그 뒤 주문인데 확인 글자 없는 예전 형식으로 읽히면
+// 새 코드가 잘못 복사돼 다른 디자인으로 읽혔을 수 있어요 ("디자인 맞음"을 누르면 더 묻지 않아요)
+const CHK_SINCE = new Date('2026-10-30T00:00:00+09:00');
+const oldFmtCheck = (l, d) => d.legacy && !DB.fixes[l.id] && new Date(l.at) >= CHK_SINCE;
 const STAGES = [['body', '본체출력'], ['btn', '버튼출력'], ['asm', '조립'], ['pack', '포장']];
 const stagesOf = l => kindOf(l) === 'custom' ? STAGES : [['asm', '생산'], ['pack', '포장']];
 const st = l => l.stages || (l.stages = {});
@@ -880,6 +884,7 @@ function issuesOf(o) {
   for (const l of customs) {
     const d = decode(codeOf(l));
     if (d.err) { out.push(`코드 오류: ${d.err}`); return out; }
+    if (oldFmtCheck(l, d)) out.push('예전 형식 코드: 잘못 복사됐을 수 있어요 (미리보기 확인)');
     d.btn.forEach(b => cnt[b.shp] !== undefined && (cnt[b.shp] += l.qty));
     if (d.rim) { cnt.rim += l.qty; rims.add(rimOf(d.rim).name); }
   }
@@ -1141,7 +1146,7 @@ function lineHTML(l) {
 function customHTML(l) {
   const raw = codeOf(l), d = decode(raw);
   if (!d) return `<div class="opt">코드 ${esc(raw)} · 해석기 준비 중</div>`;
-  const fixed = DB.fixes[l.id] ? `<div class="opt">스토어 기재 코드 ${esc(rawCodeOf(l))} → 보정 코드 사용 <button class="btn" style="padding:1px 8px;font-size:12px" data-unfix="${esc(l.id)}">되돌리기</button></div>` : '';
+  const fixed = DB.fixes[l.id] ? `<div class="opt">${DB.fixes[l.id] === rawCodeOf(l) ? '예전 형식 코드 · 디자인 확인함' : `스토어 기재 코드 ${esc(rawCodeOf(l))} → 보정 코드 사용`} <button class="btn" style="padding:1px 8px;font-size:12px" data-unfix="${esc(l.id)}">되돌리기</button></div>` : '';
   if (d.err) return `${fixed}<div class="opt">코드 <b>${esc(raw)}</b></div><div class="warnbox">${esc(d.err)} — 고객에게 받은 전체 코드를 넣어 주세요
     <div style="margin-top:6px;display:flex;gap:6px"><input data-fixin="${esc(l.id)}" placeholder="전체 코드" style="flex:1;border:1px solid var(--line);border-radius:5px;padding:5px"><button class="btn" data-fix="${esc(l.id)}">적용</button></div></div>`;
   const body = color(d.body);
@@ -1158,7 +1163,9 @@ function customHTML(l) {
   // 축 이름(딸기라떼·크림치즈 등)이 색 이름처럼 보여서, 버튼 색은 따로 세어 보여줘요
   const tally = {}, ctally = {};
   d.btn.forEach(b => { tally[b.sw] = (tally[b.sw] || 0) + 1; ctally[b.color] = (ctally[b.color] || 0) + 1; });
-  return `${fixed}<div class="opt">코드 <b>${esc(d.code)}</b> · ${Number(d.price).toLocaleString()}원</div>
+  const oldFmt = oldFmtCheck(l, d) ? `<div class="warnbox">확인 글자가 없는 예전 형식 코드예요 (10/28까지 발급). 그 뒤에 만든 코드라면 글자가 바뀌어 다른 디자인으로 읽혔을 수 있어요. 미리보기가 고객 디자인과 다르면 받은 전체 코드를 넣어 주세요
+    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><input data-fixin="${esc(l.id)}" placeholder="전체 코드" style="flex:1;min-width:120px;border:1px solid var(--line);border-radius:5px;padding:5px"><button class="btn" data-fix="${esc(l.id)}">적용</button><button class="btn" data-codeok="${esc(l.id)}">디자인 맞음</button></div></div>` : '';
+  return `${fixed}${oldFmt}<div class="opt">코드 <b>${esc(d.code)}</b> · ${Number(d.price).toLocaleString()}원</div>
     <div class="sheet">
       <img class="pv" data-pv="${esc(raw)}" alt="제작될 클리커 미리보기" title="누르면 크게 보기">
       <div class="spec">
@@ -1256,6 +1263,9 @@ document.addEventListener('click', e => {
     const d = DEC && DEC(v);
     if (d && d.err) { alert('이 코드도 해석되지 않아요: ' + d.err); return; }
     DB.fixes[t.dataset.fix] = v; save(); render();
+  } else if (t.dataset.codeok) {
+    const l = DB.orders[t.dataset.codeok];
+    if (l) { DB.fixes[l.id] = rawCodeOf(l); save(); render(); }
   } else if (t.dataset.unfix) {
     delete DB.fixes[t.dataset.unfix]; save(); render();
   }
