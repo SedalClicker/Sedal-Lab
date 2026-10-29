@@ -637,8 +637,10 @@ async function loadDecoder() {
 window.__cat=()=>({colors:COLORS.map(c=>({id:c.id,name:c.name,hex:c.hex,only:c.only||null,nobody:!!c.nobody})),shapes:SHAPES.map(s=>({k:s.k,name:s.name,acc:!!s.acc})),sw:SW.map(s=>({id:s.id,name:swName(s.id),type:s.type,hex:s.hex})),rims:Object.entries(RIMS).map(([k,r])=>({k,name:r.name,hex:r.hex}))});
 window.__dec=raw=>{const r=parseCode(raw);const code=extractCode(raw);if(r.err)return{err:r.err,code};const keep=S;try{S={...structuredClone(S),...structuredClone(r.st),acc:r.st.acc?structuredClone(r.st.acc):Array(8).fill(null),step:'done',sel:0};
 return{code,legacy:!!r.legacy,body:S.body,rim:S.rim||null,logo:S.logo||null,nomag:!!S.nomag,btn:S.btn.map((id,i)=>({shp:S.shp[i],color:id,acc:SH[S.shp[i]].acc?accOf(i):null,sw:S.sw[i]})),price:total(),breakdown:breakdown().replace(/<[^>]+>/g,'')}}finally{S=keep}};
-window.__img=(raw,cb)=>{if(raw.startsWith('st:')){const v=JSON.parse(raw.slice(3));const keep=S;try{S={...structuredClone(S),rim:false,logo:null,nomag:false,body:v.body,btn:Array(8).fill(v.btn),shp:Array(8).fill(v.shp),tone:Array(8).fill('1'),acc:Array(8).fill(null),sw:Array(8).fill(v.sw||SW_DEF)};snapImage(v.label,cb)}finally{S=keep;draw(false)}return}
-const r=parseCode(raw);if(r.err)return cb(null);const keep=S;try{S={...structuredClone(S),...structuredClone(r.st)};snapImage(code(),cb)}finally{S=keep;draw(false)}};
+// 주문 관리 미리보기는 로고가 있는 옆면(고리 반대편)이 보이게 반대쪽에서 찍어요
+const snapLogo=(label,cb)=>{const th=CAM0.th;CAM0.th=th+Math.PI;try{snapImage(label,cb)}finally{CAM0.th=th}};
+window.__img=(raw,cb)=>{if(raw.startsWith('st:')){const v=JSON.parse(raw.slice(3));const keep=S;try{S={...structuredClone(S),rim:false,logo:null,nomag:false,body:v.body,btn:Array(8).fill(v.btn),shp:Array(8).fill(v.shp),tone:Array(8).fill('1'),acc:Array(8).fill(null),sw:Array(8).fill(v.sw||SW_DEF)};snapLogo(v.label,cb)}finally{S=keep;draw(false)}return}
+const r=parseCode(raw);if(r.err)return cb(null);const keep=S;try{S={...structuredClone(S),...structuredClone(r.st)};snapLogo(code(),cb)}finally{S=keep;draw(false)}};
 <\/script></body>`);
     const fr = document.createElement('iframe');
     fr.style.cssText = 'position:absolute;width:400px;height:400px;left:-9999px;top:0;border:0';
