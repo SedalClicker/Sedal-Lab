@@ -1224,8 +1224,8 @@ function calcOf(l) {
 function calcSVG(v) {
   const P = v.pal || {body: '#D9D4CC', side: '#B5AEA4', tray: '#CCC6BD', key: '#E2DDD5', keySide: '#B9B2A8', acc: '#FFFFFF', bezel: null};
   const F = 'font-family="Noto Sans KR,Malgun Gothic,Apple SD Gothic Neo,sans-serif"';
-  const x0 = 30, y0 = 6, W = 164, H = 200, k = 42, g = 7, kx = x0 + 12, py = y0 + 11, ph = 28, ky = py + ph + 9;
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220"><rect width="400" height="220" fill="#fff"/>`;
+  const x0 = 30, y0 = 6, W = 164, H = 214, k = 42, g = 7, kx = x0 + 12, py = y0 + 11, ph = 42, ky = py + ph + 9;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 236"><rect width="400" height="236" fill="#fff"/>`;
   s += `<rect x="${x0}" y="${y0 + 6}" width="${W}" height="${H}" rx="24" fill="${P.side}"/><rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="24" fill="${P.body}"/>`;
   s += `<rect x="${x0 + 7}" y="${y0 + 7}" width="${W - 14}" height="${H - 14}" rx="18" fill="${P.tray}"/>`;
   // 위쪽 긴 연산 키
@@ -1233,7 +1233,7 @@ function calcSVG(v) {
   if (P.bezel) s += `<rect x="${kx - 3}" y="${py - 3}" width="${pw + 6}" height="${ph + 9}" rx="${(ph + 6) / 2}" fill="${P.bezel}"/>`;
   s += `<rect x="${kx}" y="${py + 3}" width="${pw}" height="${ph}" rx="${ph / 2}" fill="${P.keySide}"/><rect x="${kx}" y="${py}" width="${pw}" height="${ph}" rx="${ph / 2}" fill="${P.key}"/>`;
   s += `<rect x="${kx + 4}" y="${py + 4}" width="${pw - 8}" height="${ph - 8}" rx="${(ph - 8) / 2}" fill="none" stroke="${P.keySide}" stroke-width="3"/><rect x="${kx + 4}" y="${py + 4}" width="${pw - 8}" height="${ph - 8}" rx="${(ph - 8) / 2}" fill="none" stroke="${P.acc}" stroke-width="1.6"/>`;
-  ['+', '−', '×', '÷'].forEach((c, i) => s += `<text x="${kx + pw * (i + 1) / 5}" y="${py + ph / 2 + 5}" text-anchor="middle" font-size="15" font-weight="700" fill="${P.acc}" stroke="${P.keySide}" stroke-width="1.4" paint-order="stroke" ${F}>${c}</text>`);
+  ['+', '−', '×', '÷'].forEach((c, i) => s += `<text x="${kx + pw * (i + 1) / 5}" y="${py + ph / 2 + 6.5}" text-anchor="middle" font-size="19" font-weight="700" fill="${P.acc}" stroke="${P.keySide}" stroke-width="1.6" paint-order="stroke" ${F}>${c}</text>`);
   // 하트 장식
   const hx = x0 + W - 8, hy = ky - 3;
   s += `<path d="M${hx} ${hy + 3.2} l-3.4 -3.3 a2 2 0 0 1 3.4 -2.4 a2 2 0 0 1 3.4 2.4 z" fill="${P.acc}" stroke="${P.keySide}" stroke-width=".6"/>`;
@@ -1245,10 +1245,10 @@ function calcSVG(v) {
     s += `<text x="${x + k / 2}" y="${y + k / 2 + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="${P.acc}" stroke="${P.keySide}" stroke-width="1.4" paint-order="stroke" ${F}>${r * 3 + c + 1}</text>`;
   }
   // 오른쪽: 컬러와 열별 스위치 축
-  s += `<text x="222" y="36" font-size="15" font-weight="700" fill="#2b2621" ${F}>미니 계산기</text>`;
-  s += `<circle cx="229" cy="55" r="6" fill="${P.body}" stroke="#8a8178" stroke-width=".8"/><text x="241" y="60" font-size="13" fill="#2b2621" ${F}>컬러 ${esc(v.color || '?')}</text>`;
+  s += `<text x="222" y="42" font-size="15" font-weight="700" fill="#2b2621" ${F}>미니 계산기</text>`;
+  s += `<circle cx="229" cy="61" r="6" fill="${P.body}" stroke="#8a8178" stroke-width=".8"/><text x="241" y="66" font-size="13" fill="#2b2621" ${F}>컬러 ${esc(v.color || '?')}</text>`;
   v.cols.forEach((c, i) => {
-    const y = 88 + i * 40, sw = c.sw && swOf(c.sw);
+    const y = 96 + i * 42, sw = c.sw && swOf(c.sw);
     s += `<rect x="222" y="${y}" width="22" height="22" rx="5" fill="#fff" stroke="#c9c1b8"/>`;
     s += sw ? `<rect x="231.5" y="${y + 4}" width="3" height="14" rx="1" fill="${sw.hex}" stroke="#555" stroke-width=".4"/><rect x="226" y="${y + 9.5}" width="14" height="3" rx="1" fill="${sw.hex}" stroke="#555" stroke-width=".4"/>`
       : `<text x="233" y="${y + 16}" text-anchor="middle" font-size="13" font-weight="700" fill="#c0392b" ${F}>?</text>`;
