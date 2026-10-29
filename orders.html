@@ -139,6 +139,12 @@ input[type=file]::file-selector-button{height:32px;border:1px solid var(--line2)
 .line .opt{color:var(--sub);font-size:13.5px;word-break:break-all;margin-top:2px}
 .line.addon{padding-top:7px;padding-bottom:7px;background:var(--soft)}
 .line.addon .pname{font-weight:500;font-size:13.5px;color:var(--sub)}
+/* 취소된 줄: 줄무늬 바탕 + 취소선, 그림·체크 없이 한 줄로 */
+.line.cancelled{padding-top:8px;padding-bottom:8px;align-items:center;background:repeating-linear-gradient(-45deg,#faf8f5 0 8px,#f1ede7 8px 10px)}
+.line.cancelled .info{min-width:0}
+.line.cancelled .pname,.line.cancelled .qty,.line.cancelled .opt{text-decoration:line-through;color:var(--muted)}
+.line.cancelled .pname{font-weight:500;font-size:13.5px}
+.line.cancelled .opt{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* 단계 체크 (본체출력·버튼출력·조립·포장·발송) */
 .stages{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -1163,7 +1169,11 @@ const fmtDay = s => { const d = new Date(s); return isNaN(d) ? '' : `${d.getMont
 const fmtAt = s => { if (!s) return ''; const d = new Date(s); return isNaN(d) ? s : `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 
 function orderHTML(o) {
-  const st = [...new Set(o.lines.map(l => l.status))].map(s => `<span class="badge ${SHIPPED_STATES.includes(s) ? 'ok' : s === '취소' ? 'warn' : ''}">${esc(s)}</span>`).join(' ');
+  // 상태 배지는 살아 있는 줄 기준. 일부 줄만 취소됐으면 '일부 취소' 하나로 알려요 (취소된 줄은 카드 맨 아래 줄무늬로)
+  const nCancel = o.lines.length - o.live.length;
+  const st = o.cancelled ? '<span class="badge warn">취소</span>'
+    : [...new Set(o.live.map(l => l.status))].map(s => `<span class="badge ${SHIPPED_STATES.includes(s) ? 'ok' : ''}">${esc(s)}</span>`).join(' ')
+      + (nCancel ? ` <span class="badge warn" title="이 주문에서 ${nCancel}줄이 취소됐어요 (카드 맨 아래)">일부 취소</span>` : '');
   const who = o.receiver && o.receiver !== o.buyer ? `${esc(o.buyer)} <span class="meta">(받는 분 ${esc(o.receiver)})</span>` : esc(o.buyer || o.receiver);
   return `<div class="order ${o.cancelled ? 'cancel' : ''}" id="o-${esc(o.no)}" style="scroll-margin-top:62px">
     <div class="ohead">
@@ -1176,14 +1186,24 @@ function orderHTML(o) {
         <label class="check ${o.resolved ? 'done' : ''}"><input type="checkbox" data-fu="${esc(o.no)}" data-kind="done" ${o.resolved ? 'checked' : ''}> 해결${o.resolved ? ' ' + fmtDay(o.fu.done) : ''}</label>` : ''}
       ${o.cancelled ? '' : `<label class="check ${o.shipped ? 'done' : ''}"><input type="checkbox" data-ship="${esc(o.no)}" ${o.shipped ? 'checked' : ''}> 발송 완료</label>`}</span>
     </div>
-    ${o.lines.map(lineHTML).join('')}
+    ${[...o.live, ...o.lines.filter(isCancel)].map(lineHTML).join('')}
   </div>`;
 }
 
 function lineHTML(l) {
-  const k = kindOf(l), cancel = isCancel(l);
+  const k = kindOf(l);
+  if (isCancel(l)) {
+    // 취소된 줄: 그림·단계 체크 없이 한 줄로 접고 글자에 줄을 그어, 만들 제품과 헷갈리지 않게 해요
+    return `<div class="line cancelled">
+    <div class="info">
+      <div><span class="badge warn">취소 · 제작 안 함</span> <span class="pname">${isAddon(l) ? '+ ' + esc(l.option) : esc(l.product)}</span> <span class="qty">× ${esc(l.qty)}</span></div>
+      ${isAddon(l) ? '' : `<div class="opt">${esc(l.option)}</div>`}
+    </div>
+    ${madeButCancelled(l) ? `<button class="btn" data-restore="${esc(l.id)}">재고 되돌리기</button>` : ''}
+  </div>`;
+  }
   if (isAddon(l)) {
-    return `<div class="line addon"><div class="info"><span class="pname">+ ${esc(l.option)}</span> × ${esc(l.qty)} ${cancel ? '<span class="badge warn">취소</span>' : ''}</div></div>`;
+    return `<div class="line addon"><div class="info"><span class="pname">+ ${esc(l.option)}</span> × ${esc(l.qty)}</div></div>`;
   }
   let body = '';
   if (k === 'custom') body = customHTML(l);
@@ -1194,10 +1214,10 @@ function lineHTML(l) {
   const note = rc.err ? `<span class="badge warn">재고 차감 불가: ${esc(rc.err)}</span>` : rc.none ? '<span class="badge">재고 차감 없음</span>' : '';
   return `<div class="line">
     <div class="info">
-      <div><span class="pname">${esc(l.product)}</span> × ${esc(l.qty)} ${cancel ? '<span class="badge warn">취소</span>' : ''} ${note} ${l.imported ? '<span class="badge">불러올 때 이미 발송됨</span>' : ''}</div>
+      <div><span class="pname">${esc(l.product)}</span> × ${esc(l.qty)} ${note} ${l.imported ? '<span class="badge">불러올 때 이미 발송됨</span>' : ''}</div>
       ${body}
     </div>
-    ${cancel ? (madeButCancelled(l) ? `<button class="btn" data-restore="${esc(l.id)}">재고 되돌리기</button>` : '') : `<div class="stages">${stagesOf(l).map(([k, n]) => `<label class="check ${st(l)[k] ? 'done' : ''}"><input type="checkbox" data-line="${esc(l.id)}" data-stage="${k}" ${st(l)[k] ? 'checked' : ''}> ${n}</label>`).join('')}</div>`}
+    <div class="stages">${stagesOf(l).map(([k, n]) => `<label class="check ${st(l)[k] ? 'done' : ''}"><input type="checkbox" data-line="${esc(l.id)}" data-stage="${k}" ${st(l)[k] ? 'checked' : ''}> ${n}</label>`).join('')}</div>
   </div>`;
 }
 
