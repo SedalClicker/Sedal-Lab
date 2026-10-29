@@ -566,11 +566,11 @@ function drawView(v,forExport){
     f+=band(v,FoT,FiT,rf,rs,LW)+`</g>`;o+=f}
   // caps sorted far->near
   const idx=[0,1,2,3,4,5,6,7].sort((a,b2)=>v.cam.dp([...worldCap(b2),0])-v.cam.dp([...worldCap(a),0]));
-  const up=[];let selTop='';const SELST=window.SELSTYLE||'lift',anySel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn'&&S.step!=='sw';  // 스위치 축 단계에서는 버튼 색을 봐야 해서 나머지 버튼을 흐리게 하지 않아요
+  const up=[];let selTop='';const SELST=window.SELSTYLE||'lift',anySel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn'&&S.step!=='sw'&&S.step!=='code';  // 스위치 축 단계(버튼 색 확인)와 마지막 주문 코드 단계(완성 모습)에서는 나머지 버튼을 흐리게 하지 않아요
   const SELC='#D6432F',selOut=(A,B)=>hullPoly(v,A,B,'none',SELC,1.1);
   const frost=(A,B)=>hullPoly(v,A,B,`rgba(255,255,255,${SELST==='spot'?0.62:0.5})`,'none',0);
   const selTag=(px,py,n)=>`<g class="sel-tag" pointer-events="none"><rect x="${(px-5.2).toFixed(2)}" y="${(py-3.6).toFixed(2)}" width="10.4" height="7.2" rx="3.6" fill="${SELC}"/><text x="${px.toFixed(2)}" y="${(py+1.75).toFixed(2)}" text-anchor="middle" font-size="4.6" font-weight="700" fill="#fff" font-family="Montserrat,sans-serif">${n}</text></g>`;
-  for(const i of idx){const[x,y]=worldCap(i),id=dispBtn(i),f=fillOf(id),st=strokeOf(id),sel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn'&&S.sel===i;
+  for(const i of idx){const[x,y]=worldCap(i),id=dispBtn(i),f=fillOf(id),st=strokeOf(id),sel=!forExport&&!window.SEDAL_VIEW&&S.part==='btn'&&S.step!=='code'&&S.sel===i;
     const lift=sel&&v.taper&&SELST==='lift';let upper=(lift?hullPoly(v,rr(x,y,M.capW,M.capW,M.capR,fz-0.4),rr(x,y,M.capW+1.2,M.capW+1.2,M.capR,fz-0.4),'rgba(40,24,14,.28)','none',0):'')+`<g data-i="${i}" style="cursor:pointer"${lift?' transform="translate(0,-3.2)"':''}>`;
     if(v.taper){
       // cap rises from the bed: full width through the recess, then a convex taper to the smaller top face
@@ -913,8 +913,8 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
   $('#prev').disabled=i===0;const nx=$('#next');nx.textContent=i===STEPS.length-1?'주문코드 복사':'다음';
 }
 function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():setOn()?`단색 세트 할인 (기본 ${won(PRICE.base)}원 → ${won(PRICE.SET)}원)`:'기본가 · 옵션 추가금 없음'}
-function renderChip(){const id=S.step==='shape'?'iv':curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
-  pill.querySelector('span').textContent=S.step==='body'?`본체 · ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
+function renderChip(){const id=S.step==='shape'?'iv':S.step==='code'?S.body:curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
+  pill.querySelector('span').textContent=S.step==='body'?`본체 · ${C[id].name}`:S.step==='code'?`완성 모습 · 본체 ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
 function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code();$('#drawer [data-order]').textContent=orderLabel();$('#drawer-card-help').innerHTML=altCheaper()?'기본 상품 주문서의 <b>[판매자 요청사항]</b>란에 붙여 넣어 주세요.':'주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.'}
 function render(){normTone();syncPart();{const sg=$('#stage');if(sg)sg.classList.toggle('btn-step',S.part==='btn'&&!VIEW)}draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
 
