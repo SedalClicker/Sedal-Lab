@@ -1,7 +1,10 @@
 <!doctype html>
+<!-- © 2026 새달랩(SE:DAL). 이 페이지의 디자인·코드·주문 코드 체계는 새달랩의 저작물입니다. 무단 복제·배포를 금지합니다. 원본: https://sedalclicker.github.io/Sedal-Lab/ -->
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<meta name="author" content="새달랩(SE:DAL)">
+<meta name="copyright" content="© 2026 새달랩(SE:DAL). All rights reserved.">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F0EBE3">
 <meta name="description" content="새달랩(SE:DAL) 초콜릿 클리커 커스텀 · 본체, 버튼, 스위치 축을 골라 나만의 클리커를 만들어 보세요.">
@@ -337,9 +340,11 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
   .price strong{font-size:16px}
 }
 
+.site-foot{padding:14px 20px 18px;text-align:center;font-size:11px;color:#9A9086;letter-spacing:.2px}
 </style>
 
 <script data-goatcounter="https://sedallab.goatcounter.com/count" async src="gc-count.js"></script>
+<script>/* 원본 표시: 새달랩 주소가 아닌 곳에서 열리면 구석에 출처를 적어요 */(()=>{const o='oi.buhtig.rekcilclades'.split('').reverse().join(''),h=location.hostname;if([o,'localhost','127.0.0.1',''].includes(h))return;addEventListener('DOMContentLoaded',()=>{if(document.getElementById('sdl-mark'))return;const a=document.createElement('a');a.id='sdl-mark';a.href='https://'+o+'/Sedal-Lab/';a.textContent='@sedal.lab';a.title='이 페이지의 원본은 새달랩(SE:DAL)입니다';a.style.cssText='position:fixed;right:10px;bottom:10px;z-index:2147483647;font:700 12px/1 sans-serif;color:#fff;background:rgba(0,0,0,.6);padding:7px 11px;border-radius:99px;text-decoration:none';document.body.appendChild(a);document.title+=' · @sedal.lab'})})();</script>
 </head>
 <body>
 <div class="app">
@@ -385,6 +390,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
       <div class="panel-nav"><button class="btn" id="prev" type="button">이전</button><button class="btn primary" id="next" type="button">다음</button></div>
     </aside>
   </main>
+  <footer class="site-foot">© 2026 새달랩(SE:DAL) · 디자인·코드 무단 복제·배포 금지</footer>
 </div>
 
 <div class="drawer" id="drawer" hidden>
@@ -1041,6 +1047,8 @@ setCam();render();
 try{const hm=(location.hash||'').match(/(?:^#|&)c=([^&]+)/);if(hm){if(VIEW){vwInput=decodeURIComponent(hm[1]);viewLoad(false)}else openVerify(decodeURIComponent(hm[1]))}}catch(e){}
 stage.classList.add('hint');setTimeout(()=>stage.classList.remove('hint'),2600);
 let rzT;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(S.step==='sw')draw(false)},150)});
+// 출처 표시 (새달랩 주소 밖에서만 보여요)
+{const H=String.fromCharCode(115,101,100,97,108,99,108,105,99,107,101,114,46,103,105,116,104,117,98,46,105,111),hn=location.hostname;if(hn&&hn!==H&&hn!=='localhost'&&hn!=='127.0.0.1'&&!document.getElementById('sdl-mark')){const m=document.createElement('a');m.id='sdl-mark';m.href='https://'+H+'/Sedal-Lab/';m.textContent='@sedal.lab';m.title='이 페이지의 원본은 새달랩(SE:DAL)입니다';m.style.cssText='position:fixed;right:10px;bottom:10px;z-index:2147483647;font:700 12px/1 sans-serif;color:#fff;background:rgba(0,0,0,.6);padding:7px 11px;border-radius:99px;text-decoration:none';document.body.appendChild(m)}}
 </script>
 
 <script>if('serviceWorker' in navigator){const had=!!navigator.serviceWorker.controller;let rl=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=true;location.reload()}});addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}))}</script>
