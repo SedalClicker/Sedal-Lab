@@ -48,6 +48,8 @@ header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.3px}
 #sync::before{content:"";width:7px;height:7px;border-radius:50%;background:#a9a097}
 #sync.ok{color:#bfe7cc}#sync.ok::before{background:#4cc27a}
 #sync.warn{color:#ffc9c4}#sync.warn::before{background:#ff6b5e}
+#bk{font-size:12px;color:#ffd9a8;border:1px solid rgba(255,217,168,.35);background:rgba(255,255,255,.06);border-radius:99px;padding:3px 10px;cursor:pointer}
+#bk:empty{display:none}#bk:hover{background:rgba(255,255,255,.14)}
 nav{display:flex;gap:2px;margin-left:auto;background:rgba(255,255,255,.08);padding:3px;border-radius:10px}
 nav button{background:transparent;color:#d6cec4;border:0;padding:6px 16px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer}
 nav button:hover{color:#fff}
@@ -221,6 +223,7 @@ td.low input{border-color:#e3a33b;background:var(--amberbg)}
 <header>
   <h1>SE:DAL 주문 관리</h1>
   <span id="sync"></span>
+  <button id="bk" title="백업 파일을 내려받은 지 오래됐어요. 누르면 설정 탭으로 가요"></button>
   <nav>
     <button data-tab="orders" class="on">주문</button>
     <button data-tab="inv">재고</button>
@@ -306,7 +309,8 @@ td.low input{border-color:#e3a33b;background:var(--amberbg)}
   </div>
 </main>
 <script>
-const CHECK_URL = 'https://sedalclicker.github.io/Sedal-Lab/check.html';
+// 로컬(localhost)에서 시험할 때는 같은 폴더의 check.html 을 써요
+const CHECK_URL = location.hostname === 'localhost' ? location.origin + '/check.html' : 'https://sedalclicker.github.io/Sedal-Lab/check.html';
 const STORE_KEY = 'sedal-orders-v1';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -479,7 +483,7 @@ function setLocked(v) {
   const on = (document.querySelector('nav button.on') || {}).dataset?.tab || 'orders';
   for (const t of ['orders', 'inv', 'settings']) $('#tab-' + t).hidden = v || t !== on;
   // 잠글 때는 숨기기만 하지 않고 화면에 그려 둔 주문 내용도 지워요
-  if (v) ['#list', '#prod', '#batch', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
+  if (v) ['#list', '#prod', '#batch', '#side', '#fin', '#tab-inv', '#bk'].forEach(s => $(s).innerHTML = '');
   else { lastActive = Date.now(); render(); }
 }
 function wipeLocal() {
@@ -488,7 +492,7 @@ function wipeLocal() {
   for (const k in decCache) delete decCache[k];
   for (const k in pvCache) delete pvCache[k];
   pvClear();
-  ['#list', '#prod', '#batch', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
+  ['#list', '#prod', '#batch', '#side', '#fin', '#tab-inv', '#bk'].forEach(s => $(s).innerHTML = '');
 }
 
 async function cloudStart() {
@@ -629,7 +633,7 @@ $('#lk-reset').onclick = () => { if (confirm('연결 정보와 이 기기에 저
 // 다른 기기에서 바꾼 내용을 화면으로 돌아올 때 다시 받아요 (실시간 연결이 끊겼을 때 대비)
 document.addEventListener('visibilitychange', () => { if (!document.hidden && cloudReady) pull().catch(console.error); });
 
-// ---- 커스텀 코드 해석기 (check.html 을 숨은 iframe 으로 불러와 그 함수를 그대로 사용) ----
+// ---- 커스텀 코드 해석기 (check.html 을 숨은 iframe 으로 불러와 그 공개 함수 window.SEDAL 을 사용) ----
 let DEC = null, CAT = null;
 // 고객이 쓴 코드를 키로 쓰므로 "constructor" 같은 글자가 와도 깨지지 않게 프로토타입 없는 객체를 써요
 const decCache = Object.create(null);
@@ -637,6 +641,7 @@ async function loadDecoder() {
   $('#dec-msg').textContent = '커스텀 코드 해석기를 불러오는 중…';
   try {
     let html = await (await fetch(CHECK_URL, {cache: 'no-cache'})).text();
+    // 아래 끼워 넣는 함수는 check.html 이 공개 함수(SEDAL) 없는 예전 버전으로 캐시돼 있을 때만 쓰는 대비책이에요
     html = html.replace(/<script[^>]*data-goatcounter[^>]*><\/script>/gi, '')   // 방문자 통계는 주문 페이지에서 보내지 않아요
       .replace(/<head>/i, `<head><base href="${CHECK_URL}">`)
       .replace(/<\/body>/i, `<script>
@@ -653,9 +658,10 @@ const r=parseCode(raw);if(r.err)return cb(null);const keep=S;try{S={...structure
     fr.setAttribute('aria-hidden', 'true');
     document.body.appendChild(fr);
     await new Promise((ok, bad) => { fr.onload = ok; fr.onerror = bad; fr.srcdoc = html; });
-    DEC = fr.contentWindow.__dec;
-    CAT = fr.contentWindow.__cat();
-    window.__imgFn = fr.contentWindow.__img;
+    const api = fr.contentWindow.SEDAL;
+    DEC = api ? api.dec : fr.contentWindow.__dec;
+    CAT = api ? api.cat() : fr.contentWindow.__cat();
+    window.__imgFn = api ? (raw, cb) => api.img(raw, cb, true) : fr.contentWindow.__img;   // 주문 관리는 로고가 보이는 쪽에서 찍어요
     if (!DEC || !CAT) throw new Error('해석 함수를 찾지 못했어요');
     $('#dec-msg').textContent = '';
   } catch (e) {
@@ -975,7 +981,15 @@ function issuesOf(o) {
 }
 
 // ---- 화면: 주문 ----
-let filter = 'make';
+let filter = 'make', listKey = '', shown = 50;
+const PAGE = 50;
+// 백업한 지 30일이 지났거나(또는 한 번도 안 했거나) 주문이 있으면 머리줄에 알려줘요. 백업을 내려받으면 사라져요
+const BACKUP_AT = 'sedal-orders-backup-at';
+function renderBackupNag() {
+  const at = localStorage.getItem(BACKUP_AT), days = at ? Math.floor((Date.now() - Date.parse(at)) / 864e5) : null;
+  const need = Object.keys(DB.orders).length > 0 && (days === null || days >= 30);
+  $('#bk').textContent = need ? `백업 ${days === null ? '안 함' : days + '일 전'}` : '';
+}
 const FILTERS = [['make', '생산 대기'], ['ship', '발송 대기'], ['issue', '확인 필요'], ['done', '완료'], ['all', '전체']];
 function render() {
   if (LOCKED) return;
@@ -988,8 +1002,13 @@ function render() {
   const count = f => visible.filter(o => match(o, f)).length;
   $('#filters').innerHTML = FILTERS.map(([k, n]) => `<button data-f="${k}" class="${filter === k ? 'on' : ''}">${n}<b>${count(k)}</b></button>`).join('');
   const list = visible.filter(o => match(o, filter)).filter(o => !q || searchText(o).includes(q));
-  $('#list').innerHTML = list.length ? list.map(orderHTML).join('')
-    : `<div class="empty">${Object.keys(DB.orders).length ? '해당하는 주문이 없어요' : '스마트스토어에서 내려받은 주문 엑셀을 불러와 주세요'}</div>`;
+  // 완료·전체처럼 긴 목록은 PAGE 건씩 보여주고 "더 보기"로 늘려요 (탭이나 검색어가 바뀌면 처음부터)
+  const lk = filter + '|' + q;
+  if (lk !== listKey) { listKey = lk; shown = PAGE; }
+  $('#list').innerHTML = (list.length ? list.slice(0, shown).map(orderHTML).join('')
+    : `<div class="empty">${Object.keys(DB.orders).length ? '해당하는 주문이 없어요' : '스마트스토어에서 내려받은 주문 엑셀을 불러와 주세요'}</div>`)
+    + (list.length > shown ? `<div class="empty" style="padding:14px 0 24px"><button class="btn" id="more">더 보기 (${list.length - shown}건 남음)</button></div>` : '');
+  renderBackupNag();
   renderProd(visible);
   renderBatch(visible);
   renderSide(visible);
@@ -1276,7 +1295,8 @@ $('#side').onclick = e => {
   if (!tr) return;
   const no = tr.dataset.goto;
   let el = document.getElementById('o-' + no);
-  if (!el) { filter = 'all'; $('#q').value = ''; render(); el = document.getElementById('o-' + no); }
+  // 다른 탭에 있거나 "더 보기" 뒤에 숨은 주문이면 전체 탭을 끝까지 펼쳐서 찾아요
+  if (!el) { filter = 'all'; $('#q').value = ''; listKey = 'all|'; shown = 1e9; render(); el = document.getElementById('o-' + no); }
   if (!el) return;
   // 누른 주문자를 바로 표시하고, 부드럽게 내려가는 동안에는 다른 주문으로 바뀌지 않게 잠깐 고정해요
   curNo = no; curHold = Date.now() + 1000; markCur(false);
@@ -1588,6 +1608,8 @@ document.addEventListener('change', e => {
 document.addEventListener('click', e => {
   const t = e.target;
   if (t.classList.contains('pv')) t.classList.toggle('big');
+  else if (t.id === 'more') { shown += PAGE; render(); }
+  else if (t.id === 'bk') $('nav button[data-tab="settings"]').click();
   else if (t.dataset.batch) {
     const [kind, id] = t.dataset.batch.split(':');
     if (!confirm(`${color(id).name} ${kind === 'body' ? '본체' : '버튼'}을 다 출력했나요? 이 색이 든 출력 전 주문을 모두 ${kind === 'body' ? '본체출력' : '버튼출력'} 완료로 체크해요.`)) return;
@@ -1763,6 +1785,8 @@ $('#backup').onclick = () => {
   a.href = URL.createObjectURL(new Blob([JSON.stringify(DB)], {type: 'application/json'}));
   a.download = `sedal-orders-backup-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
+  localStorage.setItem(BACKUP_AT, new Date().toISOString());
+  renderBackupNag();
 };
 $('#restore').onchange = async e => {
   try {
