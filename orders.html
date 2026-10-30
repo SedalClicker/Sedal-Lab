@@ -1376,9 +1376,26 @@ function fillPreviews() {
   if (!next) return;
   pvBusy = true;
   const raw = next.dataset.pv;
+  const done = url => { pvCache[raw] = url || ''; pvBusy = false; fillPreviews(); };
+  const d = !raw.startsWith('st:') && decode(raw);
   try {
-    window.__imgFn(raw, url => { pvCache[raw] = url || ''; pvBusy = false; fillPreviews(); });
+    window.__imgFn(raw, url => url && d && d.nomag ? tagNomag(url, done) : done(url));
   } catch (e) { pvCache[raw] = ''; pvBusy = false; console.error(e); }
+}
+// 자석 없음 주문은 미리보기 왼쪽 위에 빨간 글씨로 적어요
+function tagNomag(url, cb) {
+  const im = new Image();
+  im.onload = () => {
+    const c = document.createElement('canvas'), g = c.getContext('2d');
+    c.width = im.width; c.height = im.height;
+    g.drawImage(im, 0, 0);
+    g.fillStyle = '#B42318'; g.textBaseline = 'top';
+    g.font = `700 ${Math.round(im.height * 0.085)}px "Noto Sans KR", sans-serif`;
+    g.fillText('자석 없음', Math.round(im.width * 0.03), Math.round(im.height * 0.05));
+    cb(c.toDataURL('image/png'));
+  };
+  im.onerror = () => cb(url);
+  im.src = url;
 }
 
 document.addEventListener('change', e => {
