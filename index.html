@@ -8,6 +8,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F0EBE3">
 <meta name="description" content="새달랩(SE:DAL) 초콜릿 클리커 커스텀 · 본체, 버튼, 스위치 축을 골라 나만의 클리커를 만들어 보세요.">
+<!-- 카카오톡·인스타 등에 링크를 보낼 때 나오는 미리보기 카드 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="새달랩 SE:DAL">
+<meta property="og:title" content="새달랩 초콜릿 클리커 커스텀">
+<meta property="og:description" content="본체, 버튼, 스위치 축을 골라 나만의 초콜릿 클리커를 만들어 보세요.">
+<meta property="og:url" content="https://sedalclicker.github.io/Sedal-Lab/">
+<meta property="og:image" content="https://sedalclicker.github.io/Sedal-Lab/icons/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -81,7 +91,8 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .price strong{font-size:clamp(22px,2.2vw,26px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
 .price strong small{font-size:14px;font-weight:500;margin-left:2px}
 .price em{display:block;font-style:normal;font-size:12px;color:var(--ink-3);max-width:230px;margin-left:auto;margin-top:2px}
-.stage{position:relative;flex:1;min-height:300px;background:var(--stage);border-radius:6px;display:grid;place-items:center;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+/* touch-action:pan-y — 휴대폰에서 미리보기 위에 손가락을 대고 위아래로 끌면 페이지가 스크롤되고, 좌우로 끌면 모형이 돌아가요 */
+.stage{position:relative;flex:1;min-height:300px;background:var(--stage);border-radius:6px;display:grid;place-items:center;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .stage .floor{position:absolute;left:50%;top:67%;width:78%;max-width:620px;aspect-ratio:3.4/1;transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid #D9D2CA;pointer-events:none}
 .stage .floor::after{content:"360°";position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);font-family:var(--wordmark);font-weight:700;font-size:14px;color:#8E8680;letter-spacing:.06em}
 .stage .view{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%);width:min(84%,700px);height:78%;z-index:1;cursor:grab}
@@ -863,7 +874,7 @@ function renderViewPanel(){const n=twoCount();
   <dl class="summary">${summaryRows().replace(/<div class="row"><dt>금액<\/dt>[\s\S]*$/,'')}</dl>
   <div class="v-price"><span>결제 금액</span><b>${won(total())}원</b><em>${breakdown()}</em></div>${optN()?`<p class="heart-alert">${heartMsg()}</p>`:''}
   <details class="v-sheet"><summary>제작 시트 (버튼별 상세)</summary><table><thead><tr><th>#</th><th>모양</th><th>버튼 색</th><th>테두리·하트</th><th>축</th></tr></thead><tbody>${makerRows()}</tbody></table></details>
-  <div class="load"><button type="button" class="btn" id="img">이미지로 저장</button></div>`}
+  <div class="load"><button type="button" class="btn" id="img">이미지로 저장</button><button type="button" class="btn" id="share">디자인 링크 공유</button></div>`}
   else h+=`<p class="help">예: 8F9Y:MK]U*!%XBB · 코드는 커스텀 페이지의 마지막 단계(주문 코드)에서 확인할 수 있습니다.</p>`;
   $('#panel-body').innerHTML=h}
 function viewLoad(useInput=true){const el=$('#vw-code');if(useInput&&el)vwInput=el.value.trim();const r=parseCode(vwInput);if(r.err){status(r.err);return}Object.assign(S,structuredClone(r.st));S.step='code';vwLoaded=true;vwInput=code();vwImg='';render();snapImage(code(),url=>{vwImg=url;const im=$('#vw-img');if(im)im.src=url});draw(false);status('코드대로 불러왔습니다')}
@@ -914,7 +925,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     <p class="status" id="status" role="status"></p>
     <p class="help">주문 코드는 선택한 본체·테두리·로고·버튼·축 정보를 짧게 묶은 값입니다. 코드를 넣으면 어떤 조합인지 그대로 확인됩니다.</p>
     <div class="sec"><div class="sec-head"><h3>내가 선택한 커스텀 확인하기</h3></div><p class="help">주문 코드를 넣으면 제작될 모습과 금액이 나타납니다.</p><div class="load"><input id="code-in" placeholder="8F9Y:MK]U*!%XBB" aria-label="주문 코드 입력" maxlength="200" autocomplete="off"><button type="button" class="btn primary" id="my-check">확인하기</button></div></div>
-    <div class="sec"><div class="sec-head"><h3>더 보기</h3></div><div class="load"><button type="button" class="btn" id="img">이미지로 저장</button><button type="button" class="btn" id="random">랜덤 조합</button><button type="button" class="btn ghost" id="example">초기 상태로</button></div></div>`;
+    <div class="sec"><div class="sec-head"><h3>더 보기</h3></div><div class="load"><button type="button" class="btn" id="share">디자인 링크 공유</button><button type="button" class="btn" id="img">이미지로 저장</button><button type="button" class="btn" id="random">랜덤 조합</button><button type="button" class="btn ghost" id="example">초기 상태로</button></div></div>`;
   }
   $('#panel-body').innerHTML=h;
   $('#prev').disabled=i===0;const nx=$('#next');nx.textContent=i===STEPS.length-1?'주문코드 복사':'다음';
@@ -929,8 +940,13 @@ function render(){normTone();syncPart();{const sg=$('#stage');if(sg)sg.classList
 let toastT=null;function status(t,ms=2200){let el=$('#status');if(el)el.textContent=t;let ts=$('#toast');if(!ts){ts=document.createElement('div');ts.id='toast';ts.setAttribute('role','status');ts.style.cssText='position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;z-index:50;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(ts)}
   ts.textContent=t;ts.style.opacity='1';clearTimeout(toastT);toastT=setTimeout(()=>ts.style.opacity='0',ms)}
 
-async function copyText(txt,where='주문서 [커스텀 주문코드]란에'){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
-  if(ok)status('복사됨: '+txt+' — '+where+' 붙여넣고, 앞·뒤 글자가 같은지 확인해 주세요',5000);else{const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요',5000)}return ok}
+// 디자인 링크 공유: 확인 페이지 주소 + 코드. 휴대폰은 공유 시트(카카오톡 등), PC는 링크 복사
+const SHARE_BASE='https://sedalclicker.github.io/Sedal-Lab/check.html';
+async function shareLink(){const url=SHARE_BASE+'#c='+encodeURIComponent(code());
+  if(navigator.share){try{await navigator.share({title:'새달랩 초콜릿 클리커 커스텀',text:'내가 만든 클리커 디자인이에요',url});return}catch(e){if(e&&e.name==='AbortError')return}}
+  copyText(url,'',`링크를 복사했어요. 카카오톡 등에 붙여 넣으면 이 디자인이 그대로 열려요`)}
+async function copyText(txt,where='주문서 [커스텀 주문코드]란에',msg){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
+  if(ok)status(msg||('복사됨: '+txt+' — '+where+' 붙여넣고, 앞·뒤 글자가 같은지 확인해 주세요'),5000);else{const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요',5000)}return ok}
 async function copyOrder(){return copyText(code(),altCheaper()?'기본 상품 주문서의 [판매자 요청사항]란에':undefined)}
 function go(k){S.step=k;syncPart();lastPick=null;render();window.scrollTo({top:0,behavior:'smooth'})}
 
@@ -975,6 +991,7 @@ document.addEventListener('click',e=>{
   if(t.id==='load'){loadCode();return}
   if(t.id==='my-check'){openVerify($('#code-in').value.trim()||code());return}
   if(t.id==='vw-go'){viewLoad();return}
+  if(t.id==='share'){shareLink();return}
   if(t.id==='img'){exportImage();return}
   if(t.id==='verify-open'){openVerify();return}
   if(t.id==='v-run'){runVerify();return}
