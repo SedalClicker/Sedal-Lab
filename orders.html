@@ -17,11 +17,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="application-name" content="SE:DAL 주문 관리">
 <!-- 외부로는 Supabase 와 이 사이트만 통신할 수 있게 막아요 (주문 정보가 다른 곳으로 새지 않도록) -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https://sedalclicker.github.io data: blob:; connect-src 'self' https://sedalclicker.github.io https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self' https://sedalclicker.github.io; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.sheetjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https://sedalclicker.github.io data: blob:; connect-src 'self' https://sedalclicker.github.io https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self' https://sedalclicker.github.io; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- integrity: CDN 파일이 바꿔치기되면 브라우저가 실행을 막아요 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx-populate/1.21.0/xlsx-populate.min.js" integrity="sha384-YnsK3VaaV54M5EcU58Pt9SdJqzL0iZpQzQAcav+18Kgn5tbwk16y/3g6FpT2d83h" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+<!-- SheetJS 는 공식 CDN(cdn.sheetjs.com)에서만 최신판(0.20.x)을 받을 수 있어요. cdnjs 의 0.18.5 에는 알려진 취약점이 있어서 바꿨어요 -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
