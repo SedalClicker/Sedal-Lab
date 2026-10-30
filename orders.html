@@ -85,28 +85,29 @@ input[type=file]::file-selector-button{height:32px;border:1px solid var(--line2)
 .chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .chips button.on b{background:rgba(255,255,255,.18);color:#fff}
 
-/* 두 칸 배치 */
-.split{display:grid;grid-template-columns:310px minmax(0,1fr);gap:16px;align-items:start}
-#sidecol{position:sticky;top:72px;max-height:calc(100vh - 88px);display:flex;flex-direction:column;gap:12px}
+/* 세 칸 배치: 왼쪽 = 제품별 수량 + 주문자별 진행표(남는 높이를 모두 써요), 가운데 = 주문, 오른쪽 = 출력 묶음 + 매출 */
+.split{display:grid;grid-template-columns:330px minmax(0,1fr) 290px;gap:16px;align-items:start}
+#sidecol,#rightcol{position:sticky;top:72px;max-height:calc(100vh - 88px);display:flex;flex-direction:column;gap:12px}
 #prod,#batch,#side,#fin{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+#prod:empty,#batch:empty,#fin:empty{display:none}
 #side{flex:1 1 auto;min-height:140px;overflow:auto}
 #prod h2,#batch h2,#side h2,#fin h2{font-size:14px;font-weight:700;margin:0;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 #side h2{background:var(--brand-soft);color:var(--brand-ink);border-bottom:1px solid var(--brand-line);position:sticky;top:0;z-index:2}
 #prod h2 small,#batch h2 small,#side h2 small,#fin h2 small{font-weight:500;color:var(--sub);font-size:12px}
-/* 출력 묶음: 생산 대기 주문의 본체·버튼을 색별로 합친 표 */
-#batch{flex:0 0 auto;font-size:13px;max-height:38vh;overflow:auto}#batch h2{background:#f4efe6;border-bottom:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0;position:sticky;top:0;z-index:1}
+/* 출력 묶음: 생산 대기 주문의 본체·버튼을 색별로 합친 표 (오른쪽 기둥에서 남는 높이를 써요) */
+#batch{flex:1 1 auto;min-height:0;font-size:13px;overflow:auto}#batch h2{background:#f4efe6;border-bottom:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0;position:sticky;top:0;z-index:1}
 #batch table{width:100%;margin:2px 0 6px}#batch th{text-align:left;font-size:11px;font-weight:600;color:var(--sub);padding:7px 4px 2px 14px;border:0}
 #batch td{padding:3px 4px;border:0;background:none;white-space:nowrap;text-align:left}#batch td:first-child{padding-left:14px}#batch td.n{text-align:right;font-weight:700;color:var(--brand-ink)}#batch td:last-child{text-align:right;padding-right:10px}
 #batch td small{display:block;color:var(--sub);font-size:11px;line-height:1.2;padding-left:18px}#batch .btn{height:24px;padding:0 8px;font-size:12px}
-#side table{width:100%;font-size:14px}
+#side table{width:100%;font-size:13.5px}
 #side th{position:sticky;top:43px;background:#f7faf8;font-weight:600;font-size:12px;color:var(--sub);z-index:1;border-bottom:1px solid var(--line)}
-#side td,#side th{padding:7px 8px}
+#side td,#side th{padding:5px 8px}
 #side td:first-child,#side th:first-child{padding-left:14px}
 #side tr[data-goto]{cursor:pointer}
 #side tr[data-goto]:hover td{background:#f6f2ea}
 #side tr.cur td{background:var(--brand-soft)}#side tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--brand)}
 #side tr.fin td{color:var(--muted)}
-#side .nm{max-width:120px;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+#side .nm{max-width:170px;overflow:hidden;text-overflow:ellipsis;font-weight:500}
 #side .y{color:var(--brand);font-weight:700;font-size:15px}
 #side .part{color:var(--amber);background:var(--amberbg);font-weight:700;font-size:12px;padding:1px 6px;border-radius:6px}
 #side .no{color:#cbc3b8}
@@ -205,7 +206,9 @@ td.low input{border-color:#e3a33b;background:var(--amberbg)}
 @media (max-width:1100px){.twogrid{column-count:2}}
 @media (max-width:700px){.twogrid{column-count:1}}
 
-@media (max-width:900px){.split{grid-template-columns:1fr}#sidecol{position:static;max-height:none}#side{max-height:340px}}
+@media (max-width:1150px){.split{grid-template-columns:280px minmax(0,1fr) 240px}}
+/* 좁은 화면: 한 줄로. 진행표 → 주문 → 출력 묶음·매출 순서 */
+@media (max-width:900px){.split{grid-template-columns:1fr}#sidecol,#rightcol{position:static;max-height:none}#side{max-height:340px}#batch{max-height:320px}#rightcol{order:3}}
 @media (max-width:600px){
   header{height:auto;padding:8px 12px;flex-wrap:wrap;gap:8px}
   header h1{font-size:15px}
@@ -243,7 +246,7 @@ td.low input{border-color:#e3a33b;background:var(--amberbg)}
     </section>
   </div>
   <div id="tab-orders" class="split">
-   <aside id="sidecol"><div id="prod"></div><div id="batch"></div><div id="side"></div><div id="fin"></div></aside>
+   <aside id="sidecol"><div id="prod"></div><div id="side"></div></aside>
    <div class="maincol">
     <div class="bar">
       <input type="file" id="file" accept=".xlsx">
@@ -259,6 +262,7 @@ td.low input{border-color:#e3a33b;background:var(--amberbg)}
     <div class="msg" id="dec-msg" style="margin:0 0 8px 4px"></div>
     <div id="list"></div>
    </div>
+   <aside id="rightcol"><div id="batch"></div><div id="fin"></div></aside>
   </div>
   <div id="tab-inv" hidden></div>
   <div id="tab-settings" hidden>
