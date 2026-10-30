@@ -481,6 +481,7 @@ function wipeLocal() {
   DB = emptyDB(); dirty = new Set(); snap = {}; tracking = false;
   for (const k in decCache) delete decCache[k];
   for (const k in pvCache) delete pvCache[k];
+  pvClear();
   ['#list', '#prod', '#side', '#fin', '#tab-inv'].forEach(s => $(s).innerHTML = '');
 }
 
@@ -1365,34 +1366,74 @@ function calcHTML(l) {
     </div>`;
 }
 
-// check.html 확인창과 같은 미리보기 이미지를 화면에 보이는 주문부터 차례로 그려요
+// check.html 확인창과 같은 미리보기 이미지를 화면 가까이 온 주문부터 차례로 그려요.
+// 한 번 만든 그림은 가로 1000px 로 줄여 메모리와 IndexedDB(코드별)에 두고, 다음에 열 때 다시 그리지 않아요.
+// 그림에는 디자인만 있고 이름 같은 개인정보는 없어요. 로그아웃·연결 해제 때 같이 지워요
+const PV_VER = 'v2', PV_VER_KEY = 'sedal-orders-pvver', PV_W = 1000;   // 그림 모양(각도·로고·글씨)이 바뀌면 PV_VER 를 올려요
 const pvCache = Object.create(null);
-let pvBusy = false;
+let pvBusy = false, pvOpen = null;
+const pvDb = () => pvOpen || (pvOpen = new Promise((ok, bad) => {
+  const r = indexedDB.open('sedal-orders-pv', 1);
+  r.onupgradeneeded = () => r.result.createObjectStore('pv');
+  r.onsuccess = () => ok(r.result); r.onerror = () => bad(r.error);
+}));
+// IndexedDB 를 못 쓰는 브라우저(시크릿 모드 등)나 응답이 없을 때는 조용히 메모리에만 둬요
+const pvReq = (mode, fn) => Promise.race([
+  pvDb().then(db => new Promise((ok, bad) => { const q = fn(db.transaction('pv', mode).objectStore('pv')); q.onsuccess = () => ok(q.result); q.onerror = () => bad(q.error); })),
+  new Promise(ok => setTimeout(ok, 3000))
+]).catch(() => undefined);
+const pvClear = () => pvReq('readwrite', s => s.clear());
+const pvReady = localStorage.getItem(PV_VER_KEY) === PV_VER ? Promise.resolve() : pvClear().then(() => { try { localStorage.setItem(PV_VER_KEY, PV_VER); } catch (e) {} });
+const pvGet = raw => pvReady.then(() => pvReq('readonly', s => s.get(raw)));
+const pvPut = (raw, u) => pvReady.then(() => pvReq('readwrite', s => s.put(u, raw)));
+// 화면(위아래 600px 여유) 안에 들어온 그림만 만들어요
+const pvWant = [];
+const pvIO = new IntersectionObserver(es => {
+  for (const e of es) if (e.isIntersecting) { pvIO.unobserve(e.target); pvWant.push(e.target); }
+  pumpPreviews();
+}, {rootMargin: '600px 0px'});
 function fillPreviews() {
-  const imgs = [...document.querySelectorAll('img.pv:not([src]):not([data-fail])')];
-  for (const im of imgs) if (im.dataset.pv in pvCache) pvCache[im.dataset.pv] ? im.src = pvCache[im.dataset.pv] : im.dataset.fail = '1';
-  if (pvBusy || !window.__imgFn) return;
-  const next = imgs.find(im => !im.src && !im.dataset.fail);
-  if (!next) return;
-  pvBusy = true;
-  const raw = next.dataset.pv;
-  const done = url => { pvCache[raw] = url || ''; pvBusy = false; fillPreviews(); };
-  const d = !raw.startsWith('st:') && decode(raw);
-  try {
-    window.__imgFn(raw, url => url && d && d.nomag ? tagNomag(url, done) : done(url));
-  } catch (e) { pvCache[raw] = ''; pvBusy = false; console.error(e); }
+  pvIO.disconnect(); pvWant.length = 0;
+  for (const im of document.querySelectorAll('img.pv[data-pv]:not([src]):not([data-fail])')) {
+    if (im.dataset.pv in pvCache) showPreview(im.dataset.pv); else pvIO.observe(im);
+  }
 }
-// 자석 없음 주문은 미리보기 왼쪽 위에 빨간 글씨로 적어요
-function tagNomag(url, cb) {
+function showPreview(raw) {
+  for (const im of document.querySelectorAll('img.pv[data-pv]:not([src])')) if (im.dataset.pv === raw) { if (pvCache[raw]) im.src = pvCache[raw]; else im.dataset.fail = '1'; }
+}
+async function pumpPreviews() {
+  if (pvBusy || !window.__imgFn) return;
+  let im;
+  while ((im = pvWant.shift()) && (!im.isConnected || im.src || im.dataset.fail));
+  if (!im) return;
+  const raw = im.dataset.pv;
+  if (raw in pvCache) { showPreview(raw); return pumpPreviews(); }
+  pvBusy = true;
+  const done = url => { pvCache[raw] = url || ''; pvBusy = false; showPreview(raw); pumpPreviews(); };
+  try {
+    const hit = await pvGet(raw);
+    if (hit) return done(hit);
+    const d = !raw.startsWith('st:') && decode(raw);
+    window.__imgFn(raw, url => url ? packPreview(url, d && d.nomag, u => { pvPut(raw, u); done(u); }) : done(null));
+  } catch (e) { console.error(e); done(null); }
+}
+// 그림을 가로 1000px 로 줄이고(원본은 2200px · 장당 600KB), 자석 없음 주문은 왼쪽 위에 빨간 글씨로 적어요
+function packPreview(url, nomag, cb) {
   const im = new Image();
   im.onload = () => {
-    const c = document.createElement('canvas'), g = c.getContext('2d');
-    c.width = im.width; c.height = im.height;
-    g.drawImage(im, 0, 0);
-    g.fillStyle = '#B42318'; g.textBaseline = 'top';
-    g.font = `700 ${Math.round(im.height * 0.085)}px "Noto Sans KR", sans-serif`;
-    g.fillText('자석 없음', Math.round(im.width * 0.03), Math.round(im.height * 0.05));
-    cb(c.toDataURL('image/png'));
+    const c = document.createElement('canvas'), g = c.getContext('2d'), k = Math.min(1, PV_W / im.width);
+    c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(im, 0, 0, c.width, c.height);
+    if (nomag) {
+      g.fillStyle = '#B42318'; g.textBaseline = 'top';
+      g.font = `700 ${Math.round(c.height * 0.085)}px "Noto Sans KR", sans-serif`;
+      g.fillText('자석 없음', Math.round(c.width * 0.03), Math.round(c.height * 0.05));
+    }
+    // webp 로 저장할 수 있는 브라우저는 webp(훨씬 작아요), 아니면 png
+    let u = c.toDataURL('image/webp', 0.9);
+    if (!u.startsWith('data:image/webp')) u = c.toDataURL('image/png');
+    cb(u);
   };
   im.onerror = () => cb(url);
   im.src = url;
@@ -1431,7 +1472,7 @@ document.addEventListener('change', e => {
       DB.inv[k].qty = Number(t.value) || 0;
       DB.inv[k].at = new Date().toISOString();
     } else DB.inv[k].min = t.value === '' ? null : Number(t.value);
-    save(); renderInv();
+    save(); renderInvKeepFocus();
   } else if (t.id === 'show-cancel') render();
   else if (t.id === 'fin-period') { finPeriod = t.value; render(); }
 });
@@ -1476,6 +1517,17 @@ function invCell(k, need) {
 function minCell(k) {
   const m = DB.inv[k] && DB.inv[k].min;
   return `<td><input class="min" type="number" data-inv="${esc(k)}" data-field="min" value="${m ?? ''}" placeholder="-"></td>`;
+}
+// 재고 표를 바로 다시 그리면 입력칸이 통째로 바뀌어 Tab 으로 옮겨 가던 포커스가 사라져요.
+// 포커스가 다음 칸으로 옮겨진 뒤에 다시 그리고, 그 칸(또는 같은 id 의 요소)을 새로 찾아 포커스를 돌려줘요
+function renderInvKeepFocus() {
+  setTimeout(() => {
+    const a = document.activeElement, d = (a && a.dataset) || {};
+    const sel = d.inv ? `input[data-inv="${CSS.escape(d.inv)}"][data-field="${d.field}"]` : a && a.id ? '#' + CSS.escape(a.id) : null;
+    renderInv();
+    const el = sel && $('#tab-inv').querySelector(sel);
+    if (el) { el.focus(); if (el.select) el.select(); }
+  });
 }
 function renderInv() {
   usedCache = null;
@@ -1554,7 +1606,8 @@ function renderInv() {
   };
   $('#two-add').onclick = () => {
     const k = `two:${$('#two-s').value}:${$('#two-b').value}:${$('#two-a').value}`;
-    DB.inv[k] = DB.inv[k] || {qty: 0};
+    // 지금을 실사 시각으로 둬요. 없으면 예전에 조립한 주문 것까지 빠져서 음수로 시작해요
+    DB.inv[k] = DB.inv[k] || {qty: 0, at: new Date().toISOString()};
     save(); renderInv();
   };
   el.querySelectorAll('[data-deltwo]').forEach(b => b.onclick = () => { delete DB.inv[b.dataset.deltwo]; save(); renderInv(); });
