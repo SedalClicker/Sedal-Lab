@@ -765,7 +765,8 @@ function kindOf(l) {
   return 'other';
 }
 const isAddon = l => ['addShape', 'addRim'].includes(kindOf(l));
-const isCancel = l => l.status === '취소' || /취소/.test(l.claim || '');
+// 주문상태가 "취소완료"·"취소요청"처럼 적혀 와도 취소로 봐요
+const isCancel = l => /취소/.test(l.status || '') || /취소/.test(l.claim || '');
 const rawCodeOf = l => { const o = String(l.option); return o.slice(o.indexOf(':') + 1).trim(); };
 const codeOf = l => DB.fixes[l.id] || rawCodeOf(l);
 // 확인 글자가 든 새 코드는 10/29부터 나가요. 그 뒤 주문인데 확인 글자 없는 예전 형식으로 읽히면
@@ -1268,7 +1269,7 @@ function customHTML(l) {
         <div><span class="sw" style="background:${body.hex}"></span>본체 <b>${esc(body.name)}</b></div>
         ${d.rim ? `<div><span class="sw" style="background:${rimOf(d.rim).hex}"></span>테두리 <b>${esc(rimOf(d.rim).name)}</b></div>` : ''}
         <div>로고 ${d.logo ? `<b>${esc(color(d.logo).name)}</b>` : '본체색'}</div>
-        ${d.nomag ? '<div><b>자석 없음</b></div>' : ''}
+        ${d.nomag ? '<div><b style="color:var(--warn)">자석 없음</b></div>' : ''}
         <div>버튼 색 ${Object.entries(ctally).map(([id, n]) => `<span class="sw" style="background:${color(id).hex}"></span><b>${esc(color(id).name)}</b> ${n}`).join(' · ')}</div>
         <div>축 ${Object.entries(tally).map(([id, n]) => `<span class="sw" style="background:${swOf(id).hex}"></span>${esc(swOf(id).name)} ${n}`).join(' · ')}</div>
         <div class="msg">${esc(d.breakdown)}</div>
