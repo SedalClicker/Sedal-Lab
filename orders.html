@@ -320,6 +320,7 @@ td.low input{border-color:#e3a33b;background:var(--amberbg)}
 <script>
 // 로컬(localhost)에서 시험할 때는 같은 폴더의 check.html 을 써요
 const CHECK_URL = location.hostname === 'localhost' ? location.origin + '/check.html' : 'https://sedalclicker.github.io/Sedal-Lab/check.html';
+const XMAS_URL = location.hostname === 'localhost' ? location.origin + '/xmas/check.html' : 'https://sedalclicker.github.io/Sedal-Lab/xmas/check.html';
 const STORE_KEY = 'sedal-orders-v1';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -644,15 +645,15 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && cl
 
 // ---- 커스텀 코드 해석기 (check.html 을 숨은 iframe 으로 불러와 그 공개 함수 window.SEDAL 을 사용) ----
 let DEC = null, CAT = null;
+// 크리스마스 클리커 코드는 '크'로 시작해요. 이 코드만 xmas/check.html 로 읽고, 나머지는 지금까지처럼 check.html 로 읽어요
+const isXmasCode = raw => { const v = String(raw ?? '').normalize('NFKC'); return !v.startsWith('st:') && /(^|\s)크[^\s가-힣]/.test(v); };
 // 고객이 쓴 코드를 키로 쓰므로 "constructor" 같은 글자가 와도 깨지지 않게 프로토타입 없는 객체를 써요
 const decCache = Object.create(null);
-async function loadDecoder() {
-  $('#dec-msg').textContent = '커스텀 코드 해석기를 불러오는 중…';
-  try {
-    let html = await (await fetch(CHECK_URL, {cache: 'no-cache'})).text();
+async function openChecker(url) {
+    let html = await (await fetch(url, {cache: 'no-cache'})).text();
     // 아래 끼워 넣는 함수는 check.html 이 공개 함수(SEDAL) 없는 예전 버전으로 캐시돼 있을 때만 쓰는 대비책이에요
     html = html.replace(/<script[^>]*data-goatcounter[^>]*><\/script>/gi, '')   // 방문자 통계는 주문 페이지에서 보내지 않아요
-      .replace(/<head>/i, `<head><base href="${CHECK_URL}">`)
+      .replace(/<head>/i, `<head><base href="${url}">`)
       .replace(/<\/body>/i, `<script>
 window.__cat=()=>({colors:COLORS.map(c=>({id:c.id,name:c.name,hex:c.hex,only:c.only||null,nobody:!!c.nobody})),shapes:SHAPES.map(s=>({k:s.k,name:s.name,acc:!!s.acc})),sw:SW.map(s=>({id:s.id,name:swName(s.id),type:s.type,hex:s.hex})),rims:Object.entries(RIMS).map(([k,r])=>({k,name:r.name,hex:r.hex}))});
 window.__dec=raw=>{const r=parseCode(raw);const code=extractCode(raw);if(r.err)return{err:r.err,code};const keep=S;try{S={...structuredClone(S),...structuredClone(r.st),acc:r.st.acc?structuredClone(r.st.acc):Array(8).fill(null),step:'done',sel:0};
@@ -667,12 +668,29 @@ const r=parseCode(raw);if(r.err)return cb(null);const keep=S;try{S={...structure
     fr.setAttribute('aria-hidden', 'true');
     document.body.appendChild(fr);
     await new Promise((ok, bad) => { fr.onload = ok; fr.onerror = bad; fr.srcdoc = html; });
-    const api = fr.contentWindow.SEDAL;
-    DEC = api ? api.dec : fr.contentWindow.__dec;
-    CAT = api ? api.cat() : fr.contentWindow.__cat();
-    window.__imgFn = api ? (raw, cb) => api.img(raw, cb, true) : fr.contentWindow.__img;   // 주문 관리는 로고가 보이는 쪽에서 찍어요
-    if (!DEC || !CAT) throw new Error('해석 함수를 찾지 못했어요');
-    $('#dec-msg').textContent = '';
+    return fr.contentWindow;
+}
+async function loadDecoder() {
+  $('#dec-msg').textContent = '커스텀 코드 해석기를 불러오는 중…';
+  try {
+    const w = await openChecker(CHECK_URL), api = w.SEDAL;
+    const dec0 = api ? api.dec : w.__dec, cat0 = api ? api.cat() : w.__cat();
+    const img0 = api ? (raw, cb) => api.img(raw, cb, true) : w.__img;   // 주문 관리는 로고가 보이는 쪽에서 찍어요
+    if (!dec0 || !cat0) throw new Error('해석 함수를 찾지 못했어요');
+    // 크리스마스 해석기를 못 불러와도 기존 주문은 그대로 볼 수 있어야 해요. 그때는 '크' 코드만 오류로 보여요
+    let decX = null, imgX = null, xErr = '';
+    try {
+      const x = (await openChecker(XMAS_URL)).SEDAL;
+      if (!x) throw new Error('해석 함수를 찾지 못했어요');
+      const catX = x.cat();
+      // 색·모양·테두리 목록을 합쳐요. 같은 번호(화이트, 기본형, 하트형 등)는 두 제품이 같은 것이라 하나로 봐요
+      for (const [key, id] of [['colors', 'id'], ['shapes', 'k'], ['sw', 'id'], ['rims', 'k']]) for (const it of catX[key]) if (!cat0[key].some(o => o[id] === it[id])) cat0[key].push(it);
+      decX = x.dec; imgX = (raw, cb) => x.img(raw, cb, true);
+    } catch (e) { xErr = e.message; }
+    CAT = cat0;
+    DEC = raw => !isXmasCode(raw) ? dec0(raw) : decX ? decX(raw) : {err: '크리스마스 코드 해석기를 불러오지 못했어요. 새로고침해 보세요', code: String(raw)};
+    window.__imgFn = (raw, cb) => (isXmasCode(raw) && imgX ? imgX : img0)(raw, cb);
+    $('#dec-msg').innerHTML = xErr ? `<span class="msg err">크리스마스 코드 해석기를 불러오지 못했어요 (${esc(xErr)}). 새로고침해 보세요.</span>` : '';
   } catch (e) {
     $('#dec-msg').innerHTML = `<span class="msg err">커스텀 코드 해석기를 불러오지 못했어요 (${esc(e.message)}). 새로고침해 보세요.</span>`;
   }
@@ -960,20 +978,25 @@ function issuesOf(o) {
   if (cancelledMade) out.push(`취소됐는데 조립 체크된 품목 ${cancelledMade}개 (재고 확인)`);
   const customs = o.live.filter(l => kindOf(l) === 'custom');
   if (!customs.length || !DEC) return out;
-  const cnt = {H: 0, S: 0, R: 0, rim: 0}, rims = new Set();
+  const cnt = {H: 0, S: 0, R: 0, I: 0, rim: 0}, rims = new Set();
+  // 크리스마스 코드가 든 주문은 스토어 옵션이 "버튼 변경: 아이콘" 하나라서 하트·별도 아이콘으로 함께 세요
+  const anyXmas = customs.some(l => isXmasCode(codeOf(l)));
   for (const l of customs) {
     const d = decode(codeOf(l));
     if (d.err) { out.push(`코드 오류: ${d.err}`); return out; }
     if (oldFmtCheck(l, d)) out.push('예전 형식 코드: 잘못 복사됐을 수 있어요 (미리보기 확인)');
-    d.btn.forEach(b => cnt[b.shp] !== undefined && (cnt[b.shp] += l.qty));
+    const xmasProduct = /크리스마스/.test(l.product), xmasCode = isXmasCode(codeOf(l));
+    if (xmasProduct && !xmasCode) out.push("크리스마스 상품인데 코드가 '크'로 시작하지 않아요 (미리보기 확인)");
+    if (!xmasProduct && xmasCode) out.push('크리스마스 코드인데 다른 상품으로 주문됐어요 (상품 확인)');
+    d.btn.forEach(b => { const k = anyXmas && shape(b.shp).acc && b.shp !== 'R' ? 'I' : b.shp; if (cnt[k] !== undefined) cnt[k] += l.qty; });
     if (d.rim) { cnt.rim += l.qty; rims.add(rimOf(d.rim).name); }
   }
-  const paid = {H: 0, S: 0, R: 0, rim: 0}, paidRims = new Set();
+  const paid = {H: 0, S: 0, R: 0, I: 0, rim: 0}, paidRims = new Set();
   let oldStyle = false;
   for (const l of o.live) {
     if (kindOf(l) === 'addShape') {
       const v = opts(l.option)['버튼 변경'] || l.product;
-      const k = /하트/.test(v) ? 'H' : /별/.test(v) ? 'S' : /링/.test(v) ? 'R' : null;
+      const k = anyXmas ? (/링/.test(v) ? 'R' : 'I') : /하트/.test(v) ? 'H' : /별/.test(v) ? 'S' : /링/.test(v) ? 'R' : null;
       if (k) paid[k] += l.qty;
     } else if (kindOf(l) === 'addRim') {
       paid.rim += l.qty;
@@ -981,8 +1004,8 @@ function issuesOf(o) {
     } else if (kindOf(l) === 'custom' && /버튼모양/.test(l.option)) oldStyle = true;
   }
   if (oldStyle) return out;
-  const nm = {H: '하트', S: '별', R: '링', rim: '테두리'};
-  for (const k of ['H', 'S', 'R', 'rim']) {
+  const nm = {H: '하트', S: '별', R: '링', I: '아이콘', rim: '테두리'};
+  for (const k of ['H', 'S', 'I', 'R', 'rim']) {
     if (cnt[k] !== paid[k]) out.push(`${nm[k]}: 코드 ${cnt[k]}개 / 결제 ${paid[k]}개`);
   }
   if (cnt.rim && paid.rim && [...rims].some(r => !paidRims.has(r))) out.push(`테두리 색: 코드 ${[...rims].join(', ')} / 결제 ${[...paidRims].join(', ')}`);
@@ -1026,7 +1049,7 @@ function render() {
 }
 
 // 제품별 수량: 취소 뺀 주문의 수량을 생산 대기(포장 전) · 발송 대기(포장 끝) · 완료(발송)로 나눠 세요
-const PRODUCTS = [['계산기', '계산기 클리커', p => /계산기/.test(p)], ['기본 초콜릿', '기본 초콜릿 클리커', p => /초콜릿 클리커/.test(p) && !/커스텀/.test(p)], ['커스텀 초콜릿', '커스텀 초콜릿 클리커', p => /커스텀/.test(p)]];
+const PRODUCTS = [['계산기', '계산기 클리커', p => /계산기/.test(p)], ['기본 초콜릿', '기본 초콜릿 클리커', p => /초콜릿 클리커/.test(p) && !/커스텀/.test(p)], ['커스텀 초콜릿', '커스텀 초콜릿 클리커', p => /커스텀/.test(p) && !/크리스마스/.test(p)], ['커스텀 크리스마스', '커스텀 크리스마스 클리커', p => /커스텀/.test(p) && /크리스마스/.test(p)]];
 function renderProd(gs) {
   const rows = PRODUCTS.map(([name, full, test]) => {
     const c = {all: 0, make: 0, ship: 0, done: 0};
@@ -1201,7 +1224,7 @@ function importCost(wb) {
   save();
   return {ok, n};
 }
-const filOf = c => ['ww', 'wd'].includes(c) ? 'wood' : ['sy', 'cc'].includes(c) ? 'marble' : c === 'be' ? 'basic' : 'matte';
+const filOf = c => ['ww', 'wd', 'bg'].includes(c) ? 'wood' : ['sy', 'cc'].includes(c) ? 'marble' : c === 'be' ? 'basic' : 'matte';
 const filCost = (g, type) => g * (COST.fil[type] + COST.filShip) * (1 + COST.fail);
 const swCost = id => (COST.sw[id] ?? COST.swAvg) + COST.swShip;
 const sellCost = price => price * (COST.fee + COST.tax);
