@@ -529,6 +529,9 @@ function hullPoly(v,A,B,fill,stroke,w,extra=''){const H=hull(A.concat(B).map(p=>
 function patterns(){let d='';COLORS.forEach((c,ci)=>{if(!c.dots)return;let s='';const r=(()=>{let seed=ci*97+13;return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}})();
   const n=c.fin==='우드'?60:45;for(let k=0;k<n;k++){s+=`<circle cx="${(r()*20).toFixed(2)}" cy="${(r()*20).toFixed(2)}" r="${(c.fin==='우드'?0.09+r()*0.1:0.12+r()*0.16).toFixed(2)}" fill="${c.dots[k%2]}"/>`}
   d+=`<pattern id="px-${c.id}" patternUnits="userSpaceOnUse" width="20" height="20"><rect width="20" height="20" fill="${c.hex}"/>${s}</pattern>`});return`<defs>${d}</defs>`}
+// 테두리 단면: Fusion '계산기&초콜릿' 문서의 '테두리' 바디를 그대로 재서 0.8배로 맞춘 값(미리보기 본체가 실물보다 작아서).
+// 바깥 벽 → 45° 경사(실물 폭 1.39) → 평평한 윗면(2.31) → 둥근 안쪽 모서리 → 안쪽 벽. 오프셋은 바깥 가장자리에서 안쪽으로 잰 mm
+function rimRings(top){const r=(o,z)=>rr(0,0,M.bw-2*o,M.bl-2*o,Math.max(0.5,M.br-o),z),zt=top+1.6,zm=zt-1.11;return{zt,FoB:r(0,top-0.3),FoM:r(0,zm),FoT:r(1.11,zt),FiT:r(2.96,zt),FiR:r(3.12,zt-0.3),FiB:r(2.84,top-0.5),FiL:r(2.51,zt)}}
 function drawView(v,forExport){
   const host=document.getElementById(v.id);const b=S.body,bf=fillOf(b),bs=strokeOf(b),LW=0.32;
   const top=M.bh;let o='';
@@ -576,12 +579,11 @@ function drawView(v,forExport){
   o+=`</g></g>`;
   // optional chocolate rim: a raised frame sitting on the lip, inner edge flush with the recess
   let RF=null;
-  if(S.rim){const RM=rimOf(),rf=RM.col&&C[RM.col]&&C[RM.col].dots?fillOf(RM.col):RM.hex,rs=strokeOf2(RM.hex),zb=top-0.3,zt=top+1.3,zi=top-0.5;
-    const FoB=rr(0,0,M.bw-0.9,M.bl-0.9,M.br-0.45,zb),FoT=rr(0,0,M.bw-1.3,M.bl-1.3,M.br-0.65,zt),FiT=rr(0,0,M.bw-2*M.rim+0.2,M.bl-2*M.rim+0.2,M.br-M.rim+0.1,zt),FiB=rr(0,0,M.bw-2*M.rim,M.bl-2*M.rim,M.br-M.rim,zi);
-    RF={rf,rs,FoB,FoT,FiT,FiB,side:mix(RM.hex,-0.14),inner:mix(RM.hex,-0.3)};
+  if(S.rim){const RM=rimOf(),rf=RM.col&&C[RM.col]&&C[RM.col].dots?fillOf(RM.col):RM.hex,rs=strokeOf2(RM.hex),R=rimRings(top);
+    RF={...R,rf,rs,side:mix(RM.hex,-0.16),slope:mix(RM.hex,-0.07),inner:mix(RM.hex,-0.3)};
     let f=`<g data-part="body">`;
-    if(v.taper){const vis=nearSeg(FiT),N=FiT.length;for(let i=0;i<N;i++){if(vis[i])continue;const j=(i+1)%N;f+=poly(v,[FiB[i],FiB[j],FiT[j],FiT[i]],RF.inner,RF.inner,LW*0.4)}}
-    f+=band(v,FoT,FiT,rf,rs,LW)+`</g>`;o+=f}
+    if(v.taper){const vis=nearSeg(R.FiT),N=R.FiT.length;for(let i=0;i<N;i++){if(vis[i])continue;const j=(i+1)%N;f+=poly(v,[R.FiB[i],R.FiB[j],R.FiR[j],R.FiR[i]],RF.inner,RF.inner,LW*0.4)+poly(v,[R.FiR[i],R.FiR[j],R.FiT[j],R.FiT[i]],RF.side,RF.side,LW*0.4)}}
+    f+=band(v,R.FoM,R.FoT,RF.slope,rs,LW)+band(v,R.FoT,R.FiT,rf,rs,LW)+`</g>`;o+=f}
   // caps sorted far->near
   const idx=[0,1,2,3,4,5,6,7].sort((a,b2)=>v.cam.dp([...worldCap(b2),0])-v.cam.dp([...worldCap(a),0]));
   const up=[];let selTop='';const SELST=window.SELSTYLE||'lift',anySel=false; // 2026-11-06 나머지 버튼 흐림 효과 삭제(선택 버튼은 빨간 테두리로만 표시). 이전 규칙:  // 스위치 축 단계(버튼 색 확인)와 마지막 주문 코드 단계(완성 모습)에서는 나머지 버튼을 흐리게 하지 않아요
@@ -616,10 +618,10 @@ function drawView(v,forExport){
     const segs=[];let seg=[];for(let i=0;i<N;i++){if(vis[i]){seg.push(i);}else if(seg.length){segs.push(seg);seg=[]}}if(seg.length)segs.push(seg);
     for(const s of segs){const ids=[...s,(s[s.length-1]+1)%N];o+=`<polyline points="${pts(v,ids.map(k=>Oi[k]))}" fill="none" stroke="${bs}" stroke-width="${LW}"/><polyline points="${pts(v,ids.map(k=>Ct[k]))}" fill="none" stroke="${bs}" stroke-width="${LW*0.8}"/>`}
   }else{o+=poly(v,Oi,'none',bs,LW)}
-  if(RF&&v.taper){const{FoB,FoT,FiT,rf,rs}=RF,vis=nearSeg(FiT),N=FiT.length;let g='';
-    for(let i=0;i<N;i++){if(!vis[i])continue;const j=(i+1)%N;g+=poly(v,[FoB[i],FoB[j],FoT[j],FoT[i]],RF.side,RF.side,LW*0.4)+poly(v,[FoT[i],FoT[j],FiT[j],FiT[i]],rf,rf,LW*0.4)}
+  if(RF&&v.taper){const{FoB,FoM,FoT,FiT,rf,rs}=RF,vis=nearSeg(FiT),N=FiT.length;let g='';
+    for(let i=0;i<N;i++){if(!vis[i])continue;const j=(i+1)%N;g+=poly(v,[FoB[i],FoB[j],FoM[j],FoM[i]],RF.side,RF.side,LW*0.4)+poly(v,[FoM[i],FoM[j],FoT[j],FoT[i]],RF.slope,RF.slope,LW*0.4)+poly(v,[FoT[i],FoT[j],FiT[j],FiT[i]],rf,rf,LW*0.4)}
     const segs=[];let seg=[];for(let i=0;i<N;i++){if(vis[i])seg.push(i);else if(seg.length){segs.push(seg);seg=[]}}if(seg.length)segs.push(seg);
-    for(const s of segs){const ids=[...s,(s[s.length-1]+1)%N];g+=['FoB','FoT','FiT'].map(k=>`<polyline points="${pts(v,ids.map(q=>RF[k][q]))}" fill="none" stroke="${rs}" stroke-width="${LW*0.8}"/>`).join('')}
+    for(const s of segs){const ids=[...s,(s[s.length-1]+1)%N];g+=['FoB','FoM','FoT','FiT'].map(k=>`<polyline points="${pts(v,ids.map(q=>RF[k][q]))}" fill="none" stroke="${rs}" stroke-width="${LW*0.8}"/>`).join('')}
     o+=`<g data-part="body">${g}</g>`}
   o+=selTop;
   // viewBox

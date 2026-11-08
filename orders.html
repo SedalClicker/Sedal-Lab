@@ -1522,7 +1522,7 @@ function calcHTML(l) {
 // check.html 확인창과 같은 미리보기 이미지를 화면 가까이 온 주문부터 차례로 그려요.
 // 한 번 만든 그림은 가로 1000px 로 줄여 메모리와 IndexedDB(코드별)에 두고, 다음에 열 때 다시 그리지 않아요.
 // 그림에는 디자인만 있고 이름 같은 개인정보는 없어요. 로그아웃·연결 해제 때 같이 지워요
-const PV_VER = 'v2', PV_VER_KEY = 'sedal-orders-pvver', PV_W = 1000;   // 그림 모양(각도·로고·글씨)이 바뀌면 PV_VER 를 올려요
+const PV_VER = 'v3', PV_VER_KEY = 'sedal-orders-pvver', PV_W = 1000;   // 그림 모양(각도·로고·글씨)이 바뀌면 PV_VER 를 올려요
 const pvCache = Object.create(null);
 let pvBusy = false, pvOpen = null;
 const pvDb = () => pvOpen || (pvOpen = new Promise((ok, bad) => {
