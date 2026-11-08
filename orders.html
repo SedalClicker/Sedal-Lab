@@ -1434,7 +1434,7 @@ function customHTML(l) {
 }
 
 // 기본 초콜릿 클리커 키링: 옵션의 색 하나로 본체와 버튼 8개를 같은 색으로 그려요
-const swByName = n => { n = String(n || '').replace(/\s|축/g, '').toUpperCase(); return CAT && (CAT.sw.find(s => s.name.replace('축', '').toUpperCase() === n) || {}).id || null; };
+const swByName = n => { n = String(n || '').replace(/\s|축/g, '').toUpperCase(); return CAT && (CAT.sw.find(s => s.name.replace(/\s|축/g, '').toUpperCase() === n) || {}).id || null; };
 function keyringOf(l) {
   if (!CAT) return null;
   const o = opts(l.option);

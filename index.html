@@ -477,7 +477,8 @@ const SW=[
   {id:'y2',name:'Y2',type:'리니어',hex:'#D8363C',d:'물속에서 누르는 듯 포근한 소리의 리니어축',t:['포근한 소리','부드러운 키감','먹먹한 타건감']},
   {id:'lp',name:'리퍼',type:'리니어',hex:'#CFE59A',house:'#E3D3B4',d:'가볍게 톡 눌리고 딸깍 소리가 경쾌한 리니어축',t:['가벼운 키감','경쾌한 소리','리듬감 있는 연타']},
   {id:'jd',name:'제이드',type:'클리키',hex:'#2FA585',d:'두꺼운 클릭바로 강한 구분감과 경쾌한 클릭음',t:['강한 클릭감','뚜렷한 구분감','묵직한 타건감']},
-  {id:'wm',name:'화이트마블',type:'리니어',hex:'#F3F1EC',house:'#FAF9F6',d:'몽돌보다 한 톤 높게 \'탁탁\' 돌이 부딪히는 경쾌한 소리의 리니어축',t:['경쾌한 소리','높은 피치','단단한 타건감']}];
+  {id:'wm',name:'화이트마블',type:'리니어',hex:'#F3F1EC',house:'#FAF9F6',d:'몽돌보다 한 톤 높게 \'탁탁\' 돌이 부딪히는 경쾌한 소리의 리니어축',t:['경쾌한 소리','높은 피치','단단한 타건감']},
+  {id:'pr',name:'공주',type:'택타일',hex:'#D98ACB',d:'뚜렷한 구분감이 느껴지는 깔끔한 택타일축',t:['뚜렷한 구분감','깔끔한 키감','안정적인 타건감']}];
 function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
 const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2',SW_START='sl';
 const RIMS={ch:{name:'초코',hex:'#6E5A48',col:'wd'},pk:{name:'핑크',hex:'#EAA6C8',col:'sk'},iv:{name:'화이트',hex:'#F5F2EA',col:'iv'}};const RIMKEYS=Object.keys(RIMS);
@@ -796,7 +797,7 @@ function squeeze(s){return /^(.)\1{7}$/.test(s)?s[0]:s}
 const B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ',CK1={c:12,w:12,h:'BPHS',k:1,salt:0},CK2={c:16,w:16,h:'BPHS',hr:4,k:2,salt:577},CK3={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:911},CK4={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:1301,a:1},CK5={c:16,w:16,h:'BPHSR',hr:8,k:2,salt:1777,a:1,r:1};
 function ckOf(d,K){let x=K.salt;for(let i=0;i<d.length;i++)x=(x+B32.indexOf(d[i])*(i+1)*(K.k>1?(i%7)+3:1))%(32**K.k);let o='';for(let j=0;j<K.k;j++){o=B32[x%32]+o;x=Math.floor(x/32)}return o}
 // CK7 주문코드(2026-10-23~): 대문자·숫자·특수문자 65종, 최대 20자(스마트스토어 주문코드란 20칸). 'SD-'로 시작하면 구버전(CK1~5) 코드로 조회.
-// 색 최대 13종·축 최대 14종까지 같은 규칙(현재 색 12·축 13 → 각 1종 여유). 목록은 뒤에만 추가할 것. 첫 글자에는 = + - @ 가 오지 않음(엑셀 수식 방지).
+// 색 최대 13종·축 최대 14종까지 같은 규칙(현재 색 12·축 14 → 색 1종 여유, 축은 여유 없음. 15번째 축은 코드 규칙을 새로 만들어야 함). 목록은 뒤에만 추가할 것. 첫 글자에는 = + - @ 가 오지 않음(엑셀 수식 방지).
 const A7='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%()*,./:;?[]^_{|}~÷₩<>=+-@',A7S=61,K7={C:13,W:14,SK:['B','P','H','S','R']};
 function is7(v){return !!v&&[...v].every(c=>A7.indexOf(c)>=0)}
 // 확인 글자(2026-10-29~): 디자인 값 위(맨 앞자리 쪽)에 1 이상의 확인 값을 얹어요. 한 글자가 바뀌거나 빠지면 확인 값이 안 맞아 오류로 알려 줘요.
