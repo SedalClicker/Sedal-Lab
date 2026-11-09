@@ -6,7 +6,7 @@
 <meta name="author" content="새달랩(SE:DAL)">
 <meta name="copyright" content="© 2026 새달랩(SE:DAL). All rights reserved.">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F0EBE3">
+<meta name="theme-color" content="#123328">
 <meta name="description" content="새달랩(SE:DAL) 크리스마스 클리커 커스텀 · 본체, 버튼, 스위치 축을 골라 나만의 클리커를 만들어 보세요.">
 <!-- 카카오톡·인스타 등에 링크를 보낼 때 나오는 미리보기 카드 -->
 <meta property="og:type" content="website">
@@ -31,9 +31,9 @@
 /* Layout: car-configurator pattern — cream top bar + step bar, sticky white product stage on the left, scrolling option panel on the right with a fixed prev/next rail. */
 :root{
   color-scheme:light;
-  --bg:#FFFFFF; --bar:#F0EBE3; --sunken:#F6F3EF; --stage:#FFFFFF;
-  --ink:#1B1512; --ink-2:#6E655F; --ink-3:#7D746D; --line:#E6DFD8; --line-2:#D4CBC2;
-  --accent:#4E2F23; --accent-ink:#FFFFFF; --check:#4E2F23; --best:#D6432F; --focus:#9A6B55;
+  --bg:#FFFDF8; --bar:#123328; --sunken:#F1ECDF; --stage:transparent;
+  --ink:#1A1F1C; --ink-2:#596159; --ink-3:#687068; --line:#E4DFD0; --line-2:#CFC9B8;
+  --accent:#A8222D; --accent-ink:#FFFFFF; --check:#1F6B52; --best:#B8252F; --focus:#1F7A5F;
   --shadow:0 22px 44px -30px rgba(50,30,20,.45);
   --body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --wordmark:"Montserrat","Noto Sans KR",sans-serif;
@@ -106,6 +106,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .turn::after{content:"← →";font-size:11px;letter-spacing:0;margin-top:-6px;opacity:.9}
 .chip{position:absolute;left:14px;top:14px;z-index:2;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #E6DFD8;color:#1B1512;font-size:13px;font-weight:500;pointer-events:none}
 .chip i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+@media (max-width:560px){.chip{left:10px;top:10px;gap:6px;padding:5px 9px;border-radius:12px;font-size:11px;line-height:1.35}.chip i{width:10px;height:10px;flex:none}.chip .pl{display:block}.chip .sep{display:none}}
 .stage-tools{position:absolute;right:14px;top:14px;z-index:2;display:flex;gap:6px}
 .stage-tools button{appearance:none;border:1px solid #E6DFD8;background:#fff;color:#1B1512;width:34px;height:34px;border-radius:999px;cursor:pointer;display:grid;place-items:center}
 .stage-tools svg{width:16px;height:16px}
@@ -354,6 +355,30 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .site-foot{padding:14px 20px 18px;text-align:center;font-size:11px;color:#9A9086;letter-spacing:.2px}
 .topbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:repeating-linear-gradient(135deg,#B8252F 0 8px,#1F7A5F 8px 16px)}
 .lim{display:inline-block;background:#B8252F;color:#fff;font-size:10px;font-weight:700;line-height:1.5;padding:1px 7px;border-radius:999px;white-space:nowrap}.card .lim{margin-top:2px}
+/* ── 크리스마스 분위기: 상단·미리보기는 짙은 소나무색, 옵션 패널은 눈 내린 크림색 ── */
+.topbar{--ink:#F8F3E8;--ink-2:#CBD8CE;--line-2:rgba(248,243,232,.38);color:var(--ink)}
+.xm-tree{width:17px;height:21px;flex:none;color:#F2C25B;margin-right:-6px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tag.pre{background:#1F6B52}
+.panel{background:#F8F4EA url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='160'%3E%3Cg stroke='%231F6B52' stroke-opacity='.065' stroke-width='1.1' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 22v16M23 26l14 8M37 26l-14 8'/%3E%3Cpath d='M110 92v12M105 95l10 6M115 95l-10 6'/%3E%3Cpath d='M150 28v9M146 30l8 5M154 30l-8 5'/%3E%3Cpath d='M52 128v10M48 130l8 6M56 130l-8 6'/%3E%3C/g%3E%3C/svg%3E");--sunken:#EEE8D9}
+.panel .panel-nav{background:#F8F4EA}
+.stage-col{--ink:#F8F3E8;--ink-2:#CBD8CE;--ink-3:#B3C4B7;--line:rgba(248,243,232,.16);--line-2:rgba(248,243,232,.42);--bg:#123328;background:var(--bg);color:var(--ink)}
+.stage{background:radial-gradient(circle at 9% 30%,rgba(246,198,91,.20) 0,rgba(246,198,91,0) 58px),radial-gradient(circle at 91% 42%,rgba(246,198,91,.16) 0,rgba(246,198,91,0) 70px),radial-gradient(circle at 84% 86%,rgba(240,82,75,.12) 0,rgba(240,82,75,0) 64px),radial-gradient(ellipse at 50% 55%,#215A47 0%,#173F32 58%,#123328 100%)}
+.stage::before,.stage::after{content:"";position:absolute;left:0;right:0;pointer-events:none;z-index:0;will-change:transform}
+.stage::before{top:-240px;height:calc(100% + 240px);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='%23FFFFFF'%3E%3Ccircle cx='114' cy='158' r='1.5' fill-opacity='0.41'/%3E%3Ccircle cx='3' cy='90' r='1.1' fill-opacity='0.67'/%3E%3Ccircle cx='166' cy='144' r='1.4' fill-opacity='0.61'/%3E%3Ccircle cx='35' cy='106' r='1.0' fill-opacity='0.71'/%3E%3Ccircle cx='14' cy='197' r='0.9' fill-opacity='0.62'/%3E%3Ccircle cx='81' cy='97' r='1.6' fill-opacity='0.36'/%3E%3Ccircle cx='15' cy='220' r='1.3' fill-opacity='0.39'/%3E%3Ccircle cx='237' cy='227' r='0.9' fill-opacity='0.52'/%3E%3Ccircle cx='32' cy='75' r='1.4' fill-opacity='0.42'/%3E%3Ccircle cx='167' cy='12' r='1.0' fill-opacity='0.68'/%3E%3Ccircle cx='96' cy='101' r='1.4' fill-opacity='0.54'/%3E%3Ccircle cx='92' cy='7' r='1.5' fill-opacity='0.74'/%3E%3Ccircle cx='234' cy='159' r='1.2' fill-opacity='0.50'/%3E%3Ccircle cx='166' cy='162' r='0.9' fill-opacity='0.44'/%3E%3Ccircle cx='87' cy='123' r='1.6' fill-opacity='0.55'/%3E%3Ccircle cx='7' cy='197' r='1.2' fill-opacity='0.56'/%3E%3Ccircle cx='53' cy='103' r='1.2' fill-opacity='0.66'/%3E%3Ccircle cx='25' cy='132' r='1.0' fill-opacity='0.63'/%3E%3Ccircle cx='9' cy='66' r='1.1' fill-opacity='0.60'/%3E%3Ccircle cx='12' cy='110' r='1.0' fill-opacity='0.46'/%3E%3Ccircle cx='114' cy='230' r='1.3' fill-opacity='0.73'/%3E%3Ccircle cx='40' cy='222' r='1.2' fill-opacity='0.43'/%3E%3C/g%3E%3C/svg%3E");animation:xm-snow1 26s linear infinite}
+.stage::after{top:-340px;height:calc(100% + 340px);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340'%3E%3Cg fill='%23FFFFFF'%3E%3Ccircle cx='254' cy='310' r='1.8' fill-opacity='0.33'/%3E%3Ccircle cx='262' cy='116' r='2.1' fill-opacity='0.25'/%3E%3Ccircle cx='14' cy='210' r='3.2' fill-opacity='0.55'/%3E%3Ccircle cx='171' cy='8' r='2.3' fill-opacity='0.49'/%3E%3Ccircle cx='283' cy='217' r='2.1' fill-opacity='0.41'/%3E%3Ccircle cx='162' cy='213' r='2.2' fill-opacity='0.53'/%3E%3Ccircle cx='304' cy='55' r='2.2' fill-opacity='0.51'/%3E%3Ccircle cx='95' cy='321' r='2.5' fill-opacity='0.46'/%3E%3Ccircle cx='240' cy='73' r='2.2' fill-opacity='0.33'/%3E%3Ccircle cx='232' cy='236' r='2.0' fill-opacity='0.52'/%3E%3Ccircle cx='143' cy='82' r='2.4' fill-opacity='0.54'/%3E%3C/g%3E%3C/svg%3E");animation:xm-snow2 44s linear infinite}
+@keyframes xm-snow1{to{transform:translateY(240px)}}
+@keyframes xm-snow2{to{transform:translateY(340px)}}
+.xm-lights{position:absolute;left:0;right:0;top:0;height:30px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='144' height='30'%3E%3Cpath d='M0 3Q36 20 72 3T144 3' fill='none' stroke='%230B1F18' stroke-width='1.4'/%3E%3Cpath d='M24 7v3' stroke='%230B1F18' stroke-width='2'/%3E%3Ccircle cx='24' cy='14' r='8' fill='%23F0524B' fill-opacity='.22'/%3E%3Cellipse cx='24' cy='14' rx='3.3' ry='4.3' fill='%23F0524B'/%3E%3Cpath d='M72 0v3' stroke='%230B1F18' stroke-width='2'/%3E%3Ccircle cx='72' cy='7' r='8' fill='%23F6C65B' fill-opacity='.22'/%3E%3Cellipse cx='72' cy='7' rx='3.3' ry='4.3' fill='%23F6C65B'/%3E%3Cpath d='M120 7v3' stroke='%230B1F18' stroke-width='2'/%3E%3Ccircle cx='120' cy='14' r='8' fill='%2359C796' fill-opacity='.22'/%3E%3Cellipse cx='120' cy='14' rx='3.3' ry='4.3' fill='%2359C796'/%3E%3C/svg%3E") repeat-x 50% 0;pointer-events:none;z-index:0;animation:xm-glow 3.6s ease-in-out infinite}
+@keyframes xm-glow{50%{opacity:.72}}
+.stage .floor{border-color:rgba(248,243,232,.30)}
+.stage .floor::after{color:rgba(248,243,232,.72)}
+.stage .disclaim{color:rgba(248,243,232,.68)}
+.stage .view svg{filter:drop-shadow(0 14px 16px rgba(0,0,0,.45))}
+.chip,.stage-tools button{border-color:rgba(18,51,40,.18)}
+.stage-tools button{color:#1A1F1C}
+.site-foot{color:#7A8279}
+@media (prefers-reduced-motion:reduce){.stage::before,.stage::after,.xm-lights{animation:none}}
 </style>
 
 <script data-goatcounter="https://sedallab.goatcounter.com/count" async src="../gc-count.js"></script>
@@ -362,7 +387,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><span class="wordmark">SE:DAL</span><span class="div"></span><span class="model">크리스마스 클리커<small>8구 · 마그넷 키링</small></span></div>
+    <div class="brand"><svg class="xm-tree" viewBox="0 0 20 24" aria-hidden="true"><path d="M10 1.2l1.3 2.7 3 .4-2.2 2 .5 2.9L10 7.8 7.4 9.2l.5-2.9-2.2-2 3-.4zM10 8.6l3.6 5H12l3.8 5H4.2l3.8-5H6.4zM8.6 19.4h2.8V23H8.6z" fill="currentColor"/></svg><span class="wordmark">SE:DAL</span><span class="div"></span><span class="model">크리스마스 클리커<small>8구 · 마그넷 키링</small></span></div>
     <div class="topbar-actions">
       <button class="btn" id="reset" type="button">처음부터</button>
       <button class="btn" id="verify-open" type="button">코드 확인</button>
@@ -386,6 +411,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
       <div class="stage" id="stage">
         <span class="chip" id="cur-pill"><i></i><span></span></span>
         <div class="stage-tools"><button type="button" id="cam-reset" title="보기 초기화" aria-label="보기 초기화"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v3h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+        <div class="xm-lights" aria-hidden="true"></div>
         <div class="floor"></div>
         <div class="turn">360°</div>
         <div class="view v-iso" id="vw-iso"></div>
@@ -885,7 +911,8 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
 }
 function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():'기본가 · 옵션 추가금 없음'}
 function renderChip(){const id=S.step==='shape'?'iv':S.step==='code'?S.body:curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
-  pill.querySelector('span').textContent=S.step==='body'?`본체 · ${C[id].name}`:S.step==='code'?`완성 모습 · 본체 ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`}
+  const label=S.step==='body'?`본체 · ${C[id].name}`:S.step==='code'?`완성 모습 · 본체 ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`;
+  pill.querySelector('span').innerHTML=label.split(' · ').map(t=>`<span class="pl">${t}</span>`).join('<span class="sep"> · </span>')}
 function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code();$('#drawer [data-order]').textContent=orderLabel()}
 function render(){normTone();syncPart();{const sg=$('#stage');if(sg)sg.classList.toggle('btn-step',S.part==='btn'&&!VIEW)}draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
 
