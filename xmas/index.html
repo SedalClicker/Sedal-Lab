@@ -304,6 +304,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 @media (max-width:960px){
   html:not(.view-mode) .stage-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--bar-h,64px) + var(--steps-h,52px));z-index:15;background:var(--bg);padding-top:10px;padding-bottom:10px;gap:8px;box-shadow:0 6px 12px -10px rgba(0,0,0,.35)}
   html:not(.view-mode) .stage{min-height:0;aspect-ratio:auto;height:min(30vh,260px)}
+  html:not(.view-mode) .stage.is-top{height:min(40vh,350px)}
   html:not(.view-mode) .stage-foot .note{display:none}
   html:not(.view-mode) .stage .floor::after{display:none}
   html:not(.view-mode) .stage-foot{position:absolute;right:calc(clamp(16px,3vw,40px) + 8px);bottom:18px;z-index:3}
@@ -348,6 +349,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
   .topbar-actions .btn svg{width:10px;height:10px}
   html:not(.view-mode) .stage-col{padding-top:6px;padding-bottom:6px;gap:6px}
   html:not(.view-mode) .stage{height:min(27vh,234px)}
+  html:not(.view-mode) .stage.is-top{height:min(36vh,312px)}
   .stage-head h1{font-size:14px}
   .price strong{font-size:16px}
 }
@@ -665,12 +667,10 @@ function drawView(v,forExport){
   // viewBox
   const all=[...Bt,...Bb,...Lo,...Lo2,...capCenters().map((_,i)=>[...worldCap(i),M.capH+M.sqH])].map(p=>v.cam.pr(p));
   let xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),pad=2.5,x0=Math.min(...xs)-pad,y0=Math.min(...ys)-pad,w=Math.max(...xs)-x0+pad,h=Math.max(...ys)-y0+pad;
-  const swLab=!forExport&&S.step==='sw';
   if(v.taper){const c=v.cam.pr([0,0,11]);w=114;h=84;x0=c[0]-w/2;y0=c[1]-h/2}
   v.vb=[x0,y0,w,h];
   host.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0.toFixed(2)} ${y0.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}" role="img" aria-label="크리스마스 클리커 미리보기">${(patterns()+o).replaceAll('id="px-','id="'+v.id+'-px-').replaceAll('url(#px-','url(#'+v.id+'-px-')}</svg>`;
   const out=host.innerHTML;
-  if(swLab){const ref=host.querySelector('svg');requestAnimationFrame(()=>{if(!host.hidden&&host.querySelector('svg')===ref&&!ref.querySelector('.sw-lab'))swLabels(v,host,xs)})}
   return out;
 }
 // top details of one button by shape: ring line/band, square, heart
@@ -683,24 +683,6 @@ function capTop(v,x,y,z,w,r,ri,sq,sqR,sqH,hs,i,f,st,LW){const sh=S.shp[i];let o=
   if(SH[sh].icon){const h=hs*0.68;o+=extrude(v,iconPts(sh,x,y,h,z),iconPts(sh,x,y,h,z+sqH),af,as,LW*0.9)}
   return o}
 // switch-name labels in the stage margins (drawn outside the viewBox; svg overflow is visible, so the model keeps its size)
-function swLabels(v,host,xs){const svg=host.querySelector('svg'),stage=host.closest('.stage');if(!svg||!stage)return;
-  const m=svg.getScreenCTM();if(!m||!m.a)return;const sr=stage.getBoundingClientRect(),pxu=m.a;
-  const toU=(px,py)=>[(px-m.e)/m.a,(py-m.f)/m.d];const[vx0,vy0]=toU(sr.left,sr.top),[vx1,vy1]=toU(sr.right,sr.bottom);
-  const fs=12/pxu,gap=fs*1.6,mx0=Math.min(...xs),mx1=Math.max(...xs),cx=(mx0+mx1)/2,L=[],R=[];
-  for(let i=0;i<8;i++){const p=v.cam.pr([...worldCap(i),M.capH]);(p[0]<cx?L:R).push({i,p,y:p[1]})}
-  const lay=arr=>{arr.sort((a,b)=>a.y-b.y);for(let k=1;k<arr.length;k++)if(arr[k].y<arr[k-1].y+gap)arr[k].y=arr[k-1].y+gap;
-    const lim=vy1-fs*1.2;if(arr.length&&arr[arr.length-1].y>lim){const d=arr[arr.length-1].y-lim;arr.forEach(a=>a.y-=d)}};
-  lay(L);lay(R);
-  const tw=s=>[...s].reduce((t,ch)=>t+(/[ㄱ-힝]/.test(ch)?fs*1.0:fs*0.62),0);
-  let g='<g class="sw-lab" pointer-events="none" style="font-family:inherit">';
-  const one=(it,left)=>{const id=S.sw[it.i],x=SWM[id],sel=S.sel===it.i,nm=(it.i+1)+' '+x.name,W=tw(nm)+fs*1.1;
-    let edge=left?Math.max(mx0-fs*0.8,vx0+fs*0.6+W):Math.min(mx1+fs*0.8,vx1-fs*0.6-W);
-    const col=sel?'#D95F7C':'#8E7A70',dotX=left?edge-fs*0.35:edge+fs*0.35,txtX=left?edge-fs*0.95:edge+fs*0.95;
-    g+=`<line x1="${(left?edge+fs*0.2:edge-fs*0.2).toFixed(2)}" y1="${it.y.toFixed(2)}" x2="${it.p[0].toFixed(2)}" y2="${it.p[1].toFixed(2)}" stroke="${col}" stroke-width="${(sel?1.4:0.9)/pxu}" stroke-dasharray="${sel?'':(3/pxu)+' '+(2.5/pxu)}"/>`;
-    g+=`<circle cx="${it.p[0].toFixed(2)}" cy="${it.p[1].toFixed(2)}" r="${(2.2/pxu).toFixed(2)}" fill="${col}"/>`;
-    g+=`<circle cx="${dotX.toFixed(2)}" cy="${it.y.toFixed(2)}" r="${(fs*0.36).toFixed(2)}" fill="${x.hex}" stroke="#6E5A52" stroke-width="${0.6/pxu}"/>`;
-    g+=`<text x="${txtX.toFixed(2)}" y="${(it.y+fs*0.36).toFixed(2)}" font-size="${fs.toFixed(2)}" font-weight="${sel?700:500}" fill="${sel?'#D95F7C':'#3A2E2A'}" text-anchor="${left?'end':'start'}" paint-order="stroke" stroke="#FBF8F5" stroke-width="${3/pxu}" stroke-linejoin="round">${nm}</text>`};
-  L.forEach(it=>one(it,true));R.forEach(it=>one(it,false));svg.insertAdjacentHTML('beforeend',g+'</g>')}
 function draw(forExport){VIEWS.forEach(v=>drawView(v,forExport))}
 const SND={};
 // ───────────────────────── UI ─────────────────────────
@@ -765,7 +747,7 @@ function endDrag(e){if(!drag)return;const d=drag;drag=null;stage.classList.remov
 stage.addEventListener('pointerup',endDrag);stage.addEventListener('pointercancel',()=>{drag=null;stage.classList.remove('grabbing')});
 $('#cam-reset').onclick=()=>{cancelAnimationFrame(camAnim);camS={...CAM0};setCam();drawView(VIEWS[1],false)};
 $('#view-seg').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(!b)return;S.view=b.dataset.view;applyView();save()});
-function applyView(){const iso=S.view==='iso';$('#vw-iso').hidden=!iso;$('#vw-top').hidden=iso;$('.floor').hidden=!iso;$('#cam-reset').hidden=!iso;document.querySelectorAll('#view-seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===S.view))}
+function applyView(){const iso=S.view==='iso';$('#vw-iso').hidden=!iso;$('#vw-top').hidden=iso;$('.floor').hidden=!iso;$('#cam-reset').hidden=!iso;$('#stage').classList.toggle('is-top',!iso);document.querySelectorAll('#view-seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===S.view))}
 
 // helpers
 function swatchBg(c){
