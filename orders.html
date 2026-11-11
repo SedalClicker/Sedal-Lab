@@ -633,7 +633,7 @@ $('#purge').onclick = () => {
   })());
   if (!targets.length) { msg.textContent = `${days}일 지난 완료·취소 주문 중 지울 이름이 없어요`; return; }
   if (!confirm(`${days}일 지난 완료·취소 주문 ${targets.length}건의 이름·ID·받는 분을 지울까요? (주문 내용과 매출 기록은 남아요)`)) return;
-  for (const l of targets.flatMap(o => o.lines)) { l.buyer = l.buyerId = l.receiver = ''; l.anon = true; }
+  for (const l of targets.flatMap(o => o.lines)) { l.buyer = l.buyerId = l.receiver = l.region = ''; if (l.req) delete l.req.note; l.anon = true; }
   save(); render();
   msg.textContent = `${targets.length}건의 이름을 지웠어요`;
 };
@@ -733,7 +733,7 @@ $('#load').onclick = async () => {
       msg.textContent = `완료: 보정 코드 ${n}건 반영`;
     } else {
       const res = importRows(rowsOf(wb.SheetNames[0]));
-      msg.textContent = `완료: 새 주문 ${res.added}줄, 갱신 ${res.updated}줄${res.shipped ? `, 발송 완료로 바뀜 ${res.shipped}줄` : ''}`;
+      msg.textContent = `완료: 새 주문 ${res.added}줄, 갱신 ${res.updated}줄${res.shipped ? `, 발송 완료로 바뀜 ${res.shipped}줄` : ''}${res.req ? `, 배송메시지 요청 ${res.req}건` : ''}`;
     }
     lastPw = pw;
     $('#pw').value = ''; $('#pw').placeholder = pw ? '비밀번호 기억 중' : '엑셀 비밀번호';
@@ -763,6 +763,22 @@ function xlDate(v) {
   const u = new Date(Math.round((v - 25569) * 864e5));
   return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate(), u.getUTCHours(), u.getUTCMinutes(), u.getUTCSeconds()).toISOString();
 }
+// 배송지는 동명이인을 가릴 수 있게 시·도 + 시·군·구 두 단계까지만 남겨요 (상세 주소·우편번호·연락처는 읽지 않아요)
+function regionOf(addr) {
+  const t = String(addr || '').replace(/^\s*\(\d{5}\)\s*/, '').trim().split(/\s+/);
+  if (!t[0]) return '';
+  return /[시군구]$/.test(t[1] || '') ? t[0] + ' ' + t[1] : t[0];
+}
+// 배송메시지에 제작 요청(미조립·자석 제외)이 있으면 그것만 뽑아요. 요청이 없는 메시지는 저장하지 않아요
+// 요청이 있는 메시지는 확인할 수 있게 남기되, 공동현관 비밀번호·전화번호 같은 숫자는 가려요
+function reqFromMsg(msg) {
+  const raw = String(msg || '').trim(), v = raw.normalize('NFKC').replace(/\s+/g, '');
+  if (!v) return null;
+  const unasm = /미조립|비조립|조립(은|을|를|도)?(안(?!전)|않|하지|말고|마세요|마시|없이|빼|[xX✕×]|전상태|되지)|조립(은|을)?(제가|직접)|(직접|제가)조립/.test(v);
+  const nomag = /자석(은|을|를|도)?(빼|없이|없는|없게|제외|제거|안(?!전)|넣지|[xX✕×]|미부착|미포함|떼)|무자석|노자석/.test(v);
+  if (!unasm && !nomag) return null;
+  return {unasm, nomag, note: raw.replace(/\d{2,}/g, m => '*'.repeat(m.length)).slice(0, 80)};
+}
 function importRows(rows) {
   // 머리줄이 첫 줄이 아닐 수도 있어서(위에 안내문이 있는 엑셀) 앞 몇 줄에서 '상품주문번호'가 있는 줄을 찾아요
   const hi = rows.slice(0, 5).findIndex(r => (r || []).some(v => String(v || '').trim() === '상품주문번호'));
@@ -773,6 +789,11 @@ function importRows(rows) {
   if (miss.length) throw new Error('스마트스토어 주문 엑셀이 아닌 것 같아요 (없는 열: ' + miss.join(', ') + ')');
   let added = 0, updated = 0, shipped = 0;
   const now = new Date().toISOString();
+  // 엑셀 양식마다 있는 열이 달라요(주문조회 / 발주발송관리). 없는 열 때문에 이미 있던 값이 지워지지 않게 해요
+  const has = h => head.includes(h);
+  const COLS = {at: '주문일시', status: '주문상태', claim: '클레임상태', buyer: '구매자명', buyerId: '구매자ID', receiver: '수취인명'};
+  const addrCol = ['기본배송지', '통합배송지', '배송지'].find(has), msgCol = ['배송메세지', '배송메시지'].find(has);
+  const reqOrders = new Set();
   for (const r of rows.slice(hi + 1)) {
     const d = {};
     head.forEach((h, i) => d[h] = r[i]);
@@ -783,10 +804,13 @@ function importRows(rows) {
       product: d['상품명'] || '', option: d['옵션정보'] || '', qty: Number(d['수량']) || 1,
       buyer: d['구매자명'] || '', buyerId: d['구매자ID'] || '', receiver: d['수취인명'] || ''
     };
+    if (addrCol) row.region = regionOf(d[addrCol]);
+    if (msgCol) { row.req = reqFromMsg(d[msgCol]); if (row.req) reqOrders.add(row.orderNo); }
     const old = DB.orders[id];
     if (old) {
+      for (const [k, h] of Object.entries(COLS)) if (!has(h)) delete row[k];
       Object.assign(old, row);
-      if (old.anon) old.buyer = old.buyerId = old.receiver = '';   // 정리한 이름은 다시 불러와도 비워 둬요
+      if (old.anon) { old.buyer = old.buyerId = old.receiver = old.region = ''; if (old.req) delete old.req.note; }   // 정리한 이름은 다시 불러와도 비워 둬요
       // 스마트스토어에서 발송 처리된 주문은 여기서도 발송 완료로 (발송 시각은 엑셀의 발송일, 없으면 지금)
       if (!old.shipped && SHIPPED_STATES.includes(row.status) && !isCancel(row)) { old.shipped = true; old.shippedAt = xlDate(d['발송일']) || now; shipped++; }
       updated++;
@@ -798,7 +822,7 @@ function importRows(rows) {
     }
   }
   save();
-  return {added, updated, shipped};
+  return {added, updated, shipped, req: reqOrders.size};
 }
 
 // 스마트스토어 옵션 칸은 20자에서 잘려서, 긴 코드는 고객에게 다시 받은 전체 코드로 바꿔 써요
@@ -837,6 +861,11 @@ const codeOf = l => DB.fixes[l.id] || rawCodeOf(l);
 // 새 코드가 잘못 복사돼 다른 디자인으로 읽혔을 수 있어요 ("디자인 맞음"을 누르면 더 묻지 않아요)
 const CHK_SINCE = new Date('2026-10-30T00:00:00+09:00');
 const oldFmtCheck = (l, d) => d.legacy && !DB.fixes[l.id] && new Date(l.at) >= CHK_SINCE;
+// 배송메시지 요청(미조립·자석 제외). 잘못 읽힌 경우 주문 카드에서 '반영 안 함'을 누르면 꺼져요
+const reqOf = l => l.req && !l.reqOff ? l.req : null;
+const noMagOf = (l, d) => !!((d && d.nomag) || (reqOf(l) || {}).nomag);
+const unasmOf = l => !!(reqOf(l) || {}).unasm;
+const reqNames = r => [r.unasm && '미조립', r.nomag && '자석 없음'].filter(Boolean).join(' · ');
 const STAGES = [['body', '본체출력'], ['btn', '버튼출력'], ['asm', '조립'], ['pack', '포장']];
 const stagesOf = l => kindOf(l) === 'custom' ? STAGES : [['asm', '생산'], ['pack', '포장']];
 const st = l => l.stages || (l.stages = {});
@@ -879,7 +908,7 @@ function recipe(l) {
       else add(`btn:${b.shp}:${b.color}`, 1);
       add('sw:' + b.sw, 1);
     });
-    if (!d.nomag && DB.settings.magnet > 0) add('etc:magnet', DB.settings.magnet);
+    if (!noMagOf(l, d) && DB.settings.magnet > 0) add('etc:magnet', DB.settings.magnet);
     return {parts: out};
   }
   if (k === 'btnSet') {
@@ -958,7 +987,7 @@ function groups() {
     lines.sort((a, b) => isAddon(a) - isAddon(b) || a.id.localeCompare(b.id));
     const live = lines.filter(l => !isCancel(l));
     const mains = live.filter(l => !isAddon(l));
-    const o = {no, lines, live, mains, at: lines[0].at, receiver: lines[0].receiver, buyer: lines[0].buyer, anon: lines.some(l => l.anon),
+    const o = {no, lines, live, mains, at: lines[0].at, receiver: lines[0].receiver, buyer: lines[0].buyer, region: (lines.find(l => l.region) || {}).region || '', req: (lines.find(l => l.req) || {}).req || null, reqOff: lines.some(l => l.req && l.reqOff), anon: lines.some(l => l.anon),
       cancelled: !live.length, shipped: live.length > 0 && live.every(l => l.shipped)};
     o.produced = mains.every(l => st(l).pack);
     o.issues = issuesOf(o);
@@ -1123,7 +1152,7 @@ function renderSide(gs) {
   const rows = shown.map(o => {
     const m = o.mains.length, asm = o.mains.filter(l => st(l).asm).length, pack = o.mains.filter(l => st(l).pack).length;
     return `<tr data-goto="${esc(o.no)}" class="${o.shipped ? 'fin' : ''}" title="${esc(fmtAt(o.at))} · 주문 ${esc(o.no)}${o.receiver && o.receiver !== o.buyer ? ' · 받는 분 ' + esc(o.receiver) : ''}">
-      <td class="nm">${o.anon ? '<span class="no">정리됨</span>' : esc(o.buyer || o.receiver)}</td><td>${m}</td>
+      <td class="nm">${o.anon ? '<span class="no">정리됨</span>' : esc(o.buyer || o.receiver) + (o.region ? ` <small style="font-weight:400;color:var(--sub)">${esc(o.region)}</small>` : '')}</td><td>${m}</td>
       <td>${mark(asm, m)}</td><td>${mark(pack, m)}</td><td>${o.shipped ? '<span class="y">✓</span>' : '<span class="no">–</span>'}</td></tr>`;
   }).join('');
   const shipped = live.filter(o => o.shipped).length;
@@ -1330,7 +1359,7 @@ $('#side').onclick = e => {
   el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1500);
 };
 // 검색은 이름·받는 분·ID·주문번호·상품명·옵션(코드)·보정 코드·상태만 봐요 (체크 시각 같은 내부 기록은 안 봐요)
-const searchText = o => o.lines.map(l => [l.buyer, l.receiver, l.buyerId, l.orderNo, l.id, l.product, l.option, DB.fixes[l.id], l.status, l.claim].join(' ')).join(' ').toLowerCase();
+const searchText = o => o.lines.map(l => [l.buyer, l.receiver, l.buyerId, l.region, l.orderNo, l.id, l.product, l.option, DB.fixes[l.id], l.status, l.claim].join(' ')).join(' ').toLowerCase();
 function match(o, f) {
   if (f === 'all') return true;
   if (f === 'issue') return o.issues.length > 0 && !o.resolved;
@@ -1348,10 +1377,11 @@ function orderHTML(o) {
   const who = o.anon ? '<span class="meta">이름 정리됨</span>' : o.receiver && o.receiver !== o.buyer ? `${esc(o.buyer)} <span class="meta">(받는 분 ${esc(o.receiver)})</span>` : esc(o.buyer || o.receiver);
   return `<div class="order ${o.cancelled ? 'cancel' : ''}" id="o-${esc(o.no)}" style="scroll-margin-top:62px">
     <div class="ohead">
-      <span class="who">${who}</span>
+      <span class="who">${who}${o.region && !o.anon ? ` <span class="meta">· ${esc(o.region)}</span>` : ''}</span>
       <span class="meta">${esc(fmtAt(o.at))} · 주문 ${esc(o.no)}</span> ${st}
       ${o.cancelled || !COST ? '' : (e => `<span class="money" title="상품 ${won(e.rev)} + 배송비 ${won(e.custShip)} − 원가 ${won(e.cost)} − 택배 ${won(e.ship)}">매출 ${won(e.rev + e.custShip)} · 순이익 ${won(e.profit)}</span>`)(econOrder(o))}
       ${o.issues.map(i => `<span class="badge ${o.resolved ? '' : 'warn'}">${esc(i)}</span>`).join(' ')}
+      ${o.req ? `<span class="badge ${o.reqOff ? '' : 'warn'}" title="배송메시지에서 읽은 요청이에요">${o.reqOff ? '요청 반영 안 함' : '배송메시지 요청'}: ${esc(reqNames(o.req))}</span>${o.req.note ? ` <span class="meta">"${esc(o.req.note)}"</span>` : ''} <button class="btn" style="padding:1px 8px;font-size:12px" data-reqoff="${esc(o.no)}">${o.reqOff ? '다시 반영' : '반영 안 함'}</button>` : ''}
       <span class="acts">${o.issues.length ? `
         <label class="check ${o.fu && o.fu.contact ? 'mid' : ''}"><input type="checkbox" data-fu="${esc(o.no)}" data-kind="contact" ${o.fu && o.fu.contact ? 'checked' : ''}> 연락 완료${o.fu && o.fu.contact ? ' ' + fmtDay(o.fu.contact) : ''}</label>
         <label class="check ${o.resolved ? 'done' : ''}"><input type="checkbox" data-fu="${esc(o.no)}" data-kind="done" ${o.resolved ? 'checked' : ''}> 해결${o.resolved ? ' ' + fmtDay(o.fu.done) : ''}</label>` : ''}
@@ -1385,10 +1415,10 @@ function lineHTML(l) {
   const note = rc.err ? `<span class="badge warn">재고 차감 불가: ${esc(rc.err)}</span>` : rc.none ? '<span class="badge">재고 차감 없음</span>' : '';
   return `<div class="line">
     <div class="info">
-      <div><span class="pname">${esc(l.product)}</span> × ${esc(l.qty)} ${note} ${l.imported ? '<span class="badge">불러올 때 이미 발송됨</span>' : ''}</div>
+      <div><span class="pname">${esc(l.product)}</span> × ${esc(l.qty)} ${note} ${reqOf(l) ? `<span class="badge warn">${esc(reqNames(reqOf(l)))}</span>` : ''} ${l.imported ? '<span class="badge">불러올 때 이미 발송됨</span>' : ''}</div>
       ${body}
     </div>
-    <div class="stages">${stagesOf(l).map(([k, n]) => `<label class="check ${st(l)[k] ? 'done' : ''}"><input type="checkbox" data-line="${esc(l.id)}" data-stage="${k}" ${st(l)[k] ? 'checked' : ''}> ${n}</label>`).join('')}</div>
+    <div class="stages">${stagesOf(l).map(([k, n]) => `<label class="check ${st(l)[k] ? 'done' : ''}"><input type="checkbox" data-line="${esc(l.id)}" data-stage="${k}" ${st(l)[k] ? 'checked' : ''}> ${n === '조립' && unasmOf(l) ? '부품 준비(미조립)' : n}</label>`).join('')}</div>
   </div>`;
 }
 
@@ -1423,7 +1453,8 @@ function customHTML(l) {
         <div><span class="sw" style="background:${body.hex}"></span>본체 <b>${esc(body.name)}</b></div>
         ${d.rim ? `<div><span class="sw" style="background:${rimOf(d.rim).hex}"></span>테두리 <b>${esc(rimOf(d.rim).name)}</b></div>` : ''}
         <div>로고 ${d.logo ? `<b>${esc(color(d.logo).name)}</b>` : '본체색'}</div>
-        ${d.nomag ? '<div><b style="color:var(--warn)">자석 없음</b></div>' : ''}
+        ${noMagOf(l, d) ? `<div><b style="color:var(--warn)">자석 없음</b>${d.nomag ? '' : ' <span class="msg">(배송메시지 요청)</span>'}</div>` : ''}
+        ${unasmOf(l) ? '<div><b style="color:var(--warn)">미조립 발송</b> <span class="msg">(배송메시지 요청)</span></div>' : ''}
         <div>버튼 색 ${Object.entries(ctally).map(([id, n]) => `<span class="sw" style="background:${color(id).hex}"></span><b>${esc(color(id).name)}</b> ${n}`).join(' · ')}</div>
         <div>축 ${Object.entries(tally).map(([id, n]) => `<span class="sw" style="background:${swOf(id).hex}"></span>${esc(swOf(id).name)} ${n}`).join(' · ')}</div>
         <div class="msg">${esc(d.breakdown)}</div>
@@ -1667,6 +1698,11 @@ document.addEventListener('click', e => {
     if (l) { DB.fixes[l.id] = rawCodeOf(l); save(); render(); }
   } else if (t.dataset.unfix) {
     delete DB.fixes[t.dataset.unfix]; save(); render();
+  } else if (t.dataset.reqoff) {
+    // 배송메시지 요청을 잘못 읽었을 때 끄거나 다시 켜요 (주문의 모든 줄에 같이 적어요)
+    const ls = Object.values(DB.orders).filter(l => l.orderNo === t.dataset.reqoff && l.req), off = !ls.some(l => l.reqOff);
+    for (const l of ls) l.reqOff = off;
+    save(); render();
   }
 });
 $('#q').oninput = render;
