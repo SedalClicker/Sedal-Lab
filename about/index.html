@@ -1,0 +1,277 @@
+<!doctype html>
+<!-- © 2026 새달랩(SE:DAL). 회사 소개 페이지 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F0EBE3">
+<meta name="author" content="새달랩(SE:DAL)">
+<meta name="description" content="새달랩(SE:DAL)은 기계식 키보드 스위치를 넣은 클리커를 직접 설계하고 3D 프린터로 만들어 판매합니다. SE:DAL designs and makes 3D-printed mechanical-switch fidget clickers.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="새달랩 SE:DAL">
+<meta property="og:title" content="새달랩 SE:DAL · 직접 설계하고 만드는 클리커">
+<meta property="og:description" content="기계식 키보드 스위치를 넣은 클리커를 직접 설계하고 3D 프린터로 만듭니다.">
+<meta property="og:url" content="https://sedalclicker.github.io/Sedal-Lab/about/">
+<meta property="og:image" content="https://sedalclicker.github.io/Sedal-Lab/about/img/og.jpg">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<title>새달랩 SE:DAL · 직접 설계하고 만드는 클리커</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Montserrat:wght@700;800&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#FFFFFF; --bar:#F0EBE3; --sunken:#F6F3EF;
+  --ink:#1B1512; --ink-2:#6E655F; --line:#E6DFD8; --line-2:#D4CBC2;
+  --accent:#4E2F23; --accent-ink:#FFFFFF; --focus:#9A6B55;
+  --body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --wordmark:"Montserrat","Noto Sans KR",sans-serif;
+  --wrap:1080px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;word-break:keep-all}
+img,svg{display:block;max-width:100%}
+img{height:auto}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
+
+/* 상단 */
+.top{position:sticky;top:0;z-index:10;background:var(--bar);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;height:60px}
+.brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;margin-right:auto}
+.brand b{font-family:var(--wordmark);font-weight:800;font-size:21px;letter-spacing:.04em}
+.brand span{font-size:13px;color:var(--ink-2)}
+.nav{display:flex;gap:22px;font-size:14px}
+.nav a{text-decoration:none;color:var(--ink-2)}
+.nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 20px;border-radius:6px;border:1px solid var(--line-2);background:#fff;color:var(--ink);font:500 15px/1 var(--body);text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{background:#3C2319}
+.btn.small{min-height:36px;padding:0 14px;font-size:14px}
+
+/* 첫 화면 */
+.hero{padding:64px 0 56px}
+.hero .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:48px;align-items:center}
+.eyebrow{font-family:var(--wordmark);font-weight:700;font-size:13px;letter-spacing:.14em;color:var(--focus);margin:0 0 14px}
+h1{font-size:40px;line-height:1.28;letter-spacing:-.02em;margin:0 0 18px;font-weight:700}
+.lead{font-size:17px;color:var(--ink-2);margin:0 0 28px;max-width:30em}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.hero figure{margin:0;background:var(--bar);border-radius:8px;aspect-ratio:4/3;position:relative;overflow:hidden}
+.hero img{position:absolute;left:5%;top:5%;width:90%;height:90%;object-fit:contain}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:48px 0 0;padding:0;list-style:none}
+.facts li{background:#fff;padding:18px 20px}
+.facts b{display:block;font-size:22px;letter-spacing:-.01em}
+.facts span{font-size:13px;color:var(--ink-2)}
+
+/* 공통 구역 */
+section{padding:72px 0}
+section.tint{background:var(--sunken)}
+h2{font-size:28px;line-height:1.35;letter-spacing:-.02em;margin:0 0 10px}
+.sub{color:var(--ink-2);margin:0 0 36px;max-width:38em}
+
+/* 제품 */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.card{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:22px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:8px;padding:22px}
+.card .pic{background:var(--sunken);border-radius:6px;aspect-ratio:1/1;position:relative;overflow:hidden}
+.card .pic img{position:absolute;left:6%;top:6%;width:88%;height:88%;object-fit:contain}
+.card h3{font-size:19px;line-height:1.4;margin:0 0 6px}
+.card p{font-size:15px;color:var(--ink-2);margin:0 0 14px}
+.tag{display:inline-block;font-size:12px;font-weight:500;color:var(--accent);background:var(--bar);border-radius:99px;padding:2px 10px;margin:0 0 8px}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+
+/* 만드는 방법 */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;counter-reset:s;margin:0;padding:0;list-style:none}
+.steps li{counter-increment:s;background:#fff;border:1px solid var(--line);border-radius:8px;padding:24px}
+.steps li::before{content:"0" counter(s);font-family:var(--wordmark);font-weight:800;font-size:15px;color:var(--focus);letter-spacing:.06em}
+.steps h3{font-size:18px;margin:8px 0 6px}
+.steps p{font-size:15px;color:var(--ink-2);margin:0}
+
+.detail{display:grid;grid-template-columns:minmax(0,2.4fr) minmax(0,1fr);gap:20px;margin-top:20px;align-items:start}
+.detail figure{margin:0}
+.detail img{width:100%;border-radius:8px}
+.detail figure:last-child img{aspect-ratio:1/1.35;object-fit:cover}
+figcaption{font-size:13px;color:var(--ink-2);margin-top:8px}
+
+/* 스위치 */
+.split{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:48px;align-items:center}
+.split img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px}
+.split ul{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.split li{padding-left:18px;position:relative;color:var(--ink-2)}
+.split li::before{content:"";position:absolute;left:0;top:.72em;width:6px;height:6px;border-radius:50%;background:var(--focus)}
+.split li b{color:var(--ink);font-weight:500}
+
+/* 구매 */
+.buy{text-align:center}
+.buy .sub{margin-left:auto;margin-right:auto}
+.buy .cta{justify-content:center}
+
+/* 바닥 */
+footer{border-top:1px solid var(--line);padding:36px 0 48px;font-size:14px;color:var(--ink-2)}
+footer .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}
+footer b{color:var(--ink)}
+footer p{margin:0 0 6px}
+footer .en{font-size:13px}
+
+@media (max-width:860px){
+  .hero{padding:40px 0}
+  .hero .cols{grid-template-columns:minmax(0,1fr);gap:28px}
+  h1{font-size:31px}
+  .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid,.steps{grid-template-columns:minmax(0,1fr)}
+  .detail{grid-template-columns:minmax(0,1fr)}
+  .detail figure:last-child img{max-width:220px}
+  .split{grid-template-columns:minmax(0,1fr);gap:24px}
+  .split img{max-width:320px}
+  section{padding:52px 0}
+  footer .wrap{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  .nav{display:none}
+  h1{font-size:27px}
+  h2{font-size:23px}
+  .card{grid-template-columns:minmax(0,1fr);gap:16px}
+  .card .pic{aspect-ratio:16/10}
+  .top .btn{padding:0 12px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><b>SE:DAL</b><span>새달랩</span></a>
+    <nav class="nav" aria-label="페이지 안"><a href="#products">제품</a><a href="#making">만드는 방법</a><a href="#switch">스위치 축</a></nav>
+    <a class="btn primary small" href="https://smartstore.naver.com/se_dal" target="_blank" rel="noopener">스마트스토어</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="wrap cols">
+      <div>
+        <p class="eyebrow">SE:DAL LAB</p>
+        <h1>누르는 재미를<br>직접 설계하고 만듭니다</h1>
+        <p class="lead">새달랩(SE:DAL)은 기계식 키보드 스위치를 넣은 클리커를 직접 설계하고, 3D 프린터로 출력해 하나씩 조립하는 제작소입니다.</p>
+        <div class="cta">
+          <a class="btn primary" href="https://smartstore.naver.com/se_dal" target="_blank" rel="noopener">스마트스토어에서 보기</a>
+          <a class="btn" href="../">커스텀 만들어 보기</a>
+        </div>
+      </div>
+      <figure><img src="img/hero.webp" width="832" height="1040" alt="베이지색 본체에 갈색 테두리를 두른 8구 클리커. 버튼에 하트와 별이 들어가 있다"></figure>
+    </div>
+    <div class="wrap">
+      <ul class="facts">
+        <li><b>8개</b><span>누름 버튼 · 바닥 자석</span></li>
+        <li><b>14종</b><span>고를 수 있는 스위치 축</span></li>
+        <li><b>12가지</b><span>본체와 버튼 색</span></li>
+        <li><b>주문 제작</b><span>주문을 받은 뒤 만듭니다</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <section class="tint" id="products">
+    <div class="wrap">
+      <h2>제품</h2>
+      <p class="sub">모든 제품은 새달랩이 직접 설계해 만듭니다. 구매는 네이버 스마트스토어에서 할 수 있습니다.</p>
+      <div class="grid">
+        <article class="card">
+          <div class="pic"><img src="img/basic.webp" width="724" height="794" loading="lazy" alt="초코색과 화이트초코색 초콜릿 클리커 키링 두 개. 볼체인과 초콜릿 모양 참이 달려 있다"></div>
+          <div>
+            <h3>마그넷 초콜릿 클리커 키링</h3>
+            <p>판 초콜릿 모양 본체에 누름 버튼 8개가 들어 있습니다. 바닥 자석으로 철제 면에 붙이고, 고리로 가방에 달 수 있습니다.</p>
+            <div class="links"><a class="btn small primary" href="https://smartstore.naver.com/se_dal/products/13694270091" target="_blank" rel="noopener">구매하기</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="pic"><img src="img/custom.webp" width="440" height="618" loading="lazy" alt="메론색 버튼에 갈색 하트와 갈색 테두리를 넣은 커스텀 클리커"></div>
+          <div>
+            <h3>초콜릿 클리커 커스텀</h3>
+            <p>본체 색, 버튼마다의 색과 모양(하트·별·링), 테두리, 스위치 축을 골라 나만의 클리커를 주문합니다.</p>
+            <div class="links"><a class="btn small primary" href="../">디자인 만들기</a><a class="btn small" href="https://smartstore.naver.com/se_dal/products/13826634945" target="_blank" rel="noopener">구매하기</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="pic"><img src="img/xmas.webp" width="596" height="1000" loading="lazy" alt="크리스마스 클리커 세 개. 빨강과 초록 버튼에 트리, 사슴, 종 아이콘이 있고 가운데 제품은 줄무늬 테두리다"></div>
+          <div>
+            <span class="tag">시즌 한정</span>
+            <h3>크리스마스 클리커 커스텀</h3>
+            <p>트리·사슴·종 같은 아이콘 버튼과 줄무늬 테두리, 크리스마스 한정 스위치 축을 고를 수 있습니다.</p>
+            <div class="links"><a class="btn small primary" href="../xmas/">디자인 만들기</a></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="pic"><img src="img/calc.webp" width="248" height="326" loading="lazy" alt="핑크색 미니 계산기 클리커. 위에 긴 기호 버튼, 아래에 숫자 버튼 아홉 개가 있다"></div>
+          <div>
+            <h3>미니 계산기 클리커</h3>
+            <p>계산기 모양 본체에 숫자 버튼 9개와 긴 기호 버튼이 들어 있습니다. 바닥에 자석이 있고, 핑크와 블루 두 가지 색입니다.</p>
+            <div class="links"><a class="btn small primary" href="https://smartstore.naver.com/se_dal" target="_blank" rel="noopener">스토어에서 보기</a></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="making">
+    <div class="wrap">
+      <h2>만드는 방법</h2>
+      <p class="sub">설계부터 포장까지 한곳에서 합니다.</p>
+      <ol class="steps">
+        <li><h3>설계</h3><p>본체와 버튼을 Autodesk Fusion으로 직접 설계합니다. 스위치와 버튼이 맞물리는 치수는 출력물로 확인하며 맞춥니다.</p></li>
+        <li><h3>출력</h3><p>본체, 버튼, 테두리를 색별로 3D 프린터에서 출력합니다. 하트·별 같은 투톤 버튼은 두 가지 색을 함께 씁니다.</p></li>
+        <li><h3>조립과 포장</h3><p>버튼마다 고른 스위치 축을 끼우고 자석과 고리를 달아 완성한 뒤 포장해 보냅니다.</p></li>
+      </ol>
+      <div class="detail">
+        <figure><img src="img/logo.jpg" width="1200" height="424" loading="lazy" alt="클리커 옆면에 새겨진 SE:DAL 로고"><figcaption>옆면에는 SE:DAL 로고가 들어갑니다. 로고 색은 본체와 다르게 고를 수 있습니다.</figcaption></figure>
+        <figure><img src="img/colors.jpg" width="430" height="900" loading="lazy" alt="열 가지 색으로 출력한 SE:DAL 로고판"><figcaption>색마다 출력한 로고판입니다.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="tint" id="switch">
+    <div class="wrap split">
+      <figure style="margin:0"><img src="img/switch.jpg" width="800" height="800" loading="lazy" alt="키보드에 끼워진 기계식 스위치 하나. 투명한 몸통에 파란 축이 보인다"><figcaption>사진: Fletcher, <a href="https://commons.wikimedia.org/wiki/File:Outemu_Blue_Key_Switch.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by/4.0" target="_blank" rel="noopener">CC BY 4.0</a> (일부를 잘라 사용)</figcaption></figure>
+      <div>
+        <h2>버튼마다 다른 스위치 축</h2>
+        <p class="sub" style="margin-bottom:0">클리커 안에는 기계식 키보드에 쓰는 스위치가 들어갑니다. 축에 따라 누르는 느낌과 소리가 달라서, 버튼 8개에 서로 다른 축을 넣을 수 있게 했습니다.</p>
+        <ul>
+          <li><b>리니어</b> 걸림 없이 부드럽게 눌립니다</li>
+          <li><b>택타일</b> 누르는 중간에 도각거리는 걸림이 있습니다</li>
+          <li><b>클리키</b> 딸깍 소리가 또렷합니다</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="buy" id="buy">
+    <div class="wrap">
+      <h2>구매 안내</h2>
+      <p class="sub">커스텀 제품은 디자인 페이지에서 만든 주문 코드를 스마트스토어 주문서에 적어 주시면 그대로 제작합니다.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://smartstore.naver.com/se_dal" target="_blank" rel="noopener">네이버 스마트스토어 가기</a>
+        <a class="btn" href="../check.html">주문 코드 확인</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p><b>새달랩 SE:DAL</b></p>
+      <p>스토어 <a href="https://smartstore.naver.com/se_dal" target="_blank" rel="noopener">smartstore.naver.com/se_dal</a></p>
+      <p>© 2026 새달랩(SE:DAL)</p>
+    </div>
+    <div class="en" lang="en">
+      <p><b>About SE:DAL</b></p>
+      <p>SE:DAL is a small hardware studio in Korea. We design fidget clickers built around mechanical keyboard switches in Autodesk Fusion, 3D print every part, and assemble each unit to order.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
