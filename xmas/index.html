@@ -696,16 +696,23 @@ function optN(){return iconN()+ringN()+(S.rim?1:0)}
 function heartMsg(){const p=[];if(iconN())p.push(`<b>아이콘 버튼 옵션 ${iconN()}개</b>`);if(ringN())p.push(`<b>링 버튼 옵션 ${ringN()}개</b>`);if(S.rim)p.push(`<b>${rimOf().name} 테두리 옵션 1개</b>`);return `네이버 스마트스토어 주문 시 ${p.join(', ')}를 추가해 주셔야 합니다.`}
 const STEPS=[{k:'body',name:'본체 색상'},{k:'shape',name:'버튼 모양'},{k:'btn',name:'버튼 색상'},{k:'sw',name:'스위치 축'},{k:'code',name:'주문 코드'}];
 // 금액은 임시로 초콜릿 클리커 커스텀과 같게 넣어 뒀어요. 크리스마스 상품 가격이 정해지면 여기만 바꾸면 됩니다.
-const PRICE={base:18900,RIM:2000};
+const PRICE={base:18900,RIM:2000,SET:16900};
+// 크리스마스 커스텀은 한정판 에디션이라 기본 옵션을 따로 팔지 않아요.
+// 예외: 한정판 색(레드·그린·버건디)·한정판 축·줄무늬 테두리를 하나도 쓰지 않은 '화이트 단색' 조합만 기본 상품(초콜릿 클리커)으로 안내해요.
+//   본체·버튼 8개·로고가 모두 화이트 + 버튼 모양이 모두 기본형 또는 모두 무지형 + 스위치 축 8개 통일(크리스마스 한정판 축 제외) + 테두리 없음 또는 화이트 테두리
+const BASIC_URL='https://smartstore.naver.com/se_dal/products/13694270091';
+function isWhiteSet(){return S.body==='iv'&&S.btn.every(x=>x==='iv')&&(!S.logo||S.logo==='iv')&&S.shp.every(k=>k===S.shp[0])&&(S.shp[0]==='B'||S.shp[0]==='P')&&S.sw.every(x=>x===S.sw[0])&&!SWM[S.sw[0]].lim&&(!S.rim||S.rim==='iv')}
+function whitePrice(){return PRICE.SET+(S.rim?PRICE.RIM:0)}
 function customPrice(){return PRICE.base+optSum()+(S.rim?PRICE.RIM:0)}
 // 마지막 단계에 항상 보이는 추가상품 목록 (스마트스토어 추가상품 이름 그대로)
 const RIM_STORE={iv:'화이트',xm:'줄무늬'};
 function addonGuide(){
+  if(isWhiteSet())return`<div class="addon-guide"><b>💡 화이트 단색 조합은 기본 상품으로 주문할 수 있어요 · ${won(customPrice()-whitePrice())}원 더 저렴</b><p>크리스마스 커스텀은 한정판 에디션이라 기본 옵션을 따로 판매하지 않지만, 한정판 색(레드·그린·버건디)을 쓰지 않은 <b>화이트 단색</b> 조합은 기본 상품과 같은 구성이에요. 기본 상품 페이지에서 이렇게 골라 주세요.</p><ul><li><span>색상</span><b>화이트</b></li><li><span>버튼 모양</span><b>${SH[S.shp[0]].name}</b></li><li><span>스위치 축</span><b>${swName(S.sw[0])}</b></li>${S.rim?`<li><span>화이트 테두리 (추가상품)</span><b>1개</b><em>+${won(PRICE.RIM)}원</em></li>`:''}</ul><p class="ag-total">상품 금액 합계 <b>${won(whitePrice())}원</b> <s>${won(customPrice())}원</s><small> · 배송비 별도</small></p></div>`;
   const ol=[];if(iconN())ol.push(['버튼 변경: 아이콘',iconN(),SH.H.price]);if(ringN())ol.push(['버튼 변경: 링',ringN(),SH.R.price]);if(S.rim)ol.push(['테두리 추가: '+(RIM_STORE[S.rim]||rimOf().name),1,PRICE.RIM]);
   return`<div class="addon-guide${ol.length?'':' none'}"><b>🛒 스마트스토어에서 함께 담아 주세요</b>${ol.length?`<ul>${ol.map(([n,q,p])=>`<li><span>${n}</span><b>${q}개</b><em>+${won(q*p)}원</em></li>`).join('')}</ul>`:'<p>추가로 담을 옵션이 없어요. 커스텀 클리커 상품만 주문하시면 됩니다.</p>'}<p class="ag-total">상품 금액 합계 <b>${won(customPrice())}원</b><small> · 배송비 별도</small></p></div>`}
 // 크리스마스 커스텀 상품 주소: 상품 등록 후 아래 따옴표 안에 넣으면 [주문하기] 버튼이 연결됩니다.
 const ORDER_URL='';
-function orderLabel(){return'코드 복사하고 스마트스토어에서 주문하기'}
+function orderLabel(){return isWhiteSet()?`기본 상품으로 주문하기 · ${won(whitePrice())}원`:'코드 복사하고 스마트스토어에서 주문하기'}
 function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
 function total(){return customPrice()}
 function breakdown(){const h=iconN(),r=ringN();return `기본 ${won(PRICE.base)}원${h?` + 아이콘(투톤) 버튼 ${h}개 × ${won(SH.H.price)}원`:''}${r?` + 링(투톤) 버튼 ${r}개 × ${won(SH.R.price)}원`:''}${S.rim?` + ${rimOf().name} 테두리 ${won(PRICE.RIM)}원`:''}`}
@@ -880,9 +887,9 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
       ${Object.keys(SND).length?'<p class="help">축 카드의 스피커 버튼을 누르면 실제 녹음한 타건 소리를 들을 수 있습니다.</p>':''}<p class="help">축 색은 제조사 스템 색을 참고한 근사치입니다. 클리키는 딸깍 소리, 택타일은 걸림 있는 타건감, 리니어는 걸림 없는 부드러운 타건감입니다.</p></div>
     <div class="sec"><div class="sec-head"><h3>추가 옵션</h3></div><label class="opt-check"><input type="checkbox" id="nomag" ${S.nomag?'checked':''}><span><b>자석 기능 빼기</b><small>바닥 자석 없이 제작합니다.</small></span></label></div>`;
   }else{
-    h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">아래 코드를 복사해 주문서 [커스텀 주문코드]란에 붙여 넣으면 이 조합 그대로 제작됩니다.</p>
+    h+=`<h2 class="ptitle">주문 코드</h2><p class="lead">${isWhiteSet()?'이 조합은 한정판 색을 쓰지 않은 <b>화이트 단색</b>이라 <b>기본 상품</b>으로 더 저렴하게 주문할 수 있어요.':'아래 코드를 복사해 주문서 [커스텀 주문코드]란에 붙여 넣으면 이 조합 그대로 제작됩니다.'}</p>
     <dl class="summary">${summaryRows()}</dl>
-    <div class="order-guide"><b>📋 주문 방법</b><ol><li><b>주문코드 복사</b> 버튼을 눌러 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>크리스마스 커스텀 클리커 상품</b>을 주문하면서 주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여넣기 해 주세요.</li><li>그 외 요청사항은 <b>판매자 요청사항</b>란에 따로 적어 주세요.</li><li>아래 <b>[함께 담아 주세요]</b>에 있는 추가 옵션을 주문할 때 <b>꼭 같이 선택</b>해 주세요. 빠지면 추가 결제를 다시 요청드려야 해요.</li></ol></div>
+    ${isWhiteSet()?`<div class="order-guide"><b>📋 주문 방법</b><ol><li>아래 <b>[기본 상품으로 주문하기]</b>를 누르면 코드가 복사되고 <b>기본 상품</b> 페이지가 열려요.</li><li>아래 상자대로 <b>색상·버튼 모양·스위치 축</b>을 골라${S.rim?' <b>화이트 테두리</b>도 함께 담아':''} 주세요.</li><li>복사된 코드를 <b>판매자 요청사항</b>란에 붙여 넣어 주세요.${S.nomag?' <b>자석 없이 제작</b>도 함께 적어 주세요.':''}</li></ol></div>`:`<div class="order-guide"><b>📋 주문 방법</b><ol><li><b>주문코드 복사</b> 버튼을 눌러 코드를 복사하세요.</li><li>네이버 스마트스토어 <b>크리스마스 커스텀 클리커 상품</b>을 주문하면서 주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여넣기 해 주세요.</li><li>그 외 요청사항은 <b>판매자 요청사항</b>란에 따로 적어 주세요.</li><li>아래 <b>[함께 담아 주세요]</b>에 있는 추가 옵션을 주문할 때 <b>꼭 같이 선택</b>해 주세요. 빠지면 추가 결제를 다시 요청드려야 해요.</li></ol></div>`}
     ${addonGuide()}
     <div class="codebox"><span class="code" id="code">${escH(code())}</span><button type="button" class="btn primary" id="copy">주문코드 복사</button></div>
     <button type="button" class="btn order-go" data-order>${orderLabel()}</button>
@@ -898,7 +905,7 @@ function renderPrice(){$('#price-total').textContent=won(total());const n=twoCou
 function renderChip(){const id=S.step==='shape'?'iv':S.step==='code'?S.body:curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
   const label=S.step==='body'?`본체 · ${C[id].name}`:S.step==='code'?`완성 모습 · 본체 ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`;
   pill.querySelector('span').innerHTML=label.split(' · ').map(t=>`<span class="pl">${t}</span>`).join('<span class="sep"> · </span>')}
-function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code();$('#drawer [data-order]').textContent=orderLabel()}
+function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code();$('#drawer [data-order]').textContent=orderLabel();$('#drawer-card-help').innerHTML=isWhiteSet()?'기본 상품 주문서의 <b>[판매자 요청사항]</b>란에 붙여 넣어 주세요.':'주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.'}
 function render(){normTone();syncPart();{const sg=$('#stage');if(sg)sg.classList.toggle('btn-step',S.part==='btn'&&!VIEW)}draw(false);applyView();renderSubsteps();renderPanel();renderChip();renderPrice();if(!$('#drawer').hidden)renderDrawer();save()}
 
 // toast
@@ -912,7 +919,7 @@ async function shareLink(){const url=SHARE_BASE+'#c='+encodeURIComponent(code())
   copyText(url,'',`링크를 복사했어요. 카카오톡 등에 붙여 넣으면 이 디자인이 그대로 열려요`)}
 async function copyText(txt,where='주문서 [커스텀 주문코드]란에',msg){let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){const ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);try{ok=document.execCommand('copy')}catch(_){}ta.remove()}
   if(ok)status(msg||('복사됨: '+txt+' — '+where+' 붙여넣고, 앞·뒤 글자가 같은지 확인해 주세요'),5000);else{const el=$('#code')||$('#drawer-code');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}status('자동 복사가 안 되어 코드를 선택해 두었습니다. 길게 눌러 복사하세요',5000)}return ok}
-async function copyOrder(){return copyText(code())}
+async function copyOrder(){return isWhiteSet()?copyText(code(),'기본 상품 주문서의 [판매자 요청사항]란에'):copyText(code())}
 function go(k){S.step=k;syncPart();lastPick=null;render();window.scrollTo({top:0,behavior:'smooth'})}
 
 let lastPick=null,shapeAll=false;
@@ -942,7 +949,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.color){const id=t.dataset.color;lastPick=id;const scope=t.dataset.scope||(S.step==='body'?'body':'btn');
     if(scope==='body'){S.body=id}else{S.btn[S.sel]=id;if(!hasAcc())S.sel=(S.sel+1)%8}render();return}
   if(t.dataset.acc){const id=t.dataset.acc;S.acc[S.sel]=id===PAIR[S.btn[S.sel]]?null:id;lastPick=null;S.sel=(S.sel+1)%8;render();return}
-  if(t.closest&&t.closest('[data-order]')){const url=ORDER_URL;if(url){copyOrder();window.open(url,'_blank','noopener')}else status('주문 페이지를 준비 중입니다. 잠시 후 다시 시도해 주세요.');return}
+  if(t.closest&&t.closest('[data-order]')){const url=isWhiteSet()?BASIC_URL:ORDER_URL;if(url){copyOrder();window.open(url,'_blank','noopener')}else status('주문 페이지를 준비 중입니다. 잠시 후 다시 시도해 주세요.');return}
   if(t.id==='copy'||t.id==='drawer-copy'){openNotice();return}
   if(t.id==='notice-ok'){$('#notice').hidden=true;copyOrder();return}
   if(t.dataset.copycode){copyText(t.dataset.copycode);return}
