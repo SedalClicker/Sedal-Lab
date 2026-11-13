@@ -686,7 +686,7 @@ function altPrice(){return PRICE.SET+soloSum()+(S.rim?PRICE.RIM:0)}
 function altCheaper(){return isSet()&&altPrice()<customPrice()}
 // 단색 세트: 본체·버튼 8개·로고가 모두 같은 색 + 스위치 축 8개 통일 + 버튼 모양 통일(기본형 또는 무지형) + 유료 옵션(테두리·하트·별) 없음 → 기본 판매 제품과 같아 기본가 할인
 // 투톤 상단색을 추천 색이 아닌 색으로 바꾼 버튼이 있으면 기본 상품 개별 옵션으로 고를 수 없어 커스텀으로 주문해요
-const BASE_BODY=['sy','ww','cc','lv','ml','st','wd','sd'];// 기본 상품(스마트스토어)에서 고를 수 있는 본체 색
+const BASE_BODY=['sy','ww','cc','lv','ml','st','wd','sd','iv'];// 기본 상품(스마트스토어)에서 고를 수 있는 본체 색
 function isSet(){const b=S.body,free=S.shp.filter(k=>!SH[k].acc);return BASE_BODY.includes(b)&&S.btn.every(x=>x===b)&&(!S.logo||S.logo===b)&&S.sw.every(x=>x===S.sw[0])&&free.every(x=>x===free[0])&&S.shp.every((k,i)=>!SH[k].acc||!(S.acc||[])[i]||S.acc[i]===PAIR[S.btn[i]])}
 function nomagNote(){return S.nomag?`<br><b>자석 기능 빼기</b>는 추가금 없이 <b>판매자 요청사항</b>란에 <b>"자석 없이 제작"</b>이라고 적어 주시면 됩니다.`:''}
 // 마지막 단계에 항상 보이는 추가상품 목록 (스마트스토어 추가상품 이름 그대로)
