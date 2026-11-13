@@ -922,7 +922,8 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
   $('#prev').disabled=i===0;const nx=$('#next');nx.textContent=i===STEPS.length-1?'주문코드 복사':'다음';
 }
 function renderPrice(){$('#price-total').textContent=won(total());const n=twoCount();$('#price-note').textContent=(n||S.rim)?breakdown():'기본가 · 옵션 추가금 없음'}
-function renderChip(){const id=S.step==='shape'?'iv':S.step==='code'?S.body:curColor(),pill=$('#cur-pill');pill.querySelector('i').style.cssText=swatchBg(C[id]);
+function renderChip(){const id=S.step==='shape'?'iv':S.step==='code'?S.body:curColor(),pill=$('#cur-pill');pill.hidden=S.step==='sw'&&!VIEW;// 스위치 축 단계는 미리보기 옆 이름표로 안내해서 좌측 상단 상자는 숨겨요
+  pill.querySelector('i').style.cssText=swatchBg(C[id]);
   const label=S.step==='body'?`본체 · ${C[id].name}`:S.step==='code'?`완성 모습 · 본체 ${C[id].name}`:S.step==='shape'?`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name}`:S.step==='sw'?`버튼 ${S.sel+1}번 · ${swName(S.sw[S.sel])}`:`버튼 ${S.sel+1}번 · ${SH[S.shp[S.sel]].name} · ${C[id].name}`;
   pill.querySelector('span').innerHTML=label.split(' · ').map(t=>`<span class="pl">${t}</span>`).join('<span class="sep"> · </span>')}
 function renderDrawer(){$('#drawer-summary').innerHTML=summaryRows();$('#drawer-code').textContent=code();$('#drawer [data-order]').textContent=orderLabel();$('#drawer-card-help').innerHTML=isWhiteSet()?'기본 상품 주문서의 <b>[판매자 요청사항]</b>란에 붙여 넣어 주세요.':'주문서의 <b>[커스텀 주문코드]</b> 입력란에 붙여 넣으면 됩니다.'}
