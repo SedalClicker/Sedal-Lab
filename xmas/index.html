@@ -967,7 +967,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.step){go(t.dataset.step);return}
   if(t.dataset.preset!=null){const p=PRESETS[+t.dataset.preset],st=p&&presetState(p);if(st){Object.assign(S,structuredClone(st));S.sel=0;render();status('추천 디자인 「'+p.name+'」을 불러왔습니다. 원하는 부분을 바꿔 보세요')}return}
   if(t.id==='prev'){const i=stepIdx();if(i>0)go(STEPS[i-1].k);return}
-  if(t.id==='next'){const i=stepIdx();if(i<STEPS.length-1)go(STEPS[i+1].k);else openNotice();return}
+  if(t.id==='next'){const i=stepIdx();if(i<STEPS.length-1)go(STEPS[i+1].k);else openNotice(!isWhiteSet()&&!!ORDER_URL);return}
   if(t.id==='apply-all'){const j=lastPick?lastI:S.sel,c=lastPick||S.btn[S.sel],a=S.acc[j];S.btn=S.btn.map(()=>c);S.acc=S.acc.map(()=>a);render();status('8개 버튼에 같은 색을 적용했습니다');return}
   if(t.id==='shape-all'){const k=S.shp[S.sel],tn=S.tone[S.sel];S.shp=S.shp.map(()=>k);S.tone=S.tone.map(()=>tn);render();status('8개 버튼을 '+SH[k].name+'으로 바꿨습니다');return}
   if(t.id==='shape-mode'){shapeAll=!shapeAll;render();status(shapeAll?'이제 모양을 고르면 8개 버튼 모두에 적용됩니다':'버튼별로 모양을 고릅니다');return}
