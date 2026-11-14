@@ -801,16 +801,19 @@ function code7(){const C=K7.C,W=K7.W,RA=2+(K7.N-2)*(C+1),N=BigInt(A7.length),ci=
   n+=chk7(n,room7(P))*P;
   let s='';do{s=A7[Number(n%N)]+s;n/=N}while(n>0n);
   while(s.length<4||A7.indexOf(s[0])>=A7S)s='0'+s;return XP+s}
-function decode7(v){if(!is7(v))return{err:'코드에 쓰이지 않는 글자가 있습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};
+function dec7(v,R){if(!is7(v))return{err:'코드에 쓰이지 않는 글자가 있습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};
   const C=K7.C,W=K7.W,RA=2+(K7.N-2)*(C+1),N=BigInt(A7.length);let n=0n,P=1n;for(const c of v)n=n*N+BigInt(A7.indexOf(c));
   const n0=n,pop=r=>{const x=Number(n%BigInt(r));n/=BigInt(r);P*=BigInt(r);return x};
-  const nm=pop(2),u2=pop(2),u1=pop(2),u0=pop(2),lg=pop(C+1),rm=pop(K7.R),bd=pop(C);
+  const nm=pop(2),u2=pop(2),u1=pop(2),u0=pop(2),lg=pop(C+1),rm=pop(R),bd=pop(C);
   const take=(one,r)=>{const a=Array.from({length:one?1:8},()=>pop(r)).reverse();return a.length===1?Array(8).fill(a[0]):a};
   const sw=take(u2,W),sa=take(u1,RA),bt=take(u0,C);
   const M=room7(P);if(n===0n||n>=M||n!==chk7(n0%P,M))return{err:'코드 중 글자가 빠졌거나 바뀐 것 같습니다. 디자인 화면의 [주문코드 복사]로 다시 복사해 붙여 넣어 주세요'};
   const shp=sa.map(x=>x<2?K7.SK[x]:K7.SK[2+Math.floor((x-2)/(C+1))]),ac=sa.map(x=>x<2?0:(x-2)%(C+1));
-  if(!COLORS[bd]||(lg&&!COLORS[lg-1])||bt.some(i=>!COLORS[i])||sw.some(i=>!SW[i])||shp.some(k=>!k)||ac.some(i=>i&&!COLORS[i-1])||rm>RIMKEYS.length)return{err:'코드가 맞지 않습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};
+  if(!COLORS[bd]||(lg&&!COLORS[lg-1])||bt.some(i=>!COLORS[i])||sw.some(i=>!SW[i])||shp.some(k=>!k)||ac.some(i=>i&&!COLORS[i-1])||rm>(R===4?2:RIMKEYS.length))return{err:'코드가 맞지 않습니다. 복사한 코드를 그대로 붙여 넣어 주세요'};
   return{st:{rim:rm?RIMKEYS[rm-1]:false,logo:lg?COLORS[lg-1].id:null,body:COLORS[bd].id,btn:bt.map(i=>COLORS[i].id),shp,tone:shp.map(k=>SH[k].acc?'2':'1'),acc:ac.map((i,j)=>i&&SH[shp[j]].acc?COLORS[i-1].id:null),sw:sw.map(i=>SW[i].id),nomag:nm===1}}}
+// 2026-11-14 테두리 그린·레드를 넣으면서 코드의 테두리 자리가 4칸→5칸으로 바뀌었어요. 그 전에 나간 코드(4칸, 테두리는 화이트·줄무늬뿐)도 계속 읽히도록,
+// 지금 규칙으로 읽히지 않으면 예전 규칙으로 한 번 더 읽어요. 이 자리 수(K7.R)를 또 바꾸면 이미 나간 코드가 전부 안 읽히니, 바꿀 때는 여기에 예전 규칙을 꼭 추가할 것.
+function decode7(v){const r=dec7(v,K7.R);if(!r.err)return r;const o=dec7(v,4);return o.err?r:o}
 function code(){return code7()}
 function chip(id,label,n){return`<span class="cdot">${n?`<em>${n}</em>`:''}<i style="${swatchBg(C[id])}"></i>${label}</span>`}
 function chipSw(id,label){return`<span class="cdot"><i style="background:${SWM[id].hex}"></i>${label}</span>`}
