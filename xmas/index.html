@@ -134,13 +134,14 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .tag.pre{background:#2F6B3A;margin-right:6px}
 .presets .tagline small{display:block;margin-top:4px;font-size:12px;color:var(--ink-3);font-weight:400}
 .pre-row{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
-.pre-card{appearance:none;flex:0 0 168px;scroll-snap-align:start;position:relative;display:grid;gap:4px;justify-items:start;text-align:left;padding:10px 10px 12px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);cursor:pointer;font:inherit;color:var(--ink)}
+.pre-card{appearance:none;flex:0 0 184px;scroll-snap-align:start;position:relative;display:grid;gap:4px;justify-items:start;text-align:left;padding:10px 10px 12px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg);cursor:pointer;font:inherit;color:var(--ink)}
 .pre-card:hover{border-color:var(--ink)}
 .pre-card .pre-img{width:100%;aspect-ratio:4/3;display:grid;place-items:center;background:#fff;border-radius:4px;overflow:hidden}
 .pre-card .pre-img svg{width:100%;height:100%;transform:scale(1.15)}
 .pre-card b{font-size:14px;margin-top:4px}
 .pre-card small{font-size:12px;color:var(--ink-2);line-height:1.4}
-.pre-card em{font-style:normal;font-size:13px;font-weight:700;margin-top:2px}
+.pre-card em{font-style:normal;font-size:13px;font-weight:700;margin-top:2px;display:flex;justify-content:space-between;align-items:baseline;gap:6px;width:100%}
+.pre-card em i{font-style:normal;font-size:11px;font-weight:500;color:var(--ink-2);white-space:nowrap}
 .pre-tag{position:absolute;top:8px;left:8px;z-index:1;background:var(--best);color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px}
 .best-box{background:var(--sunken);border-radius:4px;padding:20px 22px;display:grid;gap:16px}
 .best-box p{margin:0;font-size:14px}
@@ -745,16 +746,16 @@ function normTone(){S.tone=S.shp.map(k=>SH[k].acc?'2':'1');if(!S.acc||S.acc.leng
 // 아래 4종은 촬영한 실물 4개와 같은 조합이에요(2026-11-14 지금 코드 규칙으로 다시 적음). 코드가 읽히지 않으면 카드가 조용히 사라지니, 코드 규칙을 바꾼 뒤에는 꼭 이 목록을 확인할 것.
 // 추천 디자인: 사장님이 고른 주문 코드 + 이름 + 한 줄 설명. 비어 있으면 표시 안 함. tag는 'NEW'·'BEST' 등(선택)
 const PRESETS=[
-  {code:"크4;6M%L$.)EJO9+4O",name:"캔디 스트라이프",desc:"버건디 본체에 흰 무지 버튼과 빨강·초록 아이콘",tag:'추천'},
-  {code:"크1.U~Q4]=N:*#X÷04",name:"레드 체크",desc:"빨강 본체에 빨강·초록 무지 버튼, 트리 하나로 포인트"},
-  {code:"크4+(/R:,]YTU÷Q5^T",name:"화이트 트리",desc:"흰 본체에 초록·버건디 아이콘과 링 버튼"},
-  {code:"크6_O=LO/+]QEE5÷PS",name:"스노우 그린",desc:"초록 본체에 흰 테두리, 빨강·흰 아이콘 버튼"},
+  {code:"크8J;V@I!SAU[B6MU9",name:"캔디 스트라이프",desc:"버건디 본체에 흰 무지 버튼과 빨강·초록 아이콘",tag:'추천'},
+  {code:"크KMYQ<4I!4VAR)PT",name:"레드 체크",desc:"빨강 본체에 빨강·초록 무지 버튼, 트리 하나로 포인트"},
+  {code:"크5YRS}@_₩,4Z$]H:|",name:"화이트 트리",desc:"흰 본체에 초록·버건디 아이콘과 링 버튼"},
+  {code:"크24Y0$I6TP-%]^T7N",name:"스노우 그린",desc:"초록 본체에 흰 테두리, 빨강·흰 아이콘 버튼"},
 ];
 const PRE_THUMB={};
 function presetState(p){const r=parseCode(p.code);return r&&!r.err?r.st:null}
 function withState(st,fn){const keep=structuredClone(S),kc=camS;Object.assign(S,structuredClone(st));S.step='code';camS={...CAM0};setCam();EXPORTING=true;let out;try{out=fn()}finally{EXPORTING=false;Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,keep);camS=kc;setCam()}return out}
-function presetCard(p,k){const st=presetState(p);if(!st)return'';if(!PRE_THUMB[p.code])PRE_THUMB[p.code]=withState(st,()=>({svg:drawView(VIEWS[1],true).replaceAll('vw-iso-px-','pre'+k+'-px-'),price:total()}));const t=PRE_THUMB[p.code];
-  return`<button type="button" class="pre-card" data-preset="${k}">${p.tag?`<span class="pre-tag">${p.tag}</span>`:''}<span class="pre-img">${t.svg}</span><b>${p.name}</b>${p.desc?`<small>${p.desc}</small>`:''}<em>${won(t.price)}원</em></button>`}
+function presetCard(p,k){const st=presetState(p);if(!st)return'';if(!PRE_THUMB[p.code])PRE_THUMB[p.code]=withState(st,()=>({svg:drawView(VIEWS[1],true).replaceAll('vw-iso-px-','pre'+k+'-px-'),price:total()}));const t=PRE_THUMB[p.code],sw=st.sw.every(x=>x===st.sw[0])?swName(st.sw[0])+' 통일':'축 혼합';
+  return`<button type="button" class="pre-card" data-preset="${k}">${p.tag?`<span class="pre-tag">${p.tag}</span>`:''}<span class="pre-img">${t.svg}</span><b>${p.name}</b>${p.desc?`<small>${p.desc}</small>`:''}<em><span>${won(t.price)}원</span><i>${sw}</i></em></button>`}
 function presetsHTML(){if(!PRESETS.length||VIEW)return'';const n0=Object.keys(PRE_THUMB).length,cards=PRESETS.map(presetCard).join('');if(Object.keys(PRE_THUMB).length!==n0)draw(false);if(!cards)return'';
   return`<div class="presets"><p class="tagline"><span class="tag pre">추천</span>추천 디자인에서 시작해 보세요 <small>누르면 불러온 뒤 자유롭게 바꿀 수 있습니다</small></p><div class="pre-row">${cards}</div></div>`}
 const ORDER=['iv','gn','rd','bg'];
