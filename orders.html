@@ -633,7 +633,7 @@ $('#purge').onclick = () => {
   })());
   if (!targets.length) { msg.textContent = `${days}일 지난 완료·취소 주문 중 지울 이름이 없어요`; return; }
   if (!confirm(`${days}일 지난 완료·취소 주문 ${targets.length}건의 이름·ID·받는 분을 지울까요? (주문 내용과 매출 기록은 남아요)`)) return;
-  for (const l of targets.flatMap(o => o.lines)) { l.buyer = l.buyerId = l.receiver = l.region = ''; if (l.req) delete l.req.note; l.anon = true; }
+  for (const l of targets.flatMap(o => o.lines)) { l.buyer = l.buyerId = l.receiver = l.region = ''; delete l.msg; if (l.req) delete l.req.note; l.anon = true; }
   save(); render();
   msg.textContent = `${targets.length}건의 이름을 지웠어요`;
 };
@@ -805,7 +805,7 @@ function importRows(rows) {
       buyer: d['구매자명'] || '', buyerId: d['구매자ID'] || '', receiver: d['수취인명'] || ''
     };
     if (addrCol) row.region = regionOf(d[addrCol]);
-    if (msgCol) { row.req = reqFromMsg(d[msgCol]); if (row.req) reqOrders.add(row.orderNo); }
+    if (msgCol) { row.msg = String(d[msgCol] || '').trim().slice(0, 300); row.req = reqFromMsg(d[msgCol]); if (row.req) reqOrders.add(row.orderNo); }
     // 배송비 검토용: 묶음번호·묶음 배송비·구매자가 고른 배송방법·결제 금액 (발주발송관리 엑셀에만 있어요. 없는 열은 건드리지 않아요)
     if (has('배송비 묶음번호')) row.shipBundle = String(d['배송비 묶음번호'] || '');
     if (has('배송비 합계')) row.shipFee = Number(d['배송비 합계']) || 0;
@@ -815,7 +815,7 @@ function importRows(rows) {
     if (old) {
       for (const [k, h] of Object.entries(COLS)) if (!has(h)) delete row[k];
       Object.assign(old, row);
-      if (old.anon) { old.buyer = old.buyerId = old.receiver = old.region = ''; if (old.req) delete old.req.note; }   // 정리한 이름은 다시 불러와도 비워 둬요
+      if (old.anon) { old.buyer = old.buyerId = old.receiver = old.region = ''; delete old.msg; if (old.req) delete old.req.note; }   // 정리한 이름은 다시 불러와도 비워 둬요
       // 스마트스토어에서 발송 처리된 주문은 여기서도 발송 완료로 (발송 시각은 엑셀의 발송일, 없으면 지금)
       if (!old.shipped && SHIPPED_STATES.includes(row.status) && !isCancel(row)) { old.shipped = true; old.shippedAt = xlDate(d['발송일']) || now; shipped++; }
       updated++;
@@ -992,7 +992,7 @@ function groups() {
     lines.sort((a, b) => isAddon(a) - isAddon(b) || a.id.localeCompare(b.id));
     const live = lines.filter(l => !isCancel(l));
     const mains = live.filter(l => !isAddon(l));
-    const o = {no, lines, live, mains, at: lines[0].at, receiver: lines[0].receiver, buyer: lines[0].buyer, region: (lines.find(l => l.region) || {}).region || '', req: (lines.find(l => l.req) || {}).req || null, reqOff: lines.some(l => l.req && l.reqOff), anon: lines.some(l => l.anon),
+    const o = {no, lines, live, mains, at: lines[0].at, receiver: lines[0].receiver, buyer: lines[0].buyer, region: (lines.find(l => l.region) || {}).region || '', req: (lines.find(l => l.req) || {}).req || null, msg: (lines.find(l => l.msg) || {}).msg || '', reqOff: lines.some(l => l.req && l.reqOff), anon: lines.some(l => l.anon),
       cancelled: !live.length, shipped: live.length > 0 && live.every(l => l.shipped)};
     // 발송 완료하고 하루가 지난 주문은 '전체'에서 빼고 '발송 완료' 탭에서만 보여요 (발송 시각을 모르는 예전 주문도 지난 것으로 봐요)
     o.shippedAt = o.shipped ? Math.max(0, ...live.map(l => Date.parse(l.shippedAt) || 0)) : 0;
@@ -1408,12 +1408,13 @@ function orderHTML(o) {
       <span class="meta">${esc(fmtAt(o.at))} · 주문 ${esc(o.no)}</span> ${st}
       ${o.cancelled || !COST ? '' : (e => `<span class="money" title="상품 ${won(e.rev)} + 배송비 ${won(e.custShip)} − 원가 ${won(e.cost)} − 택배 ${won(e.ship)}">매출 ${won(e.rev + e.custShip)} · 순이익 ${won(e.profit)}</span>`)(econOrder(o))}
       ${o.issues.map(i => `<span class="badge ${o.resolved ? '' : 'warn'}">${esc(i)}</span>`).join(' ')}
-      ${o.req ? `<span class="badge ${o.reqOff ? '' : 'warn'}" title="배송메시지에서 읽은 요청이에요">${o.reqOff ? '요청 반영 안 함' : '배송메시지 요청'}: ${esc(reqNames(o.req))}</span>${o.req.note ? ` <span class="meta">"${esc(o.req.note)}"</span>` : ''} <button class="btn" style="padding:1px 8px;font-size:12px" data-reqoff="${esc(o.no)}">${o.reqOff ? '다시 반영' : '반영 안 함'}</button>` : ''}
+      ${o.req ? `<span class="badge ${o.reqOff ? '' : 'warn'}" title="배송메시지에서 읽은 요청이에요">${o.reqOff ? '요청 반영 안 함' : '배송메시지 요청'}: ${esc(reqNames(o.req))}</span>${o.req.note && !o.msg ? ` <span class="meta">"${esc(o.req.note)}"</span>` : ''} <button class="btn" style="padding:1px 8px;font-size:12px" data-reqoff="${esc(o.no)}">${o.reqOff ? '다시 반영' : '반영 안 함'}</button>` : ''}
       <span class="acts">${o.issues.length ? `
         <label class="check ${o.fu && o.fu.contact ? 'mid' : ''}"><input type="checkbox" data-fu="${esc(o.no)}" data-kind="contact" ${o.fu && o.fu.contact ? 'checked' : ''}> 연락 완료${o.fu && o.fu.contact ? ' ' + fmtDay(o.fu.contact) : ''}</label>
         <label class="check ${o.resolved ? 'done' : ''}"><input type="checkbox" data-fu="${esc(o.no)}" data-kind="done" ${o.resolved ? 'checked' : ''}> 해결${o.resolved ? ' ' + fmtDay(o.fu.done) : ''}</label>` : ''}
       ${o.cancelled ? '' : `<label class="check ${o.shipped ? 'done' : ''}"><input type="checkbox" data-ship="${esc(o.no)}" ${o.shipped ? 'checked' : ''}> 발송 완료</label>`}</span>
     </div>
+    ${o.msg && !o.anon ? `<div class="line" style="padding-top:8px;padding-bottom:8px"><div class="info"><span class="meta">배송메시지</span> ${esc(o.msg)}</div></div>` : ''}
     ${[...o.live, ...o.lines.filter(isCancel)].map(lineHTML).join('')}
   </div>`;
 }
@@ -1798,6 +1799,7 @@ function renderInv() {
     <div class="bar">
       ${short.length ? `<span class="badge warn">미생산 주문 기준 부족 ${short.length}종</span> <span class="msg">${short.slice(0, 8).map(([k, n]) => `${esc(partName(k))} ${n - invQty(k)}개`).join(', ')}${short.length > 8 ? ' …' : ''}</span>`
         : '<span class="badge ok">미생산 주문을 만들 재고가 모두 있어요</span>'}
+      <button class="btn" id="inv-zero" style="margin-left:auto" title="모든 부품의 현재 재고를 0으로 맞춰요 (최소 보유량은 그대로)">재고 전부 0으로</button>
     </div>
     <p class="hint">숫자 칸은 현재 재고예요. 직접 센 수량을 입력하면 그 시점 기준으로 맞춰지고, 그 뒤에 <b>조립</b>을 체크한 주문만큼 자동으로 빠져요 (체크를 풀면 돌아와요). "필요"는 아직 조립하지 않은 주문에 드는 수량이고, 모자라면 빨간색이에요. 작은 회색 칸은 최소 보유량이에요 (밑으로 떨어지면 주황색).</p>
     <section class="inv"><h2>버튼 (모양 × 색)</h2>
@@ -1844,6 +1846,13 @@ function renderInv() {
     const k = `two:${$('#two-s').value}:${$('#two-b').value}:${$('#two-a').value}`;
     // 지금을 실사 시각으로 둬요. 없으면 예전에 조립한 주문 것까지 빠져서 음수로 시작해요
     DB.inv[k] = DB.inv[k] || {qty: 0, at: new Date().toISOString()};
+    save(); renderInv();
+  };
+  // 재고 전부 0: 지금을 실사 시각으로 두고 모든 부품 수량을 0으로 맞춰요. 이 뒤에 조립 체크한 주문부터 다시 빠져요
+  $('#inv-zero').onclick = () => {
+    if (!confirm('모든 부품의 재고를 0으로 만들까요? 되돌릴 수 없어요 (최소 보유량은 그대로 둬요)')) return;
+    const now = new Date().toISOString();
+    for (const k of new Set([...Object.keys(DB.inv), ...Object.keys(usedParts())])) DB.inv[k] = Object.assign(DB.inv[k] || {}, {qty: 0, at: now});
     save(); renderInv();
   };
   el.querySelectorAll('[data-deltwo]').forEach(b => b.onclick = () => { delete DB.inv[b.dataset.deltwo]; save(); renderInv(); });
