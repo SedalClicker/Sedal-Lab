@@ -1,6 +1,6 @@
 // 새달랩 크리스마스 커스텀 PWA service worker: 페이지는 네트워크 우선(오프라인이면 캐시), 나머지 파일은 캐시 우선, 글꼴은 캐시.
 // 같은 주소(sedalclicker.github.io)를 쓰는 초콜릿 클리커 캐시를 지우지 않도록 자기 이름(sedal-xmas-)만 정리해요.
-const CACHE='sedal-xmas-v13';
+const CACHE='sedal-xmas-v15';
 const CORE=['./','./index.html','./check.html','./manifest.webmanifest','../icons/icon-192.png','../icons/icon-512.png','../icons/maskable-512.png','../icons/apple-touch-icon.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('sedal-xmas-')&&k!==CACHE&&k!==CACHE+'-fonts').map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

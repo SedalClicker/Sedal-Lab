@@ -14,10 +14,10 @@
 <meta property="og:title" content="새달랩 크리스마스 클리커 커스텀">
 <meta property="og:description" content="본체, 버튼, 스위치 축을 골라 나만의 크리스마스 클리커를 만들어 보세요.">
 <meta property="og:url" content="https://sedalclicker.github.io/Sedal-Lab/xmas/">
-<meta property="og:image" content="https://sedalclicker.github.io/Sedal-Lab/icons/icon-512.png">
-<meta property="og:image:width" content="512">
-<meta property="og:image:height" content="512">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://sedalclicker.github.io/Sedal-Lab/xmas/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="../icons/icon-192.png">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
@@ -504,7 +504,7 @@ const SW=[
   {id:'hx',name:'크리스마스',type:'리니어',tag:'한정판',lim:1,hex:'#EFE3C8',house:'#2E6B4E',top:'#A82A38',d:'크리스마스 클리커에서만 고를 수 있는 한정판 리니어축. 40g으로 가볍게 눌리고 3.8mm로 깊게 들어가요',t:['한정판','가벼운 40g','3.8mm 스트로크']}];
 function swName(id){const n=SWM[id].name;return n.endsWith('축')?n:n+'축'}
 const SWM=Object.fromEntries(SW.map(x=>[x.id,x]));const SW_DEF='y2',SW_START='sl';
-const RIMS={iv:{name:'화이트',hex:'#F4F5F2',col:'iv'},xm:{name:'줄무늬',hex:'#B8252F',stripe:['gn','rd']}};const RIMKEYS=Object.keys(RIMS);
+const RIMS={iv:{name:'화이트',hex:'#F4F5F2',col:'iv'},xm:{name:'줄무늬',hex:'#B8252F',stripe:['gn','rd']},gn:{name:'그린',hex:'#1F7A5F',col:'gn'},rd:{name:'레드',hex:'#B8252F',col:'rd'}};const RIMKEYS=Object.keys(RIMS);
 function rimBg(r){return r.stripe?`background:repeating-linear-gradient(45deg,${C[r.stripe[0]].hex} 0 4px,${C[r.stripe[1]].hex} 4px 8px)`:swatchBg(C[r.col])}
 function rimOf(){return S.rim?RIMS[S.rim]||RIMS.iv:null}
 const EXAMPLE={rim:false,nomag:false,logo:null,body:'bg',btn:Array(8).fill('iv'),shp:Array(8).fill('B'),tone:Array(8).fill('1'),acc:Array(8).fill(null),sw:Array(8).fill(SW_START),part:'body',sel:0,step:'body',view:'iso'};
@@ -728,7 +728,7 @@ function customPrice(){return PRICE.base+optSum()+(S.rim?PRICE.RIM:0)}
 function payPrice(){return isWhiteSet()?whitePrice():customPrice()}
 function payNote(long){if(!isWhiteSet())return breakdown();const b=`기본 상품 ${won(PRICE.SET)}원${S.rim?` + 화이트 테두리 ${won(PRICE.RIM)}원`:''}`;return long?`${b} · 화이트 단색 조합이라 기본 상품으로 주문할 때 금액입니다 (커스텀 상품으로 주문하면 ${won(customPrice())}원)`:`${b} · 화이트 단색`}
 // 마지막 단계에 항상 보이는 추가상품 목록 (스마트스토어 추가상품 이름 그대로)
-const RIM_STORE={iv:'화이트',xm:'줄무늬'};
+const RIM_STORE={iv:'화이트',xm:'줄무늬',gn:'그린',rd:'레드'};
 function addonGuide(){
   if(isWhiteSet())return`<div class="addon-guide"><b>💡 화이트 단색 조합은 기본 상품으로 주문할 수 있어요 · ${won(customPrice()-whitePrice())}원 더 저렴</b><p>크리스마스 커스텀은 한정판 에디션이라 기본 옵션을 따로 판매하지 않지만, 한정판 색(레드·그린·버건디)을 쓰지 않은 <b>화이트 단색</b> 조합은 기본 상품과 같은 구성이에요. 기본 상품 페이지에서 이렇게 골라 주세요.</p><ul><li><span>색상</span><b>화이트</b></li><li><span>버튼 모양</span><b>${SH[S.shp[0]].name}</b></li><li><span>스위치 축</span><b>${swName(S.sw[0])}</b></li>${S.rim?`<li><span>화이트 테두리 (추가상품)</span><b>1개</b><em>+${won(PRICE.RIM)}원</em></li>`:''}</ul><p class="ag-total">상품 금액 합계 <b>${won(whitePrice())}원</b> <s>${won(customPrice())}원</s><small> · 배송비 별도</small></p></div>`;
   const ol=[];if(iconN())ol.push(['버튼 변경: 아이콘',iconN(),SH.H.price]);if(ringN())ol.push(['버튼 변경: 링',ringN(),SH.R.price]);if(S.rim)ol.push(['테두리 추가: '+(RIM_STORE[S.rim]||rimOf().name),1,PRICE.RIM]);
@@ -822,7 +822,7 @@ function groupBtn(arr=S.btn){const m={};arr.forEach(id=>m[id]=(m[id]||0)+1);retu
 // 크리스마스 주문코드(XC1, 2026-11-09~): 맨 앞 '크' + 대문자·숫자·특수문자 65종, '크' 포함 최대 20자(스마트스토어 주문코드란 20칸).
 // 초콜릿 클리커 코드에는 한글이 없어서 두 제품의 코드가 겹치지 않고, 서로의 페이지에서 잘못 읽히지도 않아요.
 // 색 최대 5종·모양 최대 12종·축 최대 16종(현재 15종)·테두리 최대 3종까지 같은 규칙으로 읽어요. 목록은 반드시 뒤에만 추가할 것(앞 번호가 바뀌면 이미 나간 코드가 달라집니다).
-const XP='크',A7='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%()*,./:;?[]^_{|}~÷₩<>=+-@',A7S=61,K7={C:5,W:16,N:12,R:4,SK:['B','P','R','K','A','T','D','L','S','H','N']};
+const XP='크',A7='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%()*,./:;?[]^_{|}~÷₩<>=+-@',A7S=61,K7={C:5,W:16,N:12,R:5,SK:['B','P','R','K','A','T','D','L','S','H','N']};
 function is7(v){return !!v&&[...v].every(c=>A7.indexOf(c)>=0)}
 // 확인 글자: 한 글자가 바뀌거나 빠지면 오류로 알려 줘요. 초콜릿 클리커와 계산식을 달리해 앞에 '크'만 붙인 코드도 통과하지 못해요.
 const C7LIM=61n*65n**18n,C7MAX=4225n,C7P=2305843009213693951n;
@@ -883,7 +883,7 @@ function renderPanel(){if(VIEW){renderViewPanel();return}let h='';const i=stepId
     h+=`<h2 class="ptitle">본체 색상</h2>${presetsHTML()}
     <div class="sec"><div class="sec-head"><h3>본체 색상</h3><span class="sel">${C[S.body].name}</span></div>${swatchGrid('body')}</div>
     <div class="sec"><div class="sec-head"><h3>튜닝 옵션 · 본체 테두리</h3><span class="sel">${S.rim?rimOf().name+' 테두리 · +'+won(PRICE.RIM)+'원':'기본 · 추가금 없음'}</span></div>
-    <p class="help">본체 가장자리에 화이트 또는 크리스마스 줄무늬(레드·그린) 테두리를 덧댑니다. 선택 시 <b>+${won(PRICE.RIM)}원</b>.</p>
+    <p class="help">본체 가장자리에 화이트·그린·레드 또는 크리스마스 줄무늬(레드·그린) 테두리를 덧댑니다. 선택 시 <b>+${won(PRICE.RIM)}원</b>.</p>
     <div class="logo-row rim-row"><button type="button" class="logo-sw" data-rim="0" aria-pressed="${!S.rim}" title="본체와 같은 색"><i style="${swatchBg(C[S.body])}"></i><span>기본</span></button>${Object.entries(RIMS).map(([k,r])=>`<button type="button" class="logo-sw" data-rim="${k}" aria-pressed="${S.rim===k}" title="${r.name} 테두리 +${won(PRICE.RIM)}원"><i style="${rimBg(r)}"></i><span>${r.name}</span></button>`).join('')}</div></div>
     <div class="sec"><div class="sec-head"><h3>로고(SE:DAL) 색상</h3><span class="sel">${S.logo?C[S.logo].name:'본체와 같은 색'}</span></div>
     <p class="help">본체 옆면의 SE:DAL 로고 색입니다. 추가금 없음.</p>
