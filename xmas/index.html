@@ -735,7 +735,7 @@ function addonGuide(){
   const ol=[];if(iconN())ol.push(['버튼 변경: 아이콘',iconN(),SH.H.price]);if(ringN())ol.push(['버튼 변경: 링',ringN(),SH.R.price]);if(S.rim)ol.push(['테두리 추가: '+(RIM_STORE[S.rim]||rimOf().name),1,PRICE.RIM]);
   return`<div class="addon-guide${ol.length?'':' none'}"><b>🛒 스마트스토어에서 함께 담아 주세요</b>${ol.length?`<ul>${ol.map(([n,q,p])=>`<li><span>${n}</span><b>${q}개</b><em>+${won(q*p)}원</em></li>`).join('')}</ul>`:'<p>추가로 담을 옵션이 없어요. 커스텀 클리커 상품만 주문하시면 됩니다.</p>'}<p class="ag-total">상품 금액 합계 <b>${won(customPrice())}원</b><small> · 배송비 별도</small></p></div>`}
 // 크리스마스 커스텀 상품 주소: 상품 등록 후 아래 따옴표 안에 넣으면 [주문하기] 버튼이 연결됩니다.
-const ORDER_URL='';
+const ORDER_URL='https://smartstore.naver.com/se_dal/products/13871663142';
 function orderLabel(){return isWhiteSet()?`기본 상품으로 주문하기 · ${won(whitePrice())}원`:'코드 복사하고 스마트스토어에서 주문하기'}
 function twoCount(){return S.btn.filter((_,i)=>hasAcc(i)&&S.tone[i]==='2').length}
 function total(){return customPrice()}
