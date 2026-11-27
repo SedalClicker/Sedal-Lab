@@ -1474,7 +1474,7 @@ function customHTML(l) {
   const uniform = d.btn.every(b => b.color === d.btn[0].color && !b.acc && b.shp === d.btn[0].shp && b.sw === d.btn[0].sw);
   const oldFmt = oldFmtCheck(l, d) ? `<div class="warnbox">확인 글자가 없는 예전 형식 코드예요 (10/28까지 발급). 그 뒤에 만든 코드라면 글자가 바뀌어 다른 디자인으로 읽혔을 수 있어요. 미리보기가 고객 디자인과 다르면 받은 전체 코드를 넣어 주세요
     <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><input data-fixin="${esc(l.id)}" placeholder="전체 코드" style="flex:1;min-width:120px;border:1px solid var(--line);border-radius:5px;padding:5px"><button class="btn" data-fix="${esc(l.id)}">적용</button><button class="btn" data-codeok="${esc(l.id)}">디자인 맞음</button></div></div>` : '';
-  return `${fixed}${oldFmt}<div class="opt">코드 <b>${esc(d.code)}</b> · ${Number(d.price).toLocaleString()}원</div>
+  return `${fixed}${oldFmt}<div class="opt">${d.kindName && d.kindName !== '8구' ? `<b>${esc(d.kindName)}</b> · ` : ''}코드 <b>${esc(d.code)}</b> · ${Number(d.price).toLocaleString()}원</div>
     <div class="sheet">
       <img class="pv" data-pv="${esc(raw)}" alt="제작될 클리커 미리보기" title="누르면 크게 보기">
       <div class="spec">
@@ -1486,7 +1486,7 @@ function customHTML(l) {
         <div>버튼 색 ${Object.entries(ctally).map(([id, n]) => `<span class="sw" style="background:${color(id).hex}"></span><b>${esc(color(id).name)}</b> ${n}`).join(' · ')}</div>
         <div>축 ${Object.entries(tally).map(([id, n]) => `<span class="sw" style="background:${swOf(id).hex}"></span>${esc(swOf(id).name)} ${n}`).join(' · ')}</div>
         <div class="msg">${esc(d.breakdown)}</div>
-        <details ${uniform ? '' : 'open'} style="margin-top:6px"><summary class="msg" style="cursor:pointer">버튼별 상세 ${uniform ? '(8개 모두 같음)' : '(버튼색 + 상단색 · 모양 · 축)'}</summary>
+        <details ${uniform ? '' : 'open'} style="margin-top:6px"><summary class="msg" style="cursor:pointer">버튼별 상세 ${uniform ? '(${d.btn.length}개 모두 같음)' : '(버튼색 + 상단색 · 모양 · 축)'}</summary>
           <div class="grid" style="background:${body.hex};margin-top:4px">${cells}</div></details>
       </div>
     </div>`;

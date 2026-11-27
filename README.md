@@ -13,6 +13,7 @@ Settings → Pages → Source: Deploy from a branch → Branch: `main` / `/(root
 ## 크리스마스 클리커 커스텀 (`xmas/`)
 - 주소: https://sedalclicker.github.io/Sedal-Lab/xmas/
 - 주문 코드는 맨 앞이 `크`이고 최대 20자입니다. 초콜릿 클리커 코드와 겹치지 않습니다.
-- 스마트스토어 상품을 등록하면 `xmas/index.html`의 `ORDER_URL`에 주소를, `PRICE`에 가격을 넣습니다.
+- 종류는 8구 · 4구 정사각 · 4구 세로 세 가지입니다. 가격·테두리 추가금·스마트스토어 상품 주소는 `xmas/index.html`과 `xmas/check.html`의 `KINDS`(`base`, `rim`, `url`)에 넣습니다. 두 파일을 같이 바꿉니다.
+- 4구 주문 코드는 `크` 뒤에 종류 표시가 붙습니다: `크+…` 정사각, `크=…` 세로. 8구 코드는 그대로입니다.
 - `orders.html`은 `크` 코드를 `xmas/check.html`로 읽습니다. 스토어 상품명에 `커스텀`과 `크리스마스`가, 추가상품에 `버튼 변경: 아이콘` / `버튼 변경: 링` / `테두리 추가: 화이트·줄무늬`가 있어야 옵션 대조가 맞습니다.
 - 파일을 바꾼 뒤 `xmas/sw.js`의 `CACHE` 버전을 올립니다.
